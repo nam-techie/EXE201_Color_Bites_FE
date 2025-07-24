@@ -1,0 +1,30 @@
+# Node modules
+node_modules
+
+# Build folders
+dist
+build
+out
+.next
+.expo
+
+
+# Mac & system files
+.DS_Store
+
+# Lock files (nếu không muốn format package files)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Assets
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.gif
+*.ico
+
+# Optional: ignore mock data or large JSONs
+**/mockData.ts
+**/*.mock.ts
