@@ -69,12 +69,14 @@ EXE201_Color_Bites_FE/
 ### Các bước cài đặt
 
 1. **Clone repository**
+
    ```bash
    git clone <repository-url>
    cd EXE201_Color_Bites_FE
    ```
 
 2. **Cài đặt dependencies**
+
    ```bash
    npm install
    # hoặc
@@ -109,59 +111,68 @@ npx expo start --web
 
 ## 📋 Scripts có sẵn
 
-| Script | Mô tả |
-|--------|-------|
-| `npm start` | Khởi chạy Expo development server |
-| `npm run android` | Chạy ứng dụng trên Android emulator/device |
-| `npm run ios` | Chạy ứng dụng trên iOS simulator/device |
-| `npm run web` | Chạy ứng dụng trên web browser |
-| `npm run lint` | Chạy ESLint để kiểm tra code quality |
-| `npm run reset-project` | Reset dự án về trạng thái ban đầu |
+| Script                  | Mô tả                                      |
+| ----------------------- | ------------------------------------------ |
+| `npm start`             | Khởi chạy Expo development server          |
+| `npm run android`       | Chạy ứng dụng trên Android emulator/device |
+| `npm run ios`           | Chạy ứng dụng trên iOS simulator/device    |
+| `npm run web`           | Chạy ứng dụng trên web browser             |
+| `npm run lint`          | Chạy ESLint để kiểm tra code quality       |
+| `npm run reset-project` | Reset dự án về trạng thái ban đầu          |
 
 ## 🛠️ Công nghệ sử dụng
 
 ### Core Technologies
+
 - **React**: 19.0.0 - Library UI chính
 - **React Native**: 0.79.5 - Framework mobile
 - **Expo**: ~53.0.20 - Development platform
 - **TypeScript**: ~5.8.3 - Type safety
 
 ### Navigation & Routing
+
 - **Expo Router**: ~5.1.4 - File-based routing
 - **React Navigation**: ^7.1.6 - Navigation library
 
 ### UI & Animation
+
 - **React Native Reanimated**: ~3.17.4 - Animations
 - **React Native Gesture Handler**: ~2.24.0 - Gesture handling
 - **Expo Vector Icons**: ^14.1.0 - Icon library
 
 ### Development Tools
+
 - **ESLint**: ^9.25.0 - Code linting
 - **Babel**: ^7.25.2 - JavaScript compiler
 
 ## 🎨 Tính năng chính
 
 ### 1. **Tab Navigation**
+
 - 2 tab chính: Home và Explore
 - Haptic feedback khi chuyển tab
 - Custom tab bar background với blur effect (iOS)
 
 ### 2. **Theme System**
+
 - Hỗ trợ Dark/Light mode tự động
 - Themed components (ThemedText, ThemedView)
 - Color scheme detection
 
 ### 3. **Responsive Design**
+
 - Hỗ trợ đa nền tảng: iOS, Android, Web
 - Adaptive icons cho Android
 - Edge-to-edge design
 
 ### 4. **Animations**
+
 - Parallax scroll view
 - Animated wave component
 - Smooth transitions
 
 ### 5. **Typography**
+
 - Custom font: SpaceMono
 - Responsive text sizing
 - Themed text components
@@ -169,20 +180,22 @@ npx expo start --web
 ## 🔧 Cấu hình
 
 ### Expo Configuration (app.json)
+
 ```json
 {
-  "expo": {
-    "name": "color-bite",
-    "slug": "color-bite",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "scheme": "colorbite",
-    "newArchEnabled": true
-  }
+   "expo": {
+      "name": "color-bite",
+      "slug": "color-bite",
+      "version": "1.0.0",
+      "orientation": "portrait",
+      "scheme": "colorbite",
+      "newArchEnabled": true
+   }
 }
 ```
 
 ### TypeScript Configuration
+
 - Strict mode enabled
 - Path mapping: `@/*` → `./*`
 - Expo TypeScript base configuration
@@ -190,46 +203,56 @@ npx expo start --web
 ## 📱 Cấu trúc màn hình
 
 ### Home Screen (`app/(tabs)/index.tsx`)
+
 - Parallax scroll view với React logo
 - Welcome message với animated wave
 - Step-by-step development guide
 
 ### Explore Screen (`app/(tabs)/explore.tsx`)
+
 - Collapsible sections với thông tin về:
-  - File-based routing
-  - Multi-platform support
-  - Images handling
-  - Custom fonts
-  - Theme system
-  - Animations
+   - File-based routing
+   - Multi-platform support
+   - Images handling
+   - Custom fonts
+   - Theme system
+   - Animations
 
 ## 🎯 Development Workflow
 
 ### 1. **Khởi tạo dự án mới**
+
 ```bash
 npm run reset-project
 ```
+
 Lệnh này sẽ di chuyển code mẫu hiện tại vào thư mục `app-example` và tạo thư mục `app` trống để bắt đầu phát triển.
 
 ### 2. **Code Quality**
+
 ```bash
 npm run lint
 ```
+
 Chạy ESLint để kiểm tra và đảm bảo code quality.
 
 ### 3. **Development Build**
+
 - Sử dụng Expo development build để test trên thiết bị thật
 - Hỗ trợ hot reload và fast refresh
 
 ## 🌐 Deployment
 
 ### Web Deployment
+
 ```bash
 npm run web
 ```
+
 Ứng dụng sẽ được build thành static files sẵn sàng deploy.
 
 ### Mobile App Build
+
 ```bash
 # Build cho production
 npx expo build:android
@@ -241,11 +264,13 @@ npx expo build:ios
 ### Các vấn đề thường gặp:
 
 1. **Metro bundler cache issues**
+
    ```bash
    npx expo start --clear
    ```
 
 2. **Node modules issues**
+
    ```bash
    rm -rf node_modules
    npm install
@@ -283,4 +308,4 @@ Dự án này là private và thuộc về team phát triển EXE201_Color_Bites
 
 **Happy Coding! 🚀**
 
-*Để biết thêm thông tin chi tiết, vui lòng liên hệ team phát triển.*
+_Để biết thêm thông tin chi tiết, vui lòng liên hệ team phát triển._

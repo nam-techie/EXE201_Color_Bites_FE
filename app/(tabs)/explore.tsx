@@ -179,7 +179,12 @@ export default function ExploreScreen() {
                                  <Text style={styles.placeDistance}>{place.distance}</Text>
                                  <Text style={styles.placeSeparator}>•</Text>
                                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Ionicons name="star" size={14} color="#FBBF24" style={{ marginRight: 4 }} />
+                                    <Ionicons
+                                       name="star"
+                                       size={14}
+                                       color="#FBBF24"
+                                       style={{ marginRight: 4 }}
+                                    />
                                     <Text style={styles.placeRating}>{place.rating}</Text>
                                  </View>
                               </View>

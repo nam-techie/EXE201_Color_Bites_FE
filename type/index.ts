@@ -64,3 +64,28 @@ export interface Challenge {
    isPremium: boolean
    reward?: string
 }
+export interface RouteProfile {
+   id: string
+   name: string
+   icon: string
+}
+
+export const ROUTE_PROFILES: RouteProfile[] = [
+   { id: 'driving-car', name: 'Ô tô', icon: 'car' },
+   { id: 'cycling-regular', name: 'Xe máy', icon: 'bicycle' },
+   { id: 'foot-walking', name: 'Đi bộ', icon: 'walk' },
+   { id: 'driving-hgv', name: 'Xe tải', icon: 'bus' },
+]
+
+export interface RouteStep {
+   instruction: string
+   distance: number
+   duration: number
+}
+
+export interface DirectionResult {
+   distance: number
+   duration: number
+   steps: RouteStep[]
+   geometry: string
+}

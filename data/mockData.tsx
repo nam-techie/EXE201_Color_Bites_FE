@@ -49,39 +49,3 @@ export const mockPosts = [
       isPinned: false,
    },
 ]
-
-export const mockMapLocations = [
-   {
-      id: '1',
-      name: 'Phúc Long Coffee & Tea',
-      address: '325 Lê Văn Sỹ, Quận 3, TP.HCM',
-      latitude: 10.799408,
-      longitude: 106.668287,
-      posts: 42,
-      rating: 4.5,
-      image: 'https://picsum.photos/id/237/500/300',
-      description: 'Quán cà phê nổi tiếng với trà đậm đà và không gian thoải mái.',
-   },
-   {
-      id: '2',
-      name: 'Highlands Coffee - Saigon Centre',
-      address: '65 Lê Lợi, Quận 1, TP.HCM',
-      latitude: 10.772221,
-      longitude: 106.703348,
-      posts: 28,
-      rating: 4.3,
-      image: 'https://picsum.photos/id/1056/500/300',
-      description: 'View trung tâm thành phố, phù hợp cho làm việc và họp nhóm.',
-   },
-   {
-      id: '3',
-      name: 'The Coffee House - Nguyễn Thị Minh Khai',
-      address: '235 Nguyễn Thị Minh Khai, Quận 1, TP.HCM',
-      latitude: 10.768351,
-      longitude: 106.692116,
-      posts: 35,
-      rating: 4.6,
-      image: 'https://picsum.photos/id/1080/500/300',
-      description: 'Không gian yên tĩnh, phục vụ chuyên nghiệp.',
-   },
-]
