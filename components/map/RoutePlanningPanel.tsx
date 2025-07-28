@@ -6,7 +6,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-nati
 interface RouteStop {
    restaurant: Restaurant
    distance?: number
-   duration?: number
+   duration?: number // đơn vị: giây
    totalDistance?: number
    totalDuration?: number
 }
@@ -15,7 +15,6 @@ interface RoutePlanningPanelProps {
    routeStops: RouteStop[]
    onRemoveStop: (index: number) => void
    onClearRoute: () => void
-   onOptimizeRoute: () => void
    visible: boolean
    selectedProfile: string
 }
@@ -24,7 +23,6 @@ export default function RoutePlanningPanel({
    routeStops,
    onRemoveStop,
    onClearRoute,
-   onOptimizeRoute,
    visible,
    selectedProfile,
 }: RoutePlanningPanelProps) {
@@ -37,15 +35,9 @@ export default function RoutePlanningPanel({
       <View style={styles.container}>
          <View style={styles.header}>
             <Text style={styles.title}>Lộ trình ({routeStops.length} điểm)</Text>
-            <View style={styles.headerButtons}>
-               <TouchableOpacity onPress={onOptimizeRoute} style={styles.optimizeButton}>
-                  <Ionicons name="shuffle" size={16} color="#3B82F6" />
-                  <Text style={styles.optimizeText}>Tối ưu</Text>
-               </TouchableOpacity>
-               <TouchableOpacity onPress={onClearRoute} style={styles.clearButton}>
-                  <Ionicons name="trash" size={16} color="#EF4444" />
-               </TouchableOpacity>
-            </View>
+            <TouchableOpacity onPress={onClearRoute} style={styles.clearButton}>
+               <Ionicons name="trash" size={16} color="#EF4444" />
+            </TouchableOpacity>
          </View>
 
          {totalDistance > 0 && (
@@ -101,6 +93,7 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.25,
       shadowRadius: 3.84,
       elevation: 5,
+      zIndex: 1, 
    },
    header: {
       flexDirection: 'row',
@@ -114,23 +107,6 @@ const styles = StyleSheet.create({
       fontSize: 16,
       fontWeight: '600',
       color: '#374151',
-   },
-   headerButtons: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   optimizeButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      marginRight: 8,
-   },
-   optimizeText: {
-      marginLeft: 4,
-      fontSize: 12,
-      color: '#3B82F6',
-      fontWeight: '500',
    },
    clearButton: {
       padding: 4,

@@ -1,5 +1,8 @@
+'use client'
+
 import { formatOpeningHours, getCuisineIcon } from '@/services/MapService'
 import { Restaurant } from '@/type/location'
+import { MaterialCommunityIcons } from '@expo/vector-icons'
 import {
    Alert,
    Linking,
@@ -38,12 +41,8 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
    }
 
    const handleDirections = () => {
-      if (restaurant.tags.website) {
-         Linking.openURL(restaurant.tags.website)
-      } else {
-         const url = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lon}`
-         Linking.openURL(url)
-      }
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lon}`
+      Linking.openURL(url)
    }
 
    const getAddress = () => {
@@ -69,6 +68,8 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
       return info.join(', ')
    }
 
+   const cuisineIcon = getCuisineIcon(restaurant.tags.cuisine || '')
+
    return (
       <Modal
          visible={visible}
@@ -90,90 +91,45 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                {/* Cuisine Type */}
                <View style={styles.cuisineContainer}>
-                  <Text style={styles.cuisineIcon}>
-                     {getCuisineIcon(restaurant.tags.cuisine || '')}
-                  </Text>
+                  <MaterialCommunityIcons name={cuisineIcon.name} size={24} color={cuisineIcon.color} style={styles.cuisineIcon} />
                   <Text style={styles.cuisineText}>{restaurant.tags.cuisine || 'Quán ăn'}</Text>
                </View>
 
                {/* Address */}
                <View style={styles.infoSection}>
-                  <Text style={styles.infoLabel}>📍 Địa chỉ</Text>
+                  <MaterialCommunityIcons name="map-marker" size={18} color="#6b7280" style={{ marginRight: 4 }} />
                   <Text style={styles.infoText}>{getAddress()}</Text>
                </View>
 
                {/* Opening Hours */}
                {restaurant.tags.opening_hours && (
                   <View style={styles.infoSection}>
-                     <Text style={styles.infoLabel}>🕒 Giờ mở cửa</Text>
-                     <Text style={styles.infoText}>
-                        {formatOpeningHours(restaurant.tags.opening_hours)}
-                     </Text>
+                     <MaterialCommunityIcons name="clock-outline" size={18} color="#6b7280" style={{ marginRight: 4 }} />
+                     <Text style={styles.infoText}>{formatOpeningHours(restaurant.tags.opening_hours)}</Text>
                   </View>
                )}
 
                {/* Dietary Information */}
                {getDietaryInfo() && (
                   <View style={styles.infoSection}>
-                     <Text style={styles.infoLabel}>🥗 Chế độ ăn</Text>
+                     <MaterialCommunityIcons name="leaf" size={18} color="#6b7280" style={{ marginRight: 4 }} />
                      <Text style={styles.infoText}>{getDietaryInfo()}</Text>
                   </View>
                )}
 
-               {/* Amenities */}
-               <View style={styles.infoSection}>
-                  <Text style={styles.infoLabel}>🏢 Tiện nghi</Text>
-                  <View style={styles.amenitiesContainer}>
-                     {restaurant.tags.air_conditioning === 'yes' && (
-                        <View style={[styles.amenityTag, styles.blueTag]}>
-                           <Text style={[styles.amenityText, styles.blueText]}>❄️ Điều hòa</Text>
-                        </View>
-                     )}
-                     {restaurant.tags.wheelchair === 'yes' && (
-                        <View style={[styles.amenityTag, styles.greenTag]}>
-                           <Text style={[styles.amenityText, styles.greenText]}>♿ Xe lăn</Text>
-                        </View>
-                     )}
-                     {restaurant.tags.smoking === 'no' && (
-                        <View style={[styles.amenityTag, styles.redTag]}>
-                           <Text style={[styles.amenityText, styles.redText]}>
-                              🚭 Không hút thuốc
-                           </Text>
-                        </View>
-                     )}
-                     {restaurant.tags.indoor_seating === 'yes' && (
-                        <View style={[styles.amenityTag, styles.purpleTag]}>
-                           <Text style={[styles.amenityText, styles.purpleText]}>
-                              🏠 Chỗ ngồi trong nhà
-                           </Text>
-                        </View>
-                     )}
-                     {restaurant.tags.outdoor_seating === 'yes' && (
-                        <View style={[styles.amenityTag, styles.yellowTag]}>
-                           <Text style={[styles.amenityText, styles.yellowText]}>
-                              🌤️ Chỗ ngồi ngoài trời
-                           </Text>
-                        </View>
-                     )}
-                  </View>
-               </View>
-
                {/* Contact Information */}
                {(restaurant.tags.phone || restaurant.tags.website) && (
                   <View style={styles.contactSection}>
-                     <Text style={styles.infoLabel}>📞 Liên hệ</Text>
                      {restaurant.tags.phone && (
                         <TouchableOpacity onPress={handleCall} style={styles.contactButton}>
-                           <Text style={styles.contactIcon}>📞</Text>
+                           <MaterialCommunityIcons name="phone" size={20} color="#16a34a" style={styles.contactIcon} />
                            <Text style={styles.contactText}>{restaurant.tags.phone}</Text>
                         </TouchableOpacity>
                      )}
                      {restaurant.tags.website && (
                         <TouchableOpacity onPress={handleWebsite} style={styles.websiteButton}>
-                           <Text style={styles.websiteIcon}>🌐</Text>
-                           <Text style={styles.websiteText} numberOfLines={1}>
-                              Website
-                           </Text>
+                           <MaterialCommunityIcons name="web" size={20} color="#2563eb" style={styles.websiteIcon} />
+                           <Text style={styles.websiteText} numberOfLines={1}>Website</Text>
                         </TouchableOpacity>
                      )}
                   </View>
@@ -183,7 +139,8 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
             {/* Action Buttons */}
             <View style={styles.actionContainer}>
                <TouchableOpacity onPress={handleDirections} style={styles.directionsButton}>
-                  <Text style={styles.directionsText}>🗺️ Chỉ đường</Text>
+                  <MaterialCommunityIcons name="map" size={20} color="#ffffff" style={{ marginRight: 8 }} />
+                  <Text style={styles.directionsText}>Chỉ đường</Text>
                </TouchableOpacity>
             </View>
          </View>
