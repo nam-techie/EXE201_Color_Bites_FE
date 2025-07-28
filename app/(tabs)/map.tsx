@@ -1,579 +1,327 @@
-'use client'
+"use client"
+import FilterButtons from "@/components/common/FilterButtons"
+import RestaurantDetailModal from "@/components/common/RestaurantDetailModal"
+import RestaurantSearchBar from "@/components/common/SearchBar"
+import CustomMarker from "@/components/map/CustomMapMarker"
+import RouteProfileSelector from "@/components/map/RouteProfileSelector"
+import { getDirections } from "@/services/DirectionService"
+import { fetchRestaurantsNearby } from "@/services/MapService"
+import type { MapRegion, Restaurant } from "@/type/location"
+import { Ionicons } from "@expo/vector-icons"
+import * as Location from "expo-location"
+import { useEffect, useMemo, useState } from "react"
+import { Alert, StyleSheet, Text, TouchableOpacity, View } from "react-native"
+import MapView, { Polyline } from "react-native-maps"
 
-import { mockMapLocations } from '@/data/mockData'
-import { Ionicons } from '@expo/vector-icons'
-import { Image } from 'expo-image'
-import * as Location from 'expo-location'
-import { useEffect, useState } from 'react'
-import {
-   Alert,
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View,
-} from 'react-native'
-import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps'
-
-interface LocationData {
-   latitude: number
-   longitude: number
-   latitudeDelta: number
-   longitudeDelta: number
+interface RouteStop {
+  restaurant: Restaurant
 }
 
 export default function MapScreen() {
-   const [selectedLocation, setSelectedLocation] = useState<string | null>(null)
-   const [viewMode, setViewMode] = useState<'map' | 'list'>('map')
-   const [locationPermission, setLocationPermission] = useState(false)
-   const [locationReady, setLocationReady] = useState(false)
-   const [currentLocation, setCurrentLocation] = useState<LocationData>({
-      latitude: 10.8231, // fallback default: HCM
-      longitude: 106.6297,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-   })
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([])
+  const [loading, setLoading] = useState(true)
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [selectedFilter, setSelectedFilter] = useState("all")
+  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null)
+  const [mapRegion, setMapRegion] = useState<MapRegion>({
+    latitude: 0,
+    longitude: 0,
+    latitudeDelta: 0.08,
+    longitudeDelta: 0.08,
+  })
 
-   useEffect(() => {
-      getCurrentLocation()
-   }, [])
+  const [routePlanningMode, setRoutePlanningMode] = useState(false)
+  const [selectedProfile, setSelectedProfile] = useState("cycling-regular")
+  const [routeStops, setRouteStops] = useState<RouteStop[]>([])
+  const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
+  const [showProfileSelector, setShowProfileSelector] = useState(false)
 
-   const getCurrentLocation = async () => {
-      try {
-         const { status } = await Location.requestForegroundPermissionsAsync()
-         if (status !== 'granted') {
-            Alert.alert(
-               'Permission Denied',
-               'Location permission is required to show your current location',
-            )
-            return
-         }
-
-         setLocationPermission(true)
-         const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-         })
-
-         setCurrentLocation({
-            latitude: location.coords.latitude,
-            longitude: location.coords.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-         })
-         setLocationReady(true)
-      } catch (error) {
-         console.error('Error getting location:', error)
-         Alert.alert('Error', 'Could not get your current location')
+  const getCurrentUserLocation = async (): Promise<Location.LocationObject | null> => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      if (status !== "granted") {
+        Alert.alert("Thông báo", "Cần quyền truy cập vị trí để hiển thị vị trí hiện tại")
+        return null
       }
-   }
+      const location = await Location.getCurrentPositionAsync({})
+      return location
+    } catch (error) {
+      console.log("Lỗi khi lấy vị trí:", error)
+      return null
+    }
+  }
 
-   const handleMarkerPress = (locationId: string) => {
-      setSelectedLocation(locationId)
-   }
+  const calculateRouteForStops = async (stops: RouteStop[]) => {
+    if (stops.length < 2 || !userLocation) return
 
-   const selectedLocationData = mockMapLocations.find((loc) => loc.id === selectedLocation)
+    const allCoordinates: { latitude: number; longitude: number }[] = []
 
-   return (
-      <SafeAreaView style={styles.container}>
-         {/* Header */}
-         <View style={styles.header}>
-            <View style={styles.headerContent}>
-               <Text style={styles.headerTitle}>Food Journey Map</Text>
-               <View style={styles.headerActions}>
-                  <TouchableOpacity style={styles.filterButton}>
-                     <Ionicons name="filter-outline" size={16} color="#6B7280" />
-                     <Text style={styles.filterButtonText}>Filter</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.shareButton}>
-                     <Ionicons name="share-outline" size={16} color="#6B7280" />
-                  </TouchableOpacity>
-               </View>
-            </View>
-         </View>
+    for (let i = 0; i < stops.length; i++) {
+      const origin =
+        i === 0
+          ? { lat: userLocation.coords.latitude, lon: userLocation.coords.longitude }
+          : { lat: stops[i - 1].restaurant.lat, lon: stops[i - 1].restaurant.lon }
 
-         {/* View Mode Toggle */}
-         <View style={styles.toggleContainer}>
-            <View style={styles.toggleButtons}>
-               <TouchableOpacity
-                  onPress={() => setViewMode('map')}
-                  style={[styles.toggleButton, viewMode === 'map' && styles.activeToggleButton]}
-               >
-                  <Text
-                     style={[
-                        styles.toggleButtonText,
-                        viewMode === 'map' && styles.activeToggleButtonText,
-                     ]}
-                  >
-                     Map View
-                  </Text>
-               </TouchableOpacity>
-               <TouchableOpacity
-                  onPress={() => setViewMode('list')}
-                  style={[styles.toggleButton, viewMode === 'list' && styles.activeToggleButton]}
-               >
-                  <Text
-                     style={[
-                        styles.toggleButtonText,
-                        viewMode === 'list' && styles.activeToggleButtonText,
-                     ]}
-                  >
-                     List View
-                  </Text>
-               </TouchableOpacity>
-            </View>
-         </View>
+      const destination = { lat: stops[i].restaurant.lat, lon: stops[i].restaurant.lon }
 
-         {/* Main Content */}
-         {viewMode === 'map' ? (
-            <View style={styles.mapContainer}>
-               {locationReady ? (
-                  <MapView
-                     style={styles.map}
-                     provider={PROVIDER_DEFAULT}
-                     initialRegion={currentLocation}
-                     showsUserLocation={locationPermission}
-                     showsMyLocationButton
-                     onPress={() => setSelectedLocation(null)}
-                     mapType="standard"
-                  >
-                     {/* Markers */}
-                     {mockMapLocations.map((location) => (
-                        <Marker
-                           key={location.id}
-                           coordinate={{
-                              latitude: location.latitude,
-                              longitude: location.longitude,
-                           }}
-                           onPress={() => handleMarkerPress(location.id)}
-                        >
-                           <View style={styles.markerContainer}>
-                              <View style={styles.marker}>
-                                 <Ionicons name="restaurant" size={20} color="white" />
-                                 <View style={styles.markerBadge}>
-                                    <Text style={styles.markerBadgeText}>{location.posts}</Text>
-                                 </View>
-                              </View>
-                           </View>
-                        </Marker>
-                     ))}
-                  </MapView>
-               ) : (
-                  <View style={styles.loadingContainer}>
-                     <Text style={styles.loadingText}>Loading map...</Text>
-                  </View>
-               )}
+      try {
+        const directions = await getDirections(origin, destination, selectedProfile)
+        if (!directions || !directions.geometry) continue
 
-               {/* Location Info */}
-               {selectedLocationData && (
-                  <View style={styles.locationInfoContainer}>
-                     <View style={styles.locationInfo}>
-                        <TouchableOpacity
-                           style={styles.closeButton}
-                           onPress={() => setSelectedLocation(null)}
-                        >
-                           <Ionicons name="close" size={20} color="#6b7280" />
-                        </TouchableOpacity>
-                        <View style={styles.locationContent}>
-                           <View style={styles.locationDetails}>
-                              <Text style={styles.locationName}>{selectedLocationData.name}</Text>
-                              <Text style={styles.locationAddress}>
-                                 {selectedLocationData.address}
-                              </Text>
-                              <View style={styles.locationMeta}>
-                                 <View style={styles.postsCount}>
-                                    <Text style={styles.postsCountText}>
-                                       {selectedLocationData.posts} posts
-                                    </Text>
-                                 </View>
-                                 <View style={styles.rating}>
-                                    <Ionicons name="star" size={16} color="#FCD34D" />
-                                    <Text style={styles.ratingText}>
-                                       {selectedLocationData.rating}
-                                    </Text>
-                                 </View>
-                              </View>
-                              <Text style={styles.locationDescription}>
-                                 {selectedLocationData.description}
-                              </Text>
-                              <View style={styles.actionButtons}>
-                                 <TouchableOpacity style={styles.actionButton}>
-                                    <Ionicons name="navigate" size={16} color="#f97316" />
-                                    <Text style={styles.actionButtonText}>Directions</Text>
-                                 </TouchableOpacity>
-                                 <TouchableOpacity style={styles.actionButton}>
-                                    <Ionicons name="call" size={16} color="#f97316" />
-                                    <Text style={styles.actionButtonText}>Call</Text>
-                                 </TouchableOpacity>
-                                 <TouchableOpacity style={styles.actionButton}>
-                                    <Ionicons name="bookmark-outline" size={16} color="#f97316" />
-                                    <Text style={styles.actionButtonText}>Save</Text>
-                                 </TouchableOpacity>
-                              </View>
-                           </View>
-                           <Image
-                              source={{ uri: selectedLocationData.image }}
-                              style={styles.locationImage}
-                              contentFit="cover"
-                           />
-                        </View>
-                     </View>
-                  </View>
-               )}
+        const routeCoords = directions.geometry.map(([lon, lat]) => ({
+          latitude: lat,
+          longitude: lon,
+        }))
 
-               {/* Map Controls */}
-               <View style={styles.mapControls}>
-                  <TouchableOpacity style={styles.locateButton} onPress={getCurrentLocation}>
-                     <Ionicons name="locate-outline" size={24} color="#f97316" />
-                  </TouchableOpacity>
-               </View>
-            </View>
-         ) : (
-            <ScrollView style={styles.listContainer} contentContainerStyle={styles.listContent}>
-               {/* List view */}
-               {mockMapLocations.map((location) => (
-                  <TouchableOpacity
-                     key={location.id}
-                     onPress={() => setSelectedLocation(location.id)}
-                     style={styles.listItem}
-                  >
-                     <Image
-                        source={{ uri: location.image }}
-                        style={styles.listItemImage}
-                        contentFit="cover"
-                     />
-                     <View style={styles.listItemContent}>
-                        <Text style={styles.listItemName}>{location.name}</Text>
-                        <Text style={styles.listItemAddress}>{location.address}</Text>
-                        <View style={styles.listItemMeta}>
-                           <View style={styles.listItemPosts}>
-                              <Text style={styles.listItemPostsText}>{location.posts} posts</Text>
-                           </View>
-                           <View style={styles.listItemRating}>
-                              <Ionicons name="star" size={16} color="#FCD34D" />
-                              <Text style={styles.listItemRatingText}>{location.rating}</Text>
-                           </View>
-                        </View>
-                        <Text style={styles.listItemDescription}>{location.description}</Text>
-                     </View>
-                  </TouchableOpacity>
-               ))}
-            </ScrollView>
-         )}
-      </SafeAreaView>
-   )
+        if (routeCoords.length > 0) allCoordinates.push(...routeCoords)
+      } catch (error) {
+        console.error("Lỗi khi lấy route:", error)
+      }
+    }
+
+    setRouteCoordinates(allCoordinates)
+  }
+
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      try {
+        const location = await getCurrentUserLocation()
+        if (!location) return
+        setUserLocation(location)
+        const { latitude, longitude } = location.coords
+        setMapRegion({
+          latitude,
+          longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        })
+        const data = await fetchRestaurantsNearby(latitude, longitude)
+        setRestaurants(data)
+      } catch (error) {
+        Alert.alert("Lỗi", "Không thể tải dữ liệu hoặc vị trí")
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchInitialData()
+  }, [])
+
+  useEffect(() => {
+    if (routeStops.length > 0) {
+      calculateRouteForStops(routeStops)
+    }
+  }, [selectedProfile])
+
+  const getResponsiveStrokeWidth = () => {
+    const zoom = mapRegion.latitudeDelta
+    if (zoom < 0.01) return 8
+    if (zoom < 0.03) return 6
+    if (zoom < 0.08) return 4
+    return 2
+  }
+
+  const filteredRestaurants = useMemo(() => {
+    let filtered = restaurants
+    if (searchQuery.trim()) {
+      filtered = filtered.filter(
+        (restaurant) =>
+          restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (restaurant.tags.cuisine && restaurant.tags.cuisine.toLowerCase().includes(searchQuery.toLowerCase())),
+      )
+    }
+    if (selectedFilter !== "all") {
+      if (selectedFilter === "vegetarian") {
+        filtered = filtered.filter(
+          (restaurant) =>
+            restaurant.tags["diet:vegetarian"] === "yes" ||
+            restaurant.tags["diet:vegetarian"] === "only" ||
+            restaurant.tags["diet:vegan"] === "yes" ||
+            restaurant.tags["diet:vegan"] === "only",
+        )
+      } else {
+        filtered = filtered.filter(
+          (restaurant) => restaurant.tags.cuisine && restaurant.tags.cuisine.includes(selectedFilter),
+        )
+      }
+    }
+    return filtered
+  }, [restaurants, searchQuery, selectedFilter])
+
+  const handleMarkerPress = (restaurant: Restaurant) => {
+    if (routePlanningMode) {
+      const isAlreadyAdded = routeStops.some((stop) => stop.restaurant.id === restaurant.id)
+      if (!isAlreadyAdded) {
+        const newStops = [...routeStops, { restaurant }]
+        setRouteStops(newStops)
+        calculateRouteForStops(newStops)
+      }
+    } else {
+      setSelectedRestaurant(restaurant)
+      setModalVisible(true)
+    }
+  }
+
+  const handleMyLocation = async () => {
+    const location = await getCurrentUserLocation()
+    if (location) {
+      setUserLocation(location)
+      const { latitude, longitude } = location.coords
+      setMapRegion({
+        latitude,
+        longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      })
+    }
+  }
+
+  const toggleRoutePlanning = () => {
+    setRoutePlanningMode(!routePlanningMode)
+    setShowProfileSelector(!routePlanningMode)
+    if (routePlanningMode) {
+      setRouteStops([])
+      setRouteCoordinates([])
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      <MapView
+        style={styles.map}
+        region={mapRegion}
+        onRegionChangeComplete={setMapRegion}
+        showsUserLocation={true}
+        showsMyLocationButton={false}
+        showsCompass={true}
+        showsScale={true}
+      >
+        {filteredRestaurants.map((restaurant) => (
+          <CustomMarker
+            key={restaurant.id}
+            restaurant={restaurant}
+            onPress={handleMarkerPress}
+            isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
+          />
+        ))}
+
+        {routeCoordinates.length > 0 && (
+          <Polyline
+            coordinates={routeCoordinates}
+            strokeColor="#3B82F6"
+            strokeWidth={getResponsiveStrokeWidth()}
+          />
+        )}
+      </MapView>
+
+      <RestaurantSearchBar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onClearSearch={() => setSearchQuery("")}
+      />
+
+      <FilterButtons selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
+
+      <RouteProfileSelector
+
+        selectedProfile={selectedProfile}
+        onProfileChange={setSelectedProfile}
+        visible={showProfileSelector}
+      />
+
+      <TouchableOpacity
+        onPress={toggleRoutePlanning}
+        style={[styles.routePlanningButton, routePlanningMode && styles.routePlanningButtonActive]}
+      >
+        <Ionicons
+          name={routePlanningMode ? "close" : "map"}
+          size={24}
+          color={routePlanningMode ? "#EF4444" : "white"}
+        />
+      </TouchableOpacity>
+
+      {routePlanningMode && (
+        <TouchableOpacity
+          onPress={() => setShowProfileSelector(!showProfileSelector)}
+          style={styles.profileSelectorButton}
+        >
+          <Ionicons name="options" size={24} color="white" />
+        </TouchableOpacity>
+      )}
+
+      <TouchableOpacity onPress={handleMyLocation} style={styles.locationButton}>
+        <Ionicons name="location-sharp" size={24} color="white" />
+      </TouchableOpacity>
+
+      {!routePlanningMode && (
+        <View style={styles.counterContainer}>
+          <Text style={styles.counterText}>{filteredRestaurants.length} nhà hàng được tìm thấy</Text>
+        </View>
+      )}
+
+      <RestaurantDetailModal
+        restaurant={selectedRestaurant}
+        visible={modalVisible}
+        onClose={() => {
+          setModalVisible(false)
+          setSelectedRestaurant(null)
+        }}
+      />
+    </View>
+  )
 }
 
 const styles = StyleSheet.create({
-   container: {
-      flex: 1,
-      backgroundColor: '#F9FAFB',
-   },
-   header: {
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-      backgroundColor: '#FFFFFF',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-   },
-   headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-   },
-   headerTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#111827',
-   },
-   headerActions: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   filterButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      marginRight: 8,
-   },
-   filterButtonText: {
-      marginLeft: 4,
-      fontSize: 14,
-      color: '#4B5563',
-   },
-   shareButton: {
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-      padding: 8,
-   },
-   toggleContainer: {
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-      backgroundColor: '#FFFFFF',
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-   },
-   toggleButtons: {
-      flexDirection: 'row',
-   },
-   toggleButton: {
-      borderRadius: 8,
-      paddingHorizontal: 12,
-      paddingVertical: 4,
-      backgroundColor: '#F3F4F6',
-      marginRight: 8,
-   },
-   activeToggleButton: {
-      backgroundColor: '#F97316',
-   },
-   toggleButtonText: {
-      fontSize: 14,
-      color: '#4B5563',
-   },
-   activeToggleButtonText: {
-      color: '#FFFFFF',
-   },
-   mapContainer: {
-      position: 'relative',
-      flex: 1,
-   },
-   map: {
-      flex: 1,
-   },
-   loadingContainer: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-   },
-   loadingText: {
-      color: '#6B7280',
-   },
-   markerContainer: {
-      alignItems: 'center',
-   },
-   marker: {
-      position: 'relative',
-      borderRadius: 20,
-      borderWidth: 2,
-      borderColor: '#FFFFFF',
-      backgroundColor: '#F97316',
-      padding: 8,
-      shadowColor: '#000',
-      shadowOffset: {
-         width: 0,
-         height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
-   },
-   markerBadge: {
-      position: 'absolute',
-      right: -4,
-      top: -4,
-      height: 20,
-      minWidth: 20,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderRadius: 10,
-      borderWidth: 2,
-      borderColor: '#FFFFFF',
-      backgroundColor: '#EF4444',
-   },
-   markerBadgeText: {
-      fontSize: 12,
-      fontWeight: 'bold',
-      color: '#FFFFFF',
-   },
-   locationInfoContainer: {
-      position: 'absolute',
-      bottom: 16,
-      left: 16,
-      right: 16,
-   },
-   locationInfo: {
-      position: 'relative',
-      borderRadius: 12,
-      backgroundColor: '#FFFFFF',
-      padding: 16,
-      shadowColor: '#000',
-      shadowOffset: {
-         width: 0,
-         height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
-   },
-   closeButton: {
-      position: 'absolute',
-      right: 12,
-      top: 12,
-      zIndex: 10,
-      padding: 4,
-   },
-   locationContent: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-   },
-   locationDetails: {
-      flex: 1,
-      paddingRight: 12,
-   },
-   locationName: {
-      marginBottom: 4,
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#111827',
-   },
-   locationAddress: {
-      marginBottom: 8,
-      fontSize: 14,
-      color: '#4B5563',
-   },
-   locationMeta: {
-      marginBottom: 8,
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   postsCount: {
-      borderRadius: 4,
-      backgroundColor: '#F3F4F6',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      marginRight: 8,
-   },
-   postsCountText: {
-      fontSize: 12,
-      color: '#111827',
-   },
-   rating: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   ratingText: {
-      marginLeft: 4,
-      fontSize: 14,
-      color: '#111827',
-   },
-   locationDescription: {
-      marginBottom: 12,
-      fontSize: 14,
-      color: '#374151',
-   },
-   actionButtons: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-   },
-   actionButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#FED7AA',
-      backgroundColor: '#FFF7ED',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-   },
-   actionButtonText: {
-      marginLeft: 4,
-      fontSize: 12,
-      fontWeight: '500',
-      color: '#EA580C',
-   },
-   locationImage: {
-      height: 80,
-      width: 80,
-      borderRadius: 8,
-   },
-   mapControls: {
-      position: 'absolute',
-      right: 16,
-      top: 16,
-   },
-   locateButton: {
-      marginBottom: 8,
-      borderRadius: 8,
-      backgroundColor: '#FFFFFF',
-      padding: 12,
-      shadowColor: '#000',
-      shadowOffset: {
-         width: 0,
-         height: 4,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 8,
-      elevation: 8,
-   },
-   listContainer: {
-      flex: 1,
-      backgroundColor: '#FFFFFF',
-   },
-   listContent: {
-      paddingHorizontal: 16,
-      paddingVertical: 8,
-   },
-   listItem: {
-      marginBottom: 16,
-      flexDirection: 'row',
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-      backgroundColor: '#F9FAFB',
-      padding: 12,
-   },
-   listItemImage: {
-      height: 96,
-      width: 96,
-      borderRadius: 8,
-   },
-   listItemContent: {
-      flex: 1,
-      paddingHorizontal: 12,
-   },
-   listItemName: {
-      marginBottom: 4,
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#111827',
-   },
-   listItemAddress: {
-      marginBottom: 8,
-      fontSize: 14,
-      color: '#4B5563',
-   },
-   listItemMeta: {
-      marginBottom: 8,
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   listItemPosts: {
-      borderRadius: 4,
-      backgroundColor: '#F3F4F6',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-      marginRight: 8,
-   },
-   listItemPostsText: {
-      fontSize: 12,
-      color: '#111827',
-   },
-   listItemRating: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   listItemRatingText: {
-      marginLeft: 4,
-      fontSize: 14,
-      color: '#111827',
-   },
-   listItemDescription: {
-      fontSize: 14,
-      color: '#374151',
-   },
+  container: { flex: 1 },
+  map: { flex: 1 },
+  routePlanningButton: {
+    position: "absolute",
+    bottom: 140,
+    right: 16,
+    width: 48,
+    height: 48,
+    backgroundColor: "#3B82F6",
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  routePlanningButtonActive: {
+    backgroundColor: "#FEE2E2",
+  },
+  profileSelectorButton: {
+    position: "absolute",
+    bottom: 200,
+    right: 16,
+    width: 48,
+    height: 48,
+    backgroundColor: "#10B981",
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  locationButton: {
+    position: "absolute",
+    bottom: 80,
+    right: 16,
+    width: 48,
+    height: 48,
+    backgroundColor: "#3B82F6",
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  counterContainer: {
+    position: "absolute",
+    bottom: 16,
+    left: 16,
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  counterText: {
+    color: "#374151",
+    fontWeight: "500",
+  },
 })
