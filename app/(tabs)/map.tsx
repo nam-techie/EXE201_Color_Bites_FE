@@ -10,14 +10,52 @@ import { fetchRestaurantsNearby } from '@/services/MapService'
 import type { MapRegion, Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
-import { useEffect, useMemo, useState } from 'react'
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Alert,
+  Animated,
+  GestureResponderEvent,
+  PanResponder,
+  PanResponderGestureState,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
 
 interface RouteStop {
   restaurant: Restaurant
   distance?: number
   duration?: number
+}
+
+const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
+  const scale = useRef(new Animated.Value(1)).current
+
+  const handlePressIn = () => {
+    Animated.timing(scale, {
+      toValue: 0.92,
+      duration: 100,
+      useNativeDriver: true,
+    }).start()
+  }
+
+  const handlePressOut = () => {
+    Animated.timing(scale, {
+      toValue: 1,
+      duration: 100,
+      useNativeDriver: true,
+    }).start()
+  }
+
+  return (
+    <Pressable onPress={onPress} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Animated.View style={[style, { transform: [{ scale }] }]}>
+        <Ionicons name={iconName} size={24} color={iconColor} />
+      </Animated.View>
+    </Pressable>
+  )
 }
 
 export default function MapScreen() {
@@ -34,14 +72,39 @@ export default function MapScreen() {
     latitudeDelta: 0.08,
     longitudeDelta: 0.08,
   })
-
   const [routePlanningMode, setRoutePlanningMode] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState('cycling-regular')
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
-  const [routeCoordinates, setRouteCoordinates] = useState<
-    { latitude: number; longitude: number }[]
-  >([])
+  const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
+
+  const panelY = useRef(new Animated.Value(0)).current
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_evt: GestureResponderEvent, gestureState: PanResponderGestureState) => {
+        return Math.abs(gestureState.dy) > 10
+      },
+      onPanResponderMove: (_evt, gestureState) => {
+        const newY = Math.max(0, gestureState.dy)
+        panelY.setValue(newY)
+      },
+      onPanResponderRelease: (_evt, gestureState) => {
+        if (gestureState.dy > 100) {
+          Animated.timing(panelY, {
+            toValue: 300,
+            duration: 200,
+            useNativeDriver: true,
+          }).start()
+        } else {
+          Animated.timing(panelY, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+          }).start()
+        }
+      },
+    })
+  ).current
 
   const getCurrentUserLocation = async (): Promise<Location.LocationObject | null> => {
     try {
@@ -254,46 +317,68 @@ export default function MapScreen() {
         visible={showProfileSelector}
       />
 
-      <TouchableOpacity
+      <ScaleButton
         onPress={toggleRoutePlanning}
-        style={[
-          styles.routePlanningButton,
-          routePlanningMode && styles.routePlanningButtonActive,
-        ]}
-      >
-        <Ionicons
-          name={routePlanningMode ? 'close' : 'map'}
-          size={24}
-          color={routePlanningMode ? '#EF4444' : 'white'}
-        />
-      </TouchableOpacity>
+        iconName={routePlanningMode ? 'close' : 'map'}
+        iconColor={routePlanningMode ? '#EF4444' : 'white'}
+        style={[styles.routePlanningButton, routePlanningMode && styles.routePlanningButtonActive]}
+      />
 
       {routePlanningMode && (
         <>
-          <TouchableOpacity
+          <ScaleButton
             onPress={() => setShowProfileSelector(!showProfileSelector)}
+            iconName="options"
+            iconColor="white"
             style={styles.profileSelectorButton}
-          >
-            <Ionicons name="options" size={24} color="white" />
-          </TouchableOpacity>
+          />
 
-          <RoutePlanningPanel
-            routeStops={routeStops}
-            onRemoveStop={handleRemoveStop}
-            onClearRoute={() => {
-              setRouteStops([])
-              setRouteCoordinates([])
+          <Animated.View
+            {...panResponder.panHandlers}
+            style={[
+              {
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                transform: [{ translateY: panelY }],
+                zIndex: 20,
+              },
+            ]}
+          >
+            <RoutePlanningPanel
+              routeStops={routeStops}
+              onRemoveStop={handleRemoveStop}
+              onClearRoute={() => {
+                setRouteStops([])
+                setRouteCoordinates([])
+              }}
+              visible={true}
+              selectedProfile={selectedProfile}
+            />
+          </Animated.View>
+
+          <ScaleButton
+            onPress={() => {
+              Animated.timing(panelY, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+              }).start()
             }}
-            onOptimizeRoute={() => { }}
-            visible={routePlanningMode}
-            selectedProfile={selectedProfile}
+            iconName="chevron-up"
+            iconColor="white"
+            style={[styles.routePlanningButton, { bottom: 140 }]}
           />
         </>
       )}
 
-      <TouchableOpacity onPress={handleMyLocation} style={styles.locationButton}>
-        <Ionicons name="location-sharp" size={24} color="white" />
-      </TouchableOpacity>
+      <ScaleButton
+        onPress={handleMyLocation}
+        iconName="location-sharp"
+        iconColor="white"
+        style={styles.locationButton}
+      />
 
       {!routePlanningMode && (
         <View style={styles.counterContainer}>
