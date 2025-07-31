@@ -56,15 +56,7 @@ export default function WelcomeScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
          >
-            {/* Header */}
-            <View style={styles.header}>
-               <TouchableOpacity 
-                  style={styles.backButton}
-                  onPress={() => router.back()}
-               >
-                  <Ionicons name="arrow-back" size={24} color="#000" />
-               </TouchableOpacity>
-            </View>
+
 
             {/* Main Content */}
             <Animated.View 
@@ -160,19 +152,7 @@ const styles = StyleSheet.create({
    gradient: {
       flex: 1,
    },
-   header: {
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 20,
-   },
-   backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      justifyContent: 'center',
-      alignItems: 'center',
-   },
+
    content: {
       flex: 1,
       paddingHorizontal: 40,

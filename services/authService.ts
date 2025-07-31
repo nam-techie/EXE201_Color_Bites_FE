@@ -10,15 +10,17 @@ export interface ResponseDto<T> {
 
 export interface AccountResponse {
   id: string
-  username: string
+  userName: string  // BE uses 'userName' (capital N)
   email: string
   avatar?: string
-  accessToken: string
-  refreshToken: string
+  token: string  // BE uses 'token' instead of 'accessToken'
+  refreshToken?: string  // Make optional in case BE doesn't return it
+  active?: boolean
+  role?: string
 }
 
 export interface LoginRequest {
-  email: string
+  username: string
   password: string
 }
 
@@ -66,18 +68,29 @@ class AuthService {
     try {
       const response = await apiService.post<ResponseDto<AccountResponse>>('/api/auth/login', credentials)
       
+      // Check if login was successful (status 200 means success from BE)
       if (response.status === 200 && response.data) {
+        // Validate that token exists before storing
+        if (!response.data.token) {
+          throw new Error('Token không hợp lệ từ server')
+        }
+        
         // Store tokens
-        await AsyncStorage.setItem('auth_token', response.data.accessToken)
-        await AsyncStorage.setItem('refresh_token', response.data.refreshToken)
+        await AsyncStorage.setItem('auth_token', response.data.token)
+        if (response.data.refreshToken) {
+          await AsyncStorage.setItem('refresh_token', response.data.refreshToken)
+        }
         
         // Store user data
         await AsyncStorage.setItem('user_data', JSON.stringify({
           id: response.data.id,
-          username: response.data.username,
+          username: response.data.userName,  // Map userName to username for consistency
           email: response.data.email,
           avatar: response.data.avatar
         }))
+      } else {
+        // If status is not 200, throw error with BE message
+        throw new Error(response.message || 'Đăng nhập thất bại')
       }
       
       return response

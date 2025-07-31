@@ -8,27 +8,37 @@ import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableO
 import { authService } from '../../services/authService'
 
 export default function LoginScreen() {
-   const [email, setEmail] = useState('')
+   const [username, setUsername] = useState('')
    const [password, setPassword] = useState('')
    const [isLoading, setIsLoading] = useState(false)
    const [showPassword, setShowPassword] = useState(false)
 
    const handleLogin = async () => {
-      if (!email || !password) {
+      if (!username || !password) {
          Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin')
          return
       }
 
       setIsLoading(true)
       try {
-         const response = await authService.login({ email, password })
-         console.log('✅ Login successful:', response.data?.username)
-         Alert.alert('Thành công', `Chào mừng ${response.data?.username}!`)
+         const response = await authService.login({ username, password })
+         console.log('✅ Login successful:', response.data?.userName)
+         Alert.alert('Thành công', `Chào mừng ${response.data?.userName}!`)
          router.replace('/(tabs)')
       } catch (error: any) {
          console.error('❌ Login failed:', error)
-         const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại. Vui lòng thử lại.'
-         Alert.alert('Lỗi', errorMessage)
+         // Handle different error types
+         let errorMessage = 'Đăng nhập thất bại. Vui lòng thử lại.'
+         
+         if (error.response?.data?.message) {
+            // API error response from BE
+            errorMessage = error.response.data.message
+         } else if (error.message) {
+            // Custom error from authService
+            errorMessage = error.message
+         }
+         
+         Alert.alert('Lỗi đăng nhập', errorMessage)
       } finally {
          setIsLoading(false)
       }
@@ -66,16 +76,15 @@ export default function LoginScreen() {
                
                {/* Form */}
                <View style={styles.form}>
-                  {/* Email */}
+                  {/* Username */}
                   <View style={styles.inputContainer}>
-                     <Text style={styles.inputLabel}>Email</Text>
+                     <Text style={styles.inputLabel}>Tên đăng nhập</Text>
                      <TextInput
                         style={styles.input}
-                        value={email}
-                        onChangeText={setEmail}
-                        placeholder="Nhập email của bạn"
+                        value={username}
+                        onChangeText={setUsername}
+                        placeholder="Nhập tên đăng nhập"
                         placeholderTextColor="#999"
-                        keyboardType="email-address"
                         autoCapitalize="none"
                      />
                   </View>
@@ -116,13 +125,13 @@ export default function LoginScreen() {
 
                {/* Login Button */}
                <TouchableOpacity 
-                  style={[styles.loginButton, (!email || !password || isLoading) && styles.loginButtonDisabled]}
+                  style={[styles.loginButton, (!username || !password || isLoading) && styles.loginButtonDisabled]}
                   onPress={handleLogin}
-                  disabled={!email || !password || isLoading}
+                  disabled={!username || !password || isLoading}
                   activeOpacity={0.8}
                >
                   <Ionicons name="log-in" size={20} color="#FFF" style={styles.buttonIcon} />
-                  <Text style={[styles.loginButtonText, (!email || !password || isLoading) && styles.loginButtonTextDisabled]}>
+                  <Text style={[styles.loginButtonText, (!username || !password || isLoading) && styles.loginButtonTextDisabled]}>
                      {isLoading ? 'Đang xử lý...' : 'Đăng Nhập'}
                   </Text>
                </TouchableOpacity>
