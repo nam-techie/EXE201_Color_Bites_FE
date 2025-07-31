@@ -1,9 +1,11 @@
 'use client'
 
+import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { useState } from 'react'
 import {
+   Alert,
    Dimensions,
    SafeAreaView,
    ScrollView,
@@ -34,6 +36,29 @@ const userPosts = [
 
 export default function ProfileScreen() {
    const [activeTab, setActiveTab] = useState('posts')
+   const { user, logout } = useAuth()
+
+   const handleLogout = async () => {
+      Alert.alert(
+         'Logout',
+         'Are you sure you want to logout?',
+         [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+               text: 'Logout', 
+               style: 'destructive',
+               onPress: async () => {
+                  try {
+                     await logout()
+                     console.log('Logout successful')
+                  } catch (error) {
+                     console.error('Logout error:', error)
+                  }
+               }
+            }
+         ]
+      )
+   }
 
    return (
       <SafeAreaView style={styles.container}>
@@ -41,14 +66,15 @@ export default function ProfileScreen() {
          <View style={styles.header}>
             <View style={styles.headerContent}>
                <Text style={styles.headerTitle}>Profile</Text>
-               <View style={styles.headerActions}>
-                  <TouchableOpacity style={styles.headerButton}>
-                     <Ionicons name="share-outline" size={16} color="#6B7280" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.headerButton}>
-                     <Ionicons name="settings-outline" size={16} color="#6B7280" />
-                  </TouchableOpacity>
-               </View>
+                               <View style={styles.headerActions}>
+                   <TouchableOpacity style={styles.headerButton}>
+                      <Ionicons name="share-outline" size={16} color="#6B7280" />
+                   </TouchableOpacity>
+                   <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                      <Ionicons name="log-out-outline" size={16} color="#DC2626" />
+                      <Text style={styles.logoutText}>Logout</Text>
+                   </TouchableOpacity>
+                </View>
             </View>
          </View>
 
@@ -89,9 +115,24 @@ export default function ProfileScreen() {
                   </View>
                </View>
 
-               <TouchableOpacity style={styles.editProfileButton}>
-                  <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-               </TouchableOpacity>
+                               <TouchableOpacity style={styles.editProfileButton}>
+                   <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+                </TouchableOpacity>
+                
+                {/* Test Logout Button */}
+                <TouchableOpacity 
+                   style={[styles.editProfileButton, { backgroundColor: '#DC2626', marginTop: 8 }]}
+                   onPress={async () => {
+                      try {
+                         await logout()
+                         console.log('Direct logout successful')
+                      } catch (error) {
+                         console.error('Direct logout error:', error)
+                      }
+                   }}
+                >
+                   <Text style={styles.editProfileButtonText}>Test Logout</Text>
+                </TouchableOpacity>
             </View>
 
             {/* Premium Analytics */}
@@ -471,8 +512,25 @@ const styles = StyleSheet.create({
       paddingHorizontal: 8,
       paddingVertical: 4,
    },
-   placeRatingText: {
-      fontSize: 12,
-      color: '#111827',
-   },
-})
+       placeRatingText: {
+       fontSize: 12,
+       color: '#111827',
+    },
+    logoutButton: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       borderRadius: 8,
+       borderWidth: 1,
+       borderColor: '#DC2626',
+       backgroundColor: '#FEF2F2',
+       paddingHorizontal: 12,
+       paddingVertical: 8,
+       marginLeft: 8,
+    },
+    logoutText: {
+       marginLeft: 4,
+       fontSize: 14,
+       fontWeight: '500',
+       color: '#DC2626',
+    },
+ })

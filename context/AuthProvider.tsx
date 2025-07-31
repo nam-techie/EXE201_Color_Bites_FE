@@ -45,16 +45,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
    const login = async (email: string, password: string) => {
       // Mock login - replace with real API call
-      const mockUser: User = {
-         id: '1',
-         name: 'John Doe',
-         email,
-         avatar: '/placeholder.svg?height=100&width=100',
-         isPremium: false,
-      }
+      if (email === 'test123' && password === 'test123') {
+         const mockUser: User = {
+            id: '1',
+            name: 'Test User',
+            email: 'test123@example.com',
+            avatar: 'https://i.pravatar.cc/96?img=12',
+            isPremium: false,
+         }
 
-      await AsyncStorage.setItem('user', JSON.stringify(mockUser))
-      setUser(mockUser)
+         await AsyncStorage.setItem('user', JSON.stringify(mockUser))
+         setUser(mockUser)
+      } else {
+         throw new Error('Invalid credentials')
+      }
    }
 
    const register = async (name: string, email: string, password: string) => {
@@ -72,8 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    }
 
    const logout = async () => {
-      await AsyncStorage.removeItem('user')
-      setUser(null)
+      try {
+         await AsyncStorage.removeItem('user')
+         setUser(null)
+         console.log('User logged out successfully')
+      } catch (error) {
+         console.error('Error during logout:', error)
+         throw error
+      }
    }
 
    return (
