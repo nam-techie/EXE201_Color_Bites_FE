@@ -106,7 +106,8 @@ class AuthService {
       const response = await apiService.post<ResponseDto<string>>('/api/auth/register', {
         username: userData.username,
         email: userData.email,
-        password: userData.password
+        password: userData.password,
+        confirmPassword: userData.confirmPassword
       })
       
       // Note: Register doesn't return tokens, user needs to login after registration

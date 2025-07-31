@@ -39,7 +39,7 @@ export default function SignUpFormScreen() {
       const newErrors: {[key: string]: string} = {}
 
       if (!formData.username.trim()) {
-         newErrors.username = 'Vui lòng nhập họ và tên'
+         newErrors.username = 'Vui lòng nhập tên đăng nhập'
       }
 
       if (!formData.email.trim()) {
@@ -82,13 +82,23 @@ export default function SignUpFormScreen() {
                confirmPassword: formData.confirmPassword
             })
             
-            console.log('✅ Registration successful:', response.message)
-            Alert.alert('Thành công', response.message || 'Tài khoản đã được tạo thành công! Vui lòng đăng nhập để tiếp tục.')
-            router.replace('/auth/login')
+            console.log('✅ Registration successful:', response)
+            console.log('✅ Response message:', response.message)
+            console.log('✅ Response data:', response.data)
+            
+                         // Check if registration was successful
+             if (response.status === 200) {
+                Alert.alert('Thành công', response.message || 'Tài khoản đã được tạo thành công! Vui lòng đăng nhập để tiếp tục.')
+                router.replace('/auth/login')
+             } else {
+                // Show detailed error message from BE
+                const errorMessage = response.data || response.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+                Alert.alert('Lỗi đăng ký', errorMessage)
+             }
          } catch (error: any) {
             console.error('❌ Registration failed:', error)
             const errorMessage = error.response?.data?.message || error.message || 'Đăng ký thất bại. Vui lòng thử lại.'
-            Alert.alert('Lỗi', errorMessage)
+            Alert.alert('Lỗi đăng ký', errorMessage)
          }
       }
    }
@@ -147,7 +157,7 @@ export default function SignUpFormScreen() {
                <View style={styles.form}>
                   {/* Username */}
                   <View style={styles.inputContainer}>
-                     <Text style={styles.inputLabel}>Họ và tên</Text>
+                     <Text style={styles.inputLabel}>Tên đăng nhập</Text>
                      <TextInput
                         style={[styles.input, errors.username && styles.inputError]}
                         value={formData.username}
@@ -155,8 +165,9 @@ export default function SignUpFormScreen() {
                            setFormData({...formData, username: text})
                            if (errors.username) setErrors({...errors, username: ''})
                         }}
-                        placeholder="Nhập họ và tên của bạn"
+                        placeholder="Nhập tên đăng nhập"
                         placeholderTextColor="#999"
+                        autoCapitalize="none"
                      />
                      {errors.username && <Text style={styles.errorText}>{errors.username}</Text>}
                   </View>
