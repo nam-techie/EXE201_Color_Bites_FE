@@ -4,16 +4,17 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+   Alert,
+   SafeAreaView,
+   ScrollView,
+   StatusBar,
+   StyleSheet,
+   Text,
+   TextInput,
+   TouchableOpacity,
+   View
 } from 'react-native'
+import { authService } from '../../services/authService'
 
 export default function SignUpFormScreen() {
    const [formData, setFormData] = useState({
@@ -71,11 +72,24 @@ export default function SignUpFormScreen() {
       return Object.keys(newErrors).length === 0
    }
 
-   const handleSubmit = () => {
+   const handleSubmit = async () => {
       if (validateForm()) {
-         // Handle form submission
-         Alert.alert('Thành công', 'Tài khoản đã được tạo thành công!')
-         router.replace('/(tabs)')
+         try {
+            const response = await authService.signup({
+               username: formData.username,
+               email: formData.email,
+               password: formData.password,
+               confirmPassword: formData.confirmPassword
+            })
+            
+            console.log('✅ Registration successful:', response.message)
+            Alert.alert('Thành công', response.message || 'Tài khoản đã được tạo thành công! Vui lòng đăng nhập để tiếp tục.')
+            router.replace('/auth/login')
+         } catch (error: any) {
+            console.error('❌ Registration failed:', error)
+            const errorMessage = error.response?.data?.message || error.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+            Alert.alert('Lỗi', errorMessage)
+         }
       }
    }
 

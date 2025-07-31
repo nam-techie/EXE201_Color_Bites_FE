@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { authService } from '../../services/authService'
 
 export default function ForgotPasswordScreen() {
    const [email, setEmail] = useState('')
@@ -23,11 +24,11 @@ export default function ForgotPasswordScreen() {
 
       setIsLoading(true)
       try {
-         // Simulate API call
-         await new Promise(resolve => setTimeout(resolve, 2000))
+         const response = await authService.forgotPassword(email)
+         console.log('✅ Forgot password successful:', response.message)
          Alert.alert(
             'Thành công', 
-            'Email đặt lại mật khẩu đã được gửi!',
+            response.message || 'Email đặt lại mật khẩu đã được gửi!',
             [
                {
                   text: 'OK',
@@ -35,8 +36,10 @@ export default function ForgotPasswordScreen() {
                }
             ]
          )
-      } catch (error) {
-         Alert.alert('Lỗi', 'Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.')
+      } catch (error: any) {
+         console.error('❌ Forgot password failed:', error)
+         const errorMessage = error.response?.data?.message || error.message || 'Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.'
+         Alert.alert('Lỗi', errorMessage)
       } finally {
          setIsLoading(false)
       }

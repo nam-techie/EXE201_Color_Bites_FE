@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { authService } from '../../services/authService'
 
 export default function ResetPasswordScreen() {
    const [newPassword, setNewPassword] = useState('')
@@ -68,11 +69,15 @@ export default function ResetPasswordScreen() {
 
       setIsLoading(true)
       try {
-         // Simulate API call
-         await new Promise(resolve => setTimeout(resolve, 2000))
+         const response = await authService.resetPassword({
+            token: '', // Token sẽ được lấy từ URL params hoặc navigation
+            newPassword,
+            confirmPassword
+         })
+         console.log('✅ Reset password successful:', response.message)
          Alert.alert(
             'Thành công', 
-            'Mật khẩu đã được đặt lại thành công!',
+            response.message || 'Mật khẩu đã được đặt lại thành công!',
             [
                {
                   text: 'OK',
@@ -80,8 +85,10 @@ export default function ResetPasswordScreen() {
                }
             ]
          )
-      } catch (error) {
-         Alert.alert('Lỗi', 'Không thể đặt lại mật khẩu. Vui lòng thử lại.')
+      } catch (error: any) {
+         console.error('❌ Reset password failed:', error)
+         const errorMessage = error.response?.data?.message || error.message || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.'
+         Alert.alert('Lỗi', errorMessage)
       } finally {
          setIsLoading(false)
       }

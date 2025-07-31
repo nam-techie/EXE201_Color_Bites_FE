@@ -15,6 +15,7 @@ import {
    View
 } from 'react-native'
 
+
 const { width, height } = Dimensions.get('window')
 
 export default function WelcomeScreen() {
@@ -139,6 +140,8 @@ export default function WelcomeScreen() {
                      <Text style={styles.signInButtonText}>Đăng Nhập</Text>
                   </TouchableOpacity>
                </View>
+
+
 
                {/* Footer */}
                <View style={styles.footer}>

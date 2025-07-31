@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { authService } from '../../services/authService'
 
 export default function NewPasswordScreen() {
    const [newPassword, setNewPassword] = useState('')
@@ -67,11 +68,15 @@ export default function NewPasswordScreen() {
 
       setIsLoading(true)
       try {
-         // Simulate API call to set new password
-         await new Promise(resolve => setTimeout(resolve, 2000))
+         const response = await authService.resetPassword({
+            token: '', // Token sẽ được lấy từ URL params hoặc navigation
+            newPassword,
+            confirmPassword
+         })
+         console.log('✅ Set new password successful:', response.message)
          Alert.alert(
             'Thành công', 
-            'Mật khẩu đã được đặt lại thành công!',
+            response.message || 'Mật khẩu đã được đặt lại thành công!',
             [
                {
                   text: 'OK',
@@ -79,8 +84,10 @@ export default function NewPasswordScreen() {
                }
             ]
          )
-      } catch (error) {
-         Alert.alert('Lỗi', 'Không thể đặt lại mật khẩu. Vui lòng thử lại.')
+      } catch (error: any) {
+         console.error('❌ Set new password failed:', error)
+         const errorMessage = error.response?.data?.message || error.message || 'Không thể đặt lại mật khẩu. Vui lòng thử lại.'
+         Alert.alert('Lỗi', errorMessage)
       } finally {
          setIsLoading(false)
       }

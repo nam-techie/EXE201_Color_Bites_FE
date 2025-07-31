@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { authService } from '../../services/authService'
 
 export default function LoginScreen() {
    const [email, setEmail] = useState('')
@@ -20,12 +21,14 @@ export default function LoginScreen() {
 
       setIsLoading(true)
       try {
-         // Simulate API call
-         await new Promise(resolve => setTimeout(resolve, 2000))
-         Alert.alert('Thành công', 'Đăng nhập thành công!')
+         const response = await authService.login({ email, password })
+         console.log('✅ Login successful:', response.data?.username)
+         Alert.alert('Thành công', `Chào mừng ${response.data?.username}!`)
          router.replace('/(tabs)')
-      } catch (error) {
-         Alert.alert('Lỗi', 'Đăng nhập thất bại. Vui lòng thử lại.')
+      } catch (error: any) {
+         console.error('❌ Login failed:', error)
+         const errorMessage = error.response?.data?.message || error.message || 'Đăng nhập thất bại. Vui lòng thử lại.'
+         Alert.alert('Lỗi', errorMessage)
       } finally {
          setIsLoading(false)
       }

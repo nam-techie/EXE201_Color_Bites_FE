@@ -3,6 +3,7 @@
 import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
+import { router } from 'expo-router'
 import { useState } from 'react'
 import {
    Alert,
@@ -50,7 +51,7 @@ export default function ProfileScreen() {
                onPress: async () => {
                   try {
                      await logout()
-                     console.log('Logout successful')
+                     router.replace('/auth/welcome')
                   } catch (error) {
                      console.error('Logout error:', error)
                   }
@@ -117,21 +118,6 @@ export default function ProfileScreen() {
 
                                <TouchableOpacity style={styles.editProfileButton}>
                    <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-                </TouchableOpacity>
-                
-                {/* Test Logout Button */}
-                <TouchableOpacity 
-                   style={[styles.editProfileButton, { backgroundColor: '#DC2626', marginTop: 8 }]}
-                   onPress={async () => {
-                      try {
-                         await logout()
-                         console.log('Direct logout successful')
-                      } catch (error) {
-                         console.error('Direct logout error:', error)
-                      }
-                   }}
-                >
-                   <Text style={styles.editProfileButtonText}>Test Logout</Text>
                 </TouchableOpacity>
             </View>
 

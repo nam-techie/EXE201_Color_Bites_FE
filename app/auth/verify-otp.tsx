@@ -5,6 +5,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { Alert, Animated, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { authService } from '../../services/authService'
 
 export default function VerifyOtpScreen() {
    const [otp, setOtp] = useState(['', '', '', '', '', ''])
@@ -91,26 +92,23 @@ export default function VerifyOtpScreen() {
 
       setIsLoading(true)
       try {
-         // Simulate API call to verify OTP
-         await new Promise(resolve => setTimeout(resolve, 2000))
+         const response = await authService.verifyOtp('user@example.com', otpString) // Email sẽ được lấy từ navigation params
+         console.log('✅ Verify OTP successful:', response.message)
          
-         // For demo, accept any 6-digit code
-         if (otpString.length === 6) {
-            Alert.alert(
-               'Thành công', 
-               'Mã OTP đã được xác thực!',
-               [
-                  {
-                     text: 'Tiếp tục',
-                     onPress: () => router.push('/auth/new-password')
-                  }
-               ]
-            )
-         } else {
-            Alert.alert('Lỗi', 'Mã OTP không đúng. Vui lòng thử lại.')
-         }
-      } catch (error) {
-         Alert.alert('Lỗi', 'Không thể xác thực OTP. Vui lòng thử lại.')
+         Alert.alert(
+            'Thành công', 
+            response.message || 'Mã OTP đã được xác thực!',
+            [
+               {
+                  text: 'Tiếp tục',
+                  onPress: () => router.push('/auth/new-password')
+               }
+            ]
+         )
+      } catch (error: any) {
+         console.error('❌ Verify OTP failed:', error)
+         const errorMessage = error.response?.data?.message || error.message || 'Mã OTP không đúng. Vui lòng thử lại.'
+         Alert.alert('Lỗi', errorMessage)
       } finally {
          setIsLoading(false)
       }
@@ -123,11 +121,13 @@ export default function VerifyOtpScreen() {
       setCountdown(60)
       
       try {
-         // Simulate API call to resend OTP
-         await new Promise(resolve => setTimeout(resolve, 1000))
-         Alert.alert('Thành công', 'Mã OTP mới đã được gửi đến email của bạn.')
-      } catch (error) {
-         Alert.alert('Lỗi', 'Không thể gửi lại mã OTP. Vui lòng thử lại.')
+         const response = await authService.resendOtp('user@example.com') // Email sẽ được lấy từ navigation params
+         console.log('✅ Resend OTP successful:', response.message)
+         Alert.alert('Thành công', response.message || 'Mã OTP mới đã được gửi đến email của bạn.')
+      } catch (error: any) {
+         console.error('❌ Resend OTP failed:', error)
+         const errorMessage = error.response?.data?.message || error.message || 'Không thể gửi lại mã OTP. Vui lòng thử lại.'
+         Alert.alert('Lỗi', errorMessage)
          setCanResend(true)
       }
    }
