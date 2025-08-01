@@ -10,6 +10,7 @@ import {
    Dimensions,
    SafeAreaView,
    ScrollView,
+   StatusBar,
    StyleSheet,
    Text,
    TouchableOpacity,
@@ -39,6 +40,9 @@ export default function ProfileScreen() {
    const [activeTab, setActiveTab] = useState('posts')
    const { user, logout } = useAuth()
 
+   // Tính toán status bar height cho Android
+   const statusBarHeight = StatusBar.currentHeight || 0
+
    const handleLogout = async () => {
       Alert.alert(
          'Logout',
@@ -62,7 +66,7 @@ export default function ProfileScreen() {
    }
 
    return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { paddingTop: statusBarHeight }]}>
          {/* Header */}
          <View style={styles.header}>
             <View style={styles.headerContent}>
