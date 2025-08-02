@@ -45,3 +45,28 @@ export interface Step {
    type: number
    way_points: [number, number]
 }
+
+export interface RouteProfile {
+   id: string
+   name: string
+   icon: string
+   description: string
+}
+
+export const ROUTE_PROFILES: RouteProfile[] = [
+   { id: 'driving-car', name: 'Ô tô', icon: 'car', description: 'Đường dành cho ô tô' },
+   { id: 'driving-hgv', name: 'Xe tải', icon: 'bus', description: 'Đường dành cho xe tải' },
+   { id: 'cycling-regular', name: 'Xe đạp', icon: 'bicycle', description: 'Đường dành cho xe đạp' },
+   { id: 'foot-walking', name: 'Đi bộ', icon: 'walk', description: 'Đường dành cho người đi bộ' },
+]
+
+export interface DirectionResult {
+   distance: number
+   duration: number
+   steps: Step[]
+   geometry: number[][]
+   summary: {
+      distance: number
+      duration: number
+   }
+}

@@ -70,7 +70,7 @@ export default function HomeScreen() {
    return (
       <SafeAreaView style={styles.container}>
          {/* Enhanced Header */}
-         <View style={styles.header}>
+         {/* <View style={styles.header}>
             <View style={styles.headerContent}>
                <View>
                   <Text style={styles.headerTitle}>ColorBite</Text>
@@ -90,7 +90,7 @@ export default function HomeScreen() {
                   <View style={styles.notificationBadge} />
                </TouchableOpacity>
             </View>
-         </View>
+         </View> */}
 
          <ScrollView
             style={styles.scrollView}

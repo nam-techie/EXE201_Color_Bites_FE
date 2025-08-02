@@ -91,28 +91,50 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                {/* Cuisine Type */}
                <View style={styles.cuisineContainer}>
-                  <MaterialCommunityIcons name={cuisineIcon.name} size={24} color={cuisineIcon.color} style={styles.cuisineIcon} />
+                  <MaterialCommunityIcons
+                     name={cuisineIcon.name}
+                     size={24}
+                     color={cuisineIcon.color}
+                     style={styles.cuisineIcon}
+                  />
                   <Text style={styles.cuisineText}>{restaurant.tags.cuisine || 'Quán ăn'}</Text>
                </View>
 
                {/* Address */}
                <View style={styles.infoSection}>
-                  <MaterialCommunityIcons name="map-marker" size={18} color="#6b7280" style={{ marginRight: 4 }} />
+                  <MaterialCommunityIcons
+                     name="map-marker"
+                     size={18}
+                     color="#6b7280"
+                     style={{ marginRight: 4 }}
+                  />
                   <Text style={styles.infoText}>{getAddress()}</Text>
                </View>
 
                {/* Opening Hours */}
                {restaurant.tags.opening_hours && (
                   <View style={styles.infoSection}>
-                     <MaterialCommunityIcons name="clock-outline" size={18} color="#6b7280" style={{ marginRight: 4 }} />
-                     <Text style={styles.infoText}>{formatOpeningHours(restaurant.tags.opening_hours)}</Text>
+                     <MaterialCommunityIcons
+                        name="clock-outline"
+                        size={18}
+                        color="#6b7280"
+                        style={{ marginRight: 4 }}
+                     />
+                     <Text style={styles.infoText}>
+                        {formatOpeningHours(restaurant.tags.opening_hours)}
+                     </Text>
                   </View>
                )}
 
                {/* Dietary Information */}
                {getDietaryInfo() && (
                   <View style={styles.infoSection}>
-                     <MaterialCommunityIcons name="leaf" size={18} color="#6b7280" style={{ marginRight: 4 }} />
+                     <MaterialCommunityIcons
+                        name="leaf"
+                        size={18}
+                        color="#6b7280"
+                        style={{ marginRight: 4 }}
+                     />
                      <Text style={styles.infoText}>{getDietaryInfo()}</Text>
                   </View>
                )}
@@ -122,14 +144,26 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
                   <View style={styles.contactSection}>
                      {restaurant.tags.phone && (
                         <TouchableOpacity onPress={handleCall} style={styles.contactButton}>
-                           <MaterialCommunityIcons name="phone" size={20} color="#16a34a" style={styles.contactIcon} />
+                           <MaterialCommunityIcons
+                              name="phone"
+                              size={20}
+                              color="#16a34a"
+                              style={styles.contactIcon}
+                           />
                            <Text style={styles.contactText}>{restaurant.tags.phone}</Text>
                         </TouchableOpacity>
                      )}
                      {restaurant.tags.website && (
                         <TouchableOpacity onPress={handleWebsite} style={styles.websiteButton}>
-                           <MaterialCommunityIcons name="web" size={20} color="#2563eb" style={styles.websiteIcon} />
-                           <Text style={styles.websiteText} numberOfLines={1}>Website</Text>
+                           <MaterialCommunityIcons
+                              name="web"
+                              size={20}
+                              color="#2563eb"
+                              style={styles.websiteIcon}
+                           />
+                           <Text style={styles.websiteText} numberOfLines={1}>
+                              Website
+                           </Text>
                         </TouchableOpacity>
                      )}
                   </View>
@@ -139,7 +173,12 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
             {/* Action Buttons */}
             <View style={styles.actionContainer}>
                <TouchableOpacity onPress={handleDirections} style={styles.directionsButton}>
-                  <MaterialCommunityIcons name="map" size={20} color="#ffffff" style={{ marginRight: 8 }} />
+                  <MaterialCommunityIcons
+                     name="map"
+                     size={20}
+                     color="#ffffff"
+                     style={{ marginRight: 8 }}
+                  />
                   <Text style={styles.directionsText}>Chỉ đường</Text>
                </TouchableOpacity>
             </View>

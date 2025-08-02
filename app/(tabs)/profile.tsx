@@ -1,8 +1,10 @@
-'use client'
-
+import { uploadUserAvatar } from '@/services/AuthService'
 import { Ionicons } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Image } from 'expo-image'
-import { useState } from 'react'
+import * as ImagePicker from 'expo-image-picker'
+import { useRouter } from 'expo-router'
+import { useEffect, useState } from 'react'
 import {
    Dimensions,
    SafeAreaView,
@@ -12,467 +14,184 @@ import {
    TouchableOpacity,
    View,
 } from 'react-native'
+import Toast from 'react-native-toast-message'
 
 const { width } = Dimensions.get('window')
-const postWidth = (width - 32 - 4) / 3 // Account for padding and gaps
-
-const userStats = {
-   posts: 127,
-   followers: 1234,
-   following: 456,
-   places: 89,
-}
-
-const userPosts = [
-   { id: '1', image: 'https://picsum.photos/id/1011/400/400', likes: 45 },
-   { id: '2', image: 'https://picsum.photos/id/1015/400/400', likes: 67 },
-   { id: '3', image: 'https://picsum.photos/id/1027/400/400', likes: 89 },
-   { id: '4', image: 'https://picsum.photos/id/1035/400/400', likes: 34 },
-   { id: '5', image: 'https://picsum.photos/id/1043/400/400', likes: 56 },
-   { id: '6', image: 'https://picsum.photos/id/1052/400/400', likes: 78 },
-]
 
 export default function ProfileScreen() {
-   const [activeTab, setActiveTab] = useState('posts')
+   const [user, setUser] = useState<any>(null)
+   const [stats, setStats] = useState({ posts: 0, followers: 0, following: 0, places: 0 })
+   const [uploading, setUploading] = useState(false)
+   const router = useRouter()
+
+   useEffect(() => {
+      const loadUser = async () => {
+         const storedUser = await AsyncStorage.getItem('user')
+         if (storedUser) {
+            const parsedUser = JSON.parse(storedUser)
+            setUser(parsedUser)
+            setStats({
+               posts: parsedUser.postsCount || 0,
+               followers: parsedUser.followers || 0,
+               following: parsedUser.following || 0,
+               places: parsedUser.places || 0,
+            })
+         }
+      }
+      loadUser()
+   }, [])
+
+   const handlePickImage = async () => {
+      const result = await ImagePicker.launchImageLibraryAsync({
+         mediaTypes: ImagePicker.MediaTypeOptions.Images,
+         allowsEditing: true,
+         aspect: [1, 1],
+         quality: 0.8,
+      })
+
+      if (!result.canceled && user?.id) {
+         try {
+            setUploading(true)
+            const imageUri = result.assets[0].uri
+            const newAvatarUrl = await uploadUserAvatar(user.id, imageUri)
+            const updatedUser = { ...user, avatar: newAvatarUrl }
+            setUser(updatedUser)
+            await AsyncStorage.setItem('user', JSON.stringify(updatedUser))
+
+            Toast.show({
+               type: 'success',
+               text1: '✅ Success',
+               text2: 'Avatar updated successfully!',
+            })
+         } catch (err: any) {
+            Toast.show({
+               type: 'error',
+               text1: 'Upload Failed',
+               text2: err.message || 'Something went wrong',
+            })
+         } finally {
+            setUploading(false)
+         }
+      }
+   }
+
+   const handleLogout = async () => {
+      await AsyncStorage.removeItem('user')
+      Toast.show({
+         type: 'success',
+         text1: 'Logout Successful',
+         text2: 'You have been logged out.',
+      })
+      setTimeout(() => {
+         router.replace('/auth/login')
+      }, 1000)
+   }
+
+   if (!user) return null
 
    return (
       <SafeAreaView style={styles.container}>
-         {/* Header */}
-         <View style={styles.header}>
-            <View style={styles.headerContent}>
-               <Text style={styles.headerTitle}>Profile</Text>
-               <View style={styles.headerActions}>
-                  <TouchableOpacity style={styles.headerButton}>
-                     <Ionicons name="share-outline" size={16} color="#6B7280" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.headerButton}>
-                     <Ionicons name="settings-outline" size={16} color="#6B7280" />
-                  </TouchableOpacity>
-               </View>
+         <ScrollView contentContainerStyle={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+               <Text style={styles.headerTitle}>My Profile</Text>
             </View>
-         </View>
 
-         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-            {/* Profile Info */}
-            <View style={styles.profileSection}>
+            {/* Avatar + Info */}
+            <TouchableOpacity onPress={handlePickImage}>
                <Image
-                  source={{ uri: 'https://i.pravatar.cc/96?img=12' }}
+                  source={{ uri: user.avatar || 'https://i.pravatar.cc/96' }}
                   style={styles.profileImage}
                   contentFit="cover"
                />
-               <View style={styles.nameContainer}>
-                  <Text style={styles.userName}>John Doe</Text>
-                  <View style={styles.proBadge}>
-                     <Ionicons name="star" size={12} color="white" />
-                     <Text style={styles.proBadgeText}>PRO</Text>
-                  </View>
-               </View>
-               <Text style={styles.userBio}>Food enthusiast & explorer 🍜✨</Text>
+            </TouchableOpacity>
 
-               {/* Stats */}
-               <View style={styles.statsContainer}>
-                  <View style={styles.statItem}>
-                     <Text style={styles.statNumber}>{userStats.posts}</Text>
-                     <Text style={styles.statLabel}>Posts</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                     <Text style={styles.statNumber}>{userStats.followers}</Text>
-                     <Text style={styles.statLabel}>Followers</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                     <Text style={styles.statNumber}>{userStats.following}</Text>
-                     <Text style={styles.statLabel}>Following</Text>
-                  </View>
-                  <View style={styles.statItem}>
-                     <Text style={styles.statNumber}>{userStats.places}</Text>
-                     <Text style={styles.statLabel}>Places</Text>
-                  </View>
-               </View>
+            {uploading && <Text style={styles.uploadingText}>Uploading...</Text>}
 
-               <TouchableOpacity style={styles.editProfileButton}>
-                  <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-               </TouchableOpacity>
-            </View>
-
-            {/* Premium Analytics */}
-            <View style={styles.analyticsSection}>
-               <View style={styles.analyticsHeader}>
-                  <View style={styles.analyticsTitle}>
-                     <Ionicons name="bar-chart" size={20} color="#EA580C" />
-                     <Text style={styles.analyticsTitleText}>Analytics</Text>
-                  </View>
-                  <View style={styles.analyticsBadge}>
-                     <Text style={styles.analyticsBadgeText}>PRO</Text>
-                  </View>
-               </View>
-               <View style={styles.analyticsGrid}>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Top Interactor</Text>
-                     <Text style={styles.analyticsValue}>@sarah_foodie</Text>
-                  </View>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Avg. Likes</Text>
-                     <Text style={styles.analyticsValue}>64 per post</Text>
-                  </View>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Best Time</Text>
-                     <Text style={styles.analyticsValue}>7-9 PM</Text>
-                  </View>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Top Cuisine</Text>
-                     <Text style={styles.analyticsValue}>Asian Food</Text>
-                  </View>
+            <View style={styles.nameContainer}>
+               <Text style={styles.userName}>{user.fullName}</Text>
+               <View style={styles.proBadge}>
+                  <Ionicons name="star" size={12} color="white" />
+                  <Text style={styles.proBadgeText}>PRO</Text>
                </View>
             </View>
 
-            {/* Content Tabs */}
-            <View style={styles.tabsContainer}>
-               <View style={styles.tabsWrapper}>
-                  <TouchableOpacity
-                     onPress={() => setActiveTab('posts')}
-                     style={[styles.tab, activeTab === 'posts' && styles.activeTab]}
-                  >
-                     <Ionicons
-                        name="grid-outline"
-                        size={16}
-                        color={activeTab === 'posts' ? 'white' : '#6B7280'}
-                     />
-                     <Text style={[styles.tabText, activeTab === 'posts' && styles.activeTabText]}>
-                        Posts
-                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                     onPress={() => setActiveTab('places')}
-                     style={[styles.tab, activeTab === 'places' && styles.activeTab]}
-                  >
-                     <Ionicons
-                        name="location-outline"
-                        size={16}
-                        color={activeTab === 'places' ? 'white' : '#6B7280'}
-                     />
-                     <Text style={[styles.tabText, activeTab === 'places' && styles.activeTabText]}>
-                        Places
-                     </Text>
-                  </TouchableOpacity>
-               </View>
+            <Text style={styles.userBio}>
+               @{user.username} | {user.email}
+            </Text>
+
+            {/* Stats */}
+            <View style={styles.statsContainer}>
+               {['Posts', 'Followers', 'Following', 'Places'].map((label, idx) => (
+                  <View style={styles.statItem} key={label}>
+                     <Text style={styles.statNumber}>{Object.values(stats)[idx]}</Text>
+                     <Text style={styles.statLabel}>{label}</Text>
+                  </View>
+               ))}
             </View>
 
-            {/* Content */}
-            {activeTab === 'posts' ? (
-               <View style={styles.postsGrid}>
-                  {userPosts.map((post, index) => (
-                     <View
-                        key={post.id}
-                        style={[styles.postItem, { marginRight: (index + 1) % 3 === 0 ? 0 : 2 }]}
-                     >
-                        <View style={styles.postImageContainer}>
-                           <Image
-                              source={{ uri: post.image }}
-                              style={styles.postImage}
-                              contentFit="cover"
-                           />
-                           <View style={styles.likesOverlay}>
-                              <Text style={styles.likesText}>❤️ {post.likes}</Text>
-                           </View>
-                        </View>
-                     </View>
-                  ))}
-               </View>
-            ) : (
-               <View style={styles.placesList}>
-                  {[1, 2, 3, 4].map((i) => (
-                     <TouchableOpacity key={i} style={styles.placeItem}>
-                        <View style={styles.placeContent}>
-                           <Image
-                              source={{
-                                 uri: `https://picsum.photos/seed/restaurant${i}/100/100`,
-                              }}
-                              style={styles.placeImage}
-                              contentFit="cover"
-                           />
+            {/* Edit Profile */}
+            <TouchableOpacity style={styles.editProfileButton}>
+               <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
 
-                           <View style={styles.placeInfo}>
-                              <Text style={styles.placeName}>Restaurant {i}</Text>
-                              <Text style={styles.placeVisits}>Visited 3 times</Text>
-                           </View>
-                           <View style={styles.placeRating}>
-                              <Text style={styles.placeRatingText}>⭐ 4.{5 + i}</Text>
-                           </View>
-                        </View>
-                     </TouchableOpacity>
-                  ))}
-               </View>
-            )}
+            {/* Logout */}
+            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+               <Ionicons name="log-out-outline" size={18} color="white" />
+               <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
          </ScrollView>
       </SafeAreaView>
    )
 }
 
 const styles = StyleSheet.create({
-   container: {
-      flex: 1,
-      backgroundColor: '#F9FAFB',
-   },
-   header: {
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-      backgroundColor: '#FFFFFF',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-   },
-   headerContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-   },
-   headerTitle: {
-      fontSize: 18,
-      fontWeight: '600',
-      color: '#111827',
-   },
-   headerActions: {
-      flexDirection: 'row',
-   },
-   headerButton: {
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#E5E7EB',
-      padding: 8,
-      marginLeft: 8,
-   },
-   scrollView: {
-      flex: 1,
-   },
-   scrollContent: {
-      padding: 16,
-   },
-   profileSection: {
-      marginBottom: 24,
-      alignItems: 'center',
-   },
-   profileImage: {
-      marginBottom: 16,
-      height: 96,
-      width: 96,
-      borderRadius: 48,
-   },
-   nameContainer: {
-      marginBottom: 8,
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   userName: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#111827',
-      marginRight: 8,
-   },
+   container: { flex: 1, backgroundColor: '#fff' },
+   content: { padding: 20, alignItems: 'center' },
+   header: { marginBottom: 16, width: '100%' },
+   headerTitle: { fontSize: 24, fontWeight: '700', textAlign: 'center' },
+   profileImage: { width: 100, height: 100, borderRadius: 50 },
+   uploadingText: { marginTop: 6, color: 'gray', fontSize: 12 },
+   nameContainer: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
+   userName: { fontSize: 20, fontWeight: '600' },
    proBadge: {
       flexDirection: 'row',
-      alignItems: 'center',
-      borderRadius: 4,
-      backgroundColor: '#F97316',
+      backgroundColor: '#6366F1',
       paddingHorizontal: 8,
-      paddingVertical: 4,
-   },
-   proBadgeText: {
-      marginLeft: 4,
-      fontSize: 12,
-      fontWeight: '500',
-      color: '#FFFFFF',
-   },
-   userBio: {
-      marginBottom: 16,
-      textAlign: 'center',
-      color: '#4B5563',
-      fontSize: 14,
-   },
-   statsContainer: {
-      marginBottom: 16,
-      flexDirection: 'row',
-      justifyContent: 'center',
-   },
-   statItem: {
-      alignItems: 'center',
-      marginHorizontal: 16,
-   },
-   statNumber: {
-      fontSize: 20,
-      fontWeight: 'bold',
-      color: '#111827',
-   },
-   statLabel: {
-      fontSize: 14,
-      color: '#6B7280',
-   },
-   editProfileButton: {
-      marginBottom: 16,
-      width: '100%',
-      borderRadius: 8,
-      backgroundColor: '#F97316',
-      paddingVertical: 12,
-   },
-   editProfileButtonText: {
-      textAlign: 'center',
-      fontWeight: '500',
-      color: '#FFFFFF',
-   },
-   analyticsSection: {
-      marginBottom: 24,
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: '#FED7AA',
-      backgroundColor: '#FFF7ED',
-      padding: 16,
-   },
-   analyticsHeader: {
-      marginBottom: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-   },
-   analyticsTitle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   analyticsTitleText: {
-      marginLeft: 8,
-      fontWeight: '600',
-      color: '#9A3412',
-   },
-   analyticsBadge: {
-      borderRadius: 4,
-      backgroundColor: '#F97316',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-   },
-   analyticsBadgeText: {
-      fontSize: 12,
-      fontWeight: '500',
-      color: '#FFFFFF',
-   },
-   analyticsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-   },
-   analyticsItem: {
-      marginBottom: 8,
-      width: '50%',
-   },
-   analyticsLabel: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: '#C2410C',
-   },
-   analyticsValue: {
-      fontSize: 14,
-      color: '#EA580C',
-   },
-   tabsContainer: {
-      marginBottom: 16,
-      overflow: 'hidden',
-      borderRadius: 8,
-      backgroundColor: '#FFFFFF',
-   },
-   tabsWrapper: {
-      flexDirection: 'row',
-   },
-   tab: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-      backgroundColor: '#F3F4F6',
-   },
-   activeTab: {
-      backgroundColor: '#F97316',
-   },
-   tabText: {
-      marginLeft: 4,
-      color: '#4B5563',
-      fontSize: 14,
-   },
-   activeTabText: {
-      color: '#FFFFFF',
-   },
-   postsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      marginHorizontal: -1,
-   },
-   postItem: {
-      marginBottom: 4,
-      width: postWidth,
-   },
-   postImageContainer: {
-      position: 'relative',
-      aspectRatio: 1,
-   },
-   postImage: {
-      height: '100%',
-      width: '100%',
-      borderRadius: 8,
-   },
-   likesOverlay: {
-      position: 'absolute',
-      bottom: 4,
-      right: 4,
-      borderRadius: 4,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      paddingHorizontal: 4,
       paddingVertical: 2,
-   },
-   likesText: {
-      fontSize: 12,
-      color: '#FFFFFF',
-   },
-   placesList: {
-      gap: 12,
-   },
-   placeItem: {
-      borderRadius: 8,
-      backgroundColor: '#FFFFFF',
-      padding: 12,
-      shadowColor: '#000',
-      shadowOffset: {
-         width: 0,
-         height: 1,
-      },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2,
-   },
-   placeContent: {
-      flexDirection: 'row',
+      borderRadius: 12,
       alignItems: 'center',
+      gap: 4,
    },
-   placeImage: {
-      height: 48,
-      width: 48,
-      borderRadius: 8,
-      marginRight: 12,
+   proBadgeText: { color: 'white', fontSize: 12 },
+   userBio: { color: '#6B7280', fontSize: 14, marginTop: 4 },
+   statsContainer: {
+      flexDirection: 'row',
+      marginTop: 20,
+      gap: 20,
+      justifyContent: 'center',
+      flexWrap: 'wrap',
    },
-   placeInfo: {
-      flex: 1,
-   },
-   placeName: {
-      fontWeight: '600',
-      color: '#111827',
-      fontSize: 16,
-   },
-   placeVisits: {
-      fontSize: 14,
-      color: '#6B7280',
-   },
-   placeRating: {
-      borderRadius: 4,
+   statItem: { alignItems: 'center', width: 70 },
+   statNumber: { fontWeight: 'bold', fontSize: 16 },
+   statLabel: { fontSize: 12, color: '#6B7280' },
+   editProfileButton: {
       backgroundColor: '#F3F4F6',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
+      paddingHorizontal: 24,
+      paddingVertical: 8,
+      borderRadius: 16,
+      marginTop: 20,
    },
-   placeRatingText: {
-      fontSize: 12,
-      color: '#111827',
+   editProfileButtonText: { fontSize: 14, fontWeight: '600', color: '#374151' },
+   logoutButton: {
+      flexDirection: 'row',
+      marginTop: 30,
+      backgroundColor: '#EF4444',
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 16,
+      alignItems: 'center',
+      gap: 8,
    },
+   logoutText: { color: 'white', fontWeight: '600', fontSize: 14 },
 })

@@ -2,7 +2,7 @@
 
 import { Ionicons } from '@expo/vector-icons'
 import { useState } from 'react'
-import { Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 interface InputProps {
    label?: string
@@ -38,33 +38,35 @@ export default function Input({
    const [isFocused, setIsFocused] = useState(false)
    const [showPassword, setShowPassword] = useState(false)
 
-   const togglePasswordVisibility = () => {
-      setShowPassword(!showPassword)
-   }
+   const togglePasswordVisibility = () => setShowPassword(!showPassword)
 
    return (
-      <View className="mb-4">
-         {label && <Text className="mb-2 text-sm font-medium text-gray-700">{label}</Text>}
+      <View style={styles.wrapper}>
+         {label && <Text style={styles.label}>{label}</Text>}
 
          <View
-            className={`
-        flex-row items-center rounded-lg border px-3 py-3
-        ${isFocused ? 'border-primary-500' : 'border-gray-300'}
-        ${error ? 'border-red-500' : ''}
-        ${disabled ? 'bg-gray-100' : 'bg-white'}
-      `}
+            style={[
+               styles.inputContainer,
+               isFocused && styles.focused,
+               error && styles.errorBorder,
+               disabled && styles.disabled,
+            ]}
          >
             {leftIcon && (
                <Ionicons
                   name={leftIcon}
                   size={20}
                   color={isFocused ? '#f97316' : '#9ca3af'}
-                  style={{ marginRight: 8 }}
+                  style={styles.icon}
                />
             )}
 
             <TextInput
-               className="flex-1 text-base text-gray-900"
+               style={[
+                  styles.input,
+                  multiline && styles.multiline,
+                  disabled && styles.inputDisabled,
+               ]}
                placeholder={placeholder}
                placeholderTextColor="#9ca3af"
                value={value}
@@ -92,7 +94,60 @@ export default function Input({
             )}
          </View>
 
-         {error && <Text className="mt-1 text-sm text-red-500">{error}</Text>}
+         {error && <Text style={styles.errorText}>{error}</Text>}
       </View>
    )
 }
+
+const styles = StyleSheet.create({
+   wrapper: {
+      marginBottom: 16,
+   },
+   label: {
+      marginBottom: 6,
+      fontSize: 14,
+      fontWeight: '500',
+      color: '#374151',
+   },
+   inputContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: '#d1d5db',
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: Platform.OS === 'ios' ? 12 : 8,
+      backgroundColor: '#fff',
+   },
+   focused: {
+      borderColor: '#f97316',
+   },
+   errorBorder: {
+      borderColor: '#ef4444',
+   },
+   disabled: {
+      backgroundColor: '#f3f4f6',
+   },
+   icon: {
+      marginRight: 8,
+   },
+   input: {
+      flex: 1,
+      fontSize: 16,
+      color: '#111827',
+      paddingVertical: 0,
+      alignSelf: 'center',
+   },
+   multiline: {
+      minHeight: 80,
+      textAlignVertical: 'top',
+   },
+   inputDisabled: {
+      color: '#9ca3af',
+   },
+   errorText: {
+      marginTop: 4,
+      fontSize: 13,
+      color: '#ef4444',
+   },
+})

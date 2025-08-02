@@ -89,3 +89,9 @@ export interface DirectionResult {
    steps: RouteStep[]
    geometry: string
 }
+
+export type ApiResponse<T = any> = {
+   status: number
+   message: string
+   data: T
+}

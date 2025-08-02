@@ -1,5 +1,6 @@
 import {
    ActivityIndicator,
+   StyleSheet,
    Text,
    TouchableOpacity,
    type TextStyle,
@@ -27,80 +28,45 @@ export default function Button({
    style,
    textStyle,
 }: ButtonProps) {
-   const getButtonStyle = (): string => {
-      let baseStyle = 'rounded-lg items-center justify-center flex-row'
+   const getButtonStyle = (): ViewStyle[] => {
+      const stylesArray: ViewStyle[] = [baseStyles.button]
 
       // Size styles
-      switch (size) {
-         case 'small':
-            baseStyle += ' px-3 py-2'
-            break
-         case 'large':
-            baseStyle += ' px-6 py-4'
-            break
-         default:
-            baseStyle += ' px-4 py-3'
-      }
+      if (size === 'small') stylesArray.push(baseStyles.small)
+      else if (size === 'large') stylesArray.push(baseStyles.large)
+      else stylesArray.push(baseStyles.medium)
 
       // Variant styles
-      switch (variant) {
-         case 'secondary':
-            baseStyle += ' bg-secondary-500'
-            break
-         case 'outline':
-            baseStyle += ' border border-primary-500 bg-transparent'
-            break
-         case 'ghost':
-            baseStyle += ' bg-transparent'
-            break
-         default:
-            baseStyle += ' bg-primary-500'
-      }
+      if (variant === 'secondary') stylesArray.push(baseStyles.secondary)
+      else if (variant === 'outline') stylesArray.push(baseStyles.outline)
+      else if (variant === 'ghost') stylesArray.push(baseStyles.ghost)
+      else stylesArray.push(baseStyles.primary)
 
-      if (disabled) {
-         baseStyle += ' opacity-50'
-      }
+      if (disabled) stylesArray.push(baseStyles.disabled)
 
-      return baseStyle
+      return [...stylesArray, style || {}]
    }
 
-   const getTextStyle = (): string => {
-      let baseStyle = 'font-medium'
+   const getTextStyle = (): TextStyle[] => {
+      const stylesArray: TextStyle[] = [baseStyles.text]
 
       // Size styles
-      switch (size) {
-         case 'small':
-            baseStyle += ' text-sm'
-            break
-         case 'large':
-            baseStyle += ' text-lg'
-            break
-         default:
-            baseStyle += ' text-base'
-      }
+      if (size === 'small') stylesArray.push(baseStyles.textSmall)
+      else if (size === 'large') stylesArray.push(baseStyles.textLarge)
+      else stylesArray.push(baseStyles.textMedium)
 
       // Variant styles
-      switch (variant) {
-         case 'outline':
-            baseStyle += ' text-primary-500'
-            break
-         case 'ghost':
-            baseStyle += ' text-primary-500'
-            break
-         default:
-            baseStyle += ' text-white'
+      if (variant === 'outline' || variant === 'ghost') {
+         stylesArray.push(baseStyles.textPrimary)
+      } else {
+         stylesArray.push(baseStyles.textWhite)
       }
 
-      return baseStyle
+      return [...stylesArray, textStyle || {}]
    }
 
    return (
-      <TouchableOpacity
-         className={getButtonStyle()}
-         onPress={onPress}
-         disabled={disabled || loading}
-         style={style}
-      >
+      <TouchableOpacity style={getButtonStyle()} onPress={onPress} disabled={disabled || loading}>
          {loading && (
             <ActivityIndicator
                size="small"
@@ -108,9 +74,63 @@ export default function Button({
                style={{ marginRight: 8 }}
             />
          )}
-         <Text className={getTextStyle()} style={textStyle}>
-            {title}
-         </Text>
+         <Text style={getTextStyle()}>{title}</Text>
       </TouchableOpacity>
    )
 }
+
+const baseStyles = StyleSheet.create({
+   button: {
+      borderRadius: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+   },
+   small: {
+      paddingVertical: 8,
+      paddingHorizontal: 12,
+   },
+   medium: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+   },
+   large: {
+      paddingVertical: 16,
+      paddingHorizontal: 24,
+   },
+   primary: {
+      backgroundColor: '#f97316', // Replace with your primary color
+   },
+   secondary: {
+      backgroundColor: '#6b7280', // Replace with your secondary color
+   },
+   outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: '#f97316',
+   },
+   ghost: {
+      backgroundColor: 'transparent',
+   },
+   disabled: {
+      opacity: 0.5,
+   },
+   text: {
+      fontWeight: '500',
+   },
+   textSmall: {
+      fontSize: 14,
+   },
+   textMedium: {
+      fontSize: 16,
+   },
+   textLarge: {
+      fontSize: 18,
+   },
+   textWhite: {
+      color: 'white',
+   },
+   textPrimary: {
+      color: '#3b82f6', // Same as primary color
+   },
+})
