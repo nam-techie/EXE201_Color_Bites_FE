@@ -93,7 +93,10 @@ export default function ChallengeScreen() {
          {/* Header */}
          <View style={styles.header}>
             <View style={styles.headerContent}>
-               <View>
+               <TouchableOpacity onPress={() => router.push('/(tabs)/')} style={styles.backButton}>
+                  <Ionicons name="arrow-back" size={24} color="#6B7280" />
+               </TouchableOpacity>
+               <View style={styles.headerCenter}>
                   <Text style={styles.headerTitle}>Thử thách</Text>
                   <Text style={styles.headerSubtitle}>Tham gia các thử thách ẩm thực thú vị</Text>
                </View>
@@ -311,6 +314,16 @@ const styles = StyleSheet.create({
       justifyContent: 'space-between',
       paddingHorizontal: 24,
       paddingVertical: 16,
+   },
+   backButton: {
+      padding: 8,
+      borderRadius: 20,
+      backgroundColor: '#F9FAFB',
+   },
+   headerCenter: {
+      flex: 1,
+      alignItems: 'center',
+      marginHorizontal: 16,
    },
    headerTitle: {
       fontSize: 24,

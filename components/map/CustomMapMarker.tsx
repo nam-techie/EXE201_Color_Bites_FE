@@ -15,6 +15,7 @@ interface Props {
    routeOrder?: number
    showDistance?: boolean
    distance?: string
+   isMoodRecommended?: boolean
 }
 
 export default function CustomMapMarker({
@@ -25,11 +26,14 @@ export default function CustomMapMarker({
    routeOrder,
    showDistance = false,
    distance,
+   isMoodRecommended = false,
 }: Props) {
    const scaleAnim = useRef(new Animated.Value(1)).current
 
-   const markerSize = isSelected ? 48 : 40
-   const { name: iconName, color: iconColor, iconFamily } = getCuisineIcon(restaurant.tags.cuisine || '')
+   const markerSize = isSelected ? 48 : isMoodRecommended ? 52 : 40
+   const { name: iconName, color: iconColor, iconFamily } = getCuisineIcon(
+      isMoodRecommended ? 'mood-recommended' : restaurant.tags.cuisine || ''
+   )
 
    const handlePress = () => {
       Animated.sequence([
@@ -49,11 +53,11 @@ export default function CustomMapMarker({
    }
 
    const renderIcon = () => {
-      const iconSize = isSelected ? 26 : 22
+      const iconSize = isSelected ? 26 : isMoodRecommended ? 28 : 22
       const props = {
          name: iconName,
          size: iconSize,
-         color: isSelected ? '#2563EB' : iconColor,
+         color: isSelected ? '#2563EB' : isMoodRecommended ? '#DC2626' : iconColor,
       }
 
       if (iconFamily === 'Ionicons') {
@@ -84,9 +88,9 @@ export default function CustomMapMarker({
                      height: markerSize,
                      borderRadius: markerSize / 2,
                      transform: [{ scale: scaleAnim }],
-                     borderColor: isSelected ? '#2563EB' : '#E5E7EB',
-                     borderWidth: isSelected ? 3 : 2,
-                     backgroundColor: isSelected ? '#EFF6FF' : '#FFFFFF',
+                     borderColor: isSelected ? '#2563EB' : isMoodRecommended ? '#DC2626' : '#E5E7EB',
+                     borderWidth: isSelected ? 3 : isMoodRecommended ? 4 : 2,
+                     backgroundColor: isSelected ? '#EFF6FF' : isMoodRecommended ? '#FEE2E2' : '#FFFFFF',
                   },
                ]}
             >
@@ -101,9 +105,9 @@ export default function CustomMapMarker({
 
             <View style={[styles.pointer, { borderTopColor: isSelected ? '#EFF6FF' : '#FFFFFF' }]} />
 
-            {isSelected && (
-               <View style={styles.labelContainer}>
-                  <Text style={styles.labelText} numberOfLines={1}>
+            {(isSelected || isMoodRecommended) && (
+               <View style={[styles.labelContainer, isMoodRecommended && styles.moodLabelContainer]}>
+                  <Text style={[styles.labelText, isMoodRecommended && styles.moodLabelText]} numberOfLines={1}>
                      {restaurant.name}
                   </Text>
                </View>
@@ -161,6 +165,14 @@ const styles = StyleSheet.create({
       fontWeight: '700',
       color: '#111827',
       textAlign: 'center',
+   },
+   moodLabelContainer: {
+      backgroundColor: 'rgba(220,38,38,0.95)',
+      borderColor: '#DC2626',
+   },
+   moodLabelText: {
+      color: '#FFFFFF',
+      fontWeight: '800',
    },
    distanceContainer: {
       backgroundColor: 'rgba(0,0,0,0.8)',

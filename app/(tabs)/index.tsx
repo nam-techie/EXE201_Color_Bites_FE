@@ -4,6 +4,7 @@ import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { mockPosts } from '@/data/mockData'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
+import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
    Dimensions,
@@ -44,6 +45,8 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
 export default function HomeScreen() {
    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
    const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set())
+   const router = useRouter()
+
 
    const toggleLike = async (postId: string) => {
       try {
@@ -128,7 +131,7 @@ export default function HomeScreen() {
                                     // Haptics not available
                                  }
                                  // Navigate to Challenge tab
-                                 // TODO: Implement navigation to challenge tab
+                                 router.push('/challenge')
                               }}
                            >
                               <Text style={styles.joinButtonText}>Join Challenge</Text>
@@ -136,6 +139,51 @@ export default function HomeScreen() {
                         </View>
                         <View style={styles.themeEmoji}>
                            <Text style={styles.emojiText}>🍲</Text>
+                        </View>
+                     </View>
+                  </CrossPlatformGradient>
+               </TouchableOpacity>
+            </View>
+
+            {/* Mood Discovery Card */}
+            <View style={styles.themeCardContainer}>
+                                 <TouchableOpacity
+                     style={styles.themeCard}
+                     onPress={async () => {
+                        try {
+                           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+                        } catch (error) {
+                           // Haptics not available
+                        }
+                        router.push('/mood/mood-quiz')
+                     }}
+                  >
+                  <CrossPlatformGradient
+                     colors={['#8b5cf6', '#ec4899', '#f97316']}
+                     start={{ x: 0, y: 0 }}
+                     end={{ x: 1, y: 1 }}
+                     style={styles.gradientContent}
+                  >
+                     <View style={styles.themeCardContent}>
+                        <View style={styles.themeTextContainer}>
+                           <Text style={styles.themeTitle}>Find Your Mood Today</Text>
+                           <Text style={styles.themeHashtag}>#MoodDiscovery</Text>
+                           <TouchableOpacity
+                              style={styles.joinButton}
+                              onPress={async () => {
+                                 try {
+                                    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+                                 } catch (error) {
+                                    // Haptics not available
+                                 }
+                                 router.push('/mood/mood-quiz')
+                              }}
+                           >
+                              <Text style={styles.joinButtonText}>Discover Now</Text>
+                           </TouchableOpacity>
+                        </View>
+                        <View style={styles.themeEmoji}>
+                           <Text style={styles.emojiText}>🎨</Text>
                         </View>
                      </View>
                   </CrossPlatformGradient>
@@ -157,6 +205,10 @@ export default function HomeScreen() {
                ))}
             </View>
          </ScrollView>
+
+
+
+
       </SafeAreaView>
    )
 }

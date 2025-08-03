@@ -1,4 +1,5 @@
 import { AuthProvider, useAuth } from '@/context/AuthProvider'
+
 import { ThemeProvider } from '@/context/ThemeContext'
 import { Stack, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'

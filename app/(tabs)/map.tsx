@@ -13,15 +13,15 @@ import * as Location from 'expo-location'
 import { useLocalSearchParams } from 'expo-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert,
-  Animated,
-  GestureResponderEvent,
-  PanResponder,
-  PanResponderGestureState,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    Alert,
+    Animated,
+    GestureResponderEvent,
+    PanResponder,
+    PanResponderGestureState,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
 
@@ -88,6 +88,7 @@ export default function MapScreen() {
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [moodRestaurants, setMoodRestaurants] = useState<Restaurant[]>([])
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -210,8 +211,47 @@ export default function MapScreen() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
+        setLoading(true)
+        
+        // Kiểm tra nếu có mood restaurants từ params
+        if (params.restaurants) {
+          try {
+            console.log('Received restaurants params:', params.restaurants)
+            const restaurantData = JSON.parse(params.restaurants as string)
+            console.log('Parsed restaurant data:', restaurantData)
+            const moodRestaurantsList = restaurantData.map((restaurant: any) => ({
+              id: restaurant.name.toLowerCase().replace(/\s+/g, '-'),
+              name: restaurant.name,
+              lat: restaurant.lat,
+              lon: restaurant.lng || restaurant.lon, // Support both lng and lon
+              tags: {
+                cuisine: 'Vietnamese',
+                'addr:street': `${restaurant.lat}, ${restaurant.lng || restaurant.lon}`,
+                mood: 'recommended'
+              }
+            }))
+            console.log('Mood restaurants list:', moodRestaurantsList)
+            setMoodRestaurants(moodRestaurantsList)
+            
+            // Cập nhật map region để hiển thị tất cả mood restaurants
+            if (moodRestaurantsList.length > 0) {
+              const avgLat = moodRestaurantsList.reduce((sum, r) => sum + r.lat, 0) / moodRestaurantsList.length
+              const avgLon = moodRestaurantsList.reduce((sum, r) => sum + r.lon, 0) / moodRestaurantsList.length
+              console.log('Setting map region to:', { latitude: avgLat, longitude: avgLon })
+              setMapRegion({
+                latitude: avgLat,
+                longitude: avgLon,
+                latitudeDelta: 0.05, // Zoom in closer
+                longitudeDelta: 0.05,
+              })
+            }
+          } catch (error) {
+            console.error('Error parsing restaurant data:', error)
+          }
+        }
+        
         // Check if we have params from challenge navigation
-        if (params.latitude && params.longitude) {
+        else if (params.latitude && params.longitude) {
           const lat = parseFloat(params.latitude as string)
           const lon = parseFloat(params.longitude as string)
           const title = params.title as string
@@ -279,7 +319,7 @@ export default function MapScreen() {
       }
     }
     fetchInitialData()
-  }, [params.latitude, params.longitude, params.title, params.address, debouncedFetchRestaurants]) // Thêm dependency array cụ thể
+  }, [params.latitude, params.longitude, params.title, params.address, params.restaurants, debouncedFetchRestaurants]) // Thêm dependency array cụ thể
 
   useEffect(() => {
     if (routeStops.length > 0 && userLocation) {
@@ -403,6 +443,7 @@ export default function MapScreen() {
         showsCompass={true}
         showsScale={true}
       >
+        {/* Regular Restaurants */}
         {filteredRestaurants.map((restaurant) => (
           <CustomMarker
             key={restaurant.id}
@@ -411,6 +452,20 @@ export default function MapScreen() {
             isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
           />
         ))}
+
+        {/* Mood Recommended Restaurants */}
+        {moodRestaurants.map((restaurant) => {
+          console.log('Rendering mood restaurant marker:', restaurant)
+          return (
+            <CustomMarker
+              key={`mood-${restaurant.id}`}
+              restaurant={restaurant}
+              onPress={handleMarkerPress}
+              isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
+              isMoodRecommended={true}
+            />
+          )
+        })}
 
         {/* Challenge Location Marker */}
         {params.latitude && params.longitude && (

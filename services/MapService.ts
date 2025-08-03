@@ -98,6 +98,7 @@ export function getCuisineIcon(cuisine: string): { name: string; color: string; 
       seafood: { name: 'fish', color: '#38BDF8', iconFamily: 'MaterialCommunityIcons' },
       bbq: { name: 'fire', color: '#DC2626', iconFamily: 'MaterialCommunityIcons' },
       vegetarian: { name: 'leaf', color: '#4ADE80', iconFamily: 'MaterialCommunityIcons' },
+      'mood-recommended': { name: 'restaurant', color: '#DC2626', iconFamily: 'Ionicons' },
       vegan: { name: 'leaf', color: '#22C55E', iconFamily: 'MaterialCommunityIcons' },
       coffee: { name: 'coffee', color: '#A16207', iconFamily: 'MaterialCommunityIcons' },
       bakery: { name: 'bread-slice', color: '#FCD34D', iconFamily: 'MaterialCommunityIcons' },
