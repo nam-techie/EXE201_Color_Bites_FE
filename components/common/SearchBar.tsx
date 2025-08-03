@@ -1,4 +1,5 @@
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { Ionicons } from '@expo/vector-icons'
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 
 interface RestaurantSearchBarProps {
    searchQuery: string
@@ -14,7 +15,7 @@ export default function RestaurantSearchBar({
    return (
       <View style={styles.container}>
          <View style={styles.searchContainer}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            <Ionicons name="search" size={20} color="#9CA3AF" style={styles.searchIcon} />
             <TextInput
                style={styles.textInput}
                placeholder="Tìm kiếm nhà hàng..."
@@ -24,7 +25,7 @@ export default function RestaurantSearchBar({
             />
             {searchQuery.length > 0 && (
                <TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
-                  <Text style={styles.clearText}>✕</Text>
+                  <Ionicons name="close-circle" size={20} color="#9CA3AF" />
                </TouchableOpacity>
             )}
          </View>
@@ -42,33 +43,33 @@ const styles = StyleSheet.create({
    },
    searchContainer: {
       backgroundColor: '#ffffff',
-      borderRadius: 8,
+      borderRadius: 16,
       shadowColor: '#000',
       shadowOffset: {
          width: 0,
-         height: 2,
+         height: 4,
       },
-      shadowOpacity: 0.25,
-      shadowRadius: 3.84,
-      elevation: 5,
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 8,
       flexDirection: 'row',
       alignItems: 'center',
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 14,
+      borderWidth: 1,
+      borderColor: '#f3f4f6',
    },
    searchIcon: {
-      color: '#9CA3AF',
-      marginRight: 8,
+      marginRight: 12,
    },
    textInput: {
       flex: 1,
       fontSize: 16,
+      color: '#1f2937',
+      fontWeight: '500',
    },
    clearButton: {
       marginLeft: 8,
-   },
-   clearText: {
-      color: '#9CA3AF',
-      fontSize: 18,
+      padding: 4,
    },
 })

@@ -1,7 +1,7 @@
 // API Configuration for different environments
 export const API_CONFIG = {
   // Development - Replace with your actual LAN IP address
-  DEVELOPMENT: 'http://192.168.1.144:8080',
+  DEVELOPMENT: 'http://10.0.240.67:8080',
   
   // Android Emulator - Special IP for AVD
   ANDROID_EMULATOR: 'http://10.0.2.2:8080',

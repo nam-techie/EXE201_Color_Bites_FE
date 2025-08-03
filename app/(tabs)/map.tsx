@@ -10,7 +10,8 @@ import { fetchRestaurantsNearby } from '@/services/MapService'
 import type { MapRegion, Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useLocalSearchParams } from 'expo-router'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Alert,
   Animated,
@@ -28,6 +29,14 @@ interface RouteStop {
   restaurant: Restaurant
   distance?: number
   duration?: number
+}
+
+// Vị trí cứng - TP.HCM
+const HARDCODED_LOCATION = {
+  id: 'hcm-central', // ID cho vị trí cứng
+  latitude: 10.8414360,
+  longitude: 106.8098568,
+  name: 'Trung tâm TP.HCM', // Tên hiển thị cho vị trí
 }
 
 const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
@@ -59,6 +68,7 @@ const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
 }
 
 export default function MapScreen() {
+  const params = useLocalSearchParams()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
@@ -67,8 +77,8 @@ export default function MapScreen() {
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null)
   const [mapRegion, setMapRegion] = useState<MapRegion>({
-    latitude: 0,
-    longitude: 0,
+    latitude: HARDCODED_LOCATION.latitude,
+    longitude: HARDCODED_LOCATION.longitude,
     latitudeDelta: 0.08,
     longitudeDelta: 0.08,
   })
@@ -77,6 +87,7 @@ export default function MapScreen() {
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -105,6 +116,8 @@ export default function MapScreen() {
       },
     })
   ).current
+
+  const apiTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const getCurrentUserLocation = async (): Promise<Location.LocationObject | null> => {
     try {
@@ -163,21 +176,102 @@ export default function MapScreen() {
     setRouteCoordinates(allCoordinates)
   }
 
+  // Debounced API call
+  const debouncedFetchRestaurants = useCallback((lat: number, lon: number, radius: number = 5000) => {
+    if (apiTimeoutRef.current) {
+      clearTimeout(apiTimeoutRef.current)
+    }
+    
+    apiTimeoutRef.current = setTimeout(async () => {
+      try {
+        setLoading(true)
+        setApiError(null)
+        const data = await fetchRestaurantsNearby(lat, lon, radius)
+        setRestaurants(data)
+      } catch (error) {
+        console.error('Lỗi khi tải nhà hàng:', error)
+        setApiError(error instanceof Error ? error.message : 'Lỗi không xác định')
+        setRestaurants([])
+      } finally {
+        setLoading(false)
+      }
+    }, 500) // Delay 500ms
+  }, [])
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (apiTimeoutRef.current) {
+        clearTimeout(apiTimeoutRef.current)
+      }
+    }
+  }, [])
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const location = await getCurrentUserLocation()
-        if (!location) return
-        setUserLocation(location)
-        const { latitude, longitude } = location.coords
-        setMapRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        })
-        const data = await fetchRestaurantsNearby(latitude, longitude)
-        setRestaurants(data)
+        // Check if we have params from challenge navigation
+        if (params.latitude && params.longitude) {
+          const lat = parseFloat(params.latitude as string)
+          const lon = parseFloat(params.longitude as string)
+          const title = params.title as string
+          const address = params.address as string
+          
+          // Set map region to the challenge location
+          setMapRegion({
+            latitude: lat,
+            longitude: lon,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          })
+          
+          // Create a mock restaurant for the challenge location
+          const challengeLocation: Restaurant = {
+            id: 999999, // Sử dụng ID số thay vì string
+            name: title || 'Địa điểm thử thách',
+            lat,
+            lon,
+            tags: {
+              cuisine: 'challenge',
+              'addr:street': address || '' // Sử dụng addr:street thay vì address
+            }
+          }
+          
+          setSelectedRestaurant(challengeLocation)
+          setModalVisible(true)
+          
+          // Also fetch nearby restaurants
+          debouncedFetchRestaurants(lat, lon)
+        } else {
+          // Sử dụng vị trí cứng thay vì lấy vị trí thực
+          const mockLocation: Location.LocationObject = {
+            coords: {
+              latitude: HARDCODED_LOCATION.latitude,
+              longitude: HARDCODED_LOCATION.longitude,
+              altitude: null,
+              accuracy: 10,
+              altitudeAccuracy: null,
+              heading: null,
+              speed: null,
+            },
+            timestamp: Date.now(),
+          }
+          
+          setUserLocation(mockLocation)
+          setMapRegion({
+            latitude: HARDCODED_LOCATION.latitude,
+            longitude: HARDCODED_LOCATION.longitude,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
+          })
+          
+          // Fetch restaurants from hardcoded location
+          debouncedFetchRestaurants(
+            HARDCODED_LOCATION.latitude, 
+            HARDCODED_LOCATION.longitude,
+            5000 // Bán kính 5km
+          )
+        }
       } catch (error) {
         Alert.alert('Lỗi', 'Không thể tải dữ liệu hoặc vị trí')
       } finally {
@@ -185,13 +279,13 @@ export default function MapScreen() {
       }
     }
     fetchInitialData()
-  }, [])
+  }, [params.latitude, params.longitude, params.title, params.address, debouncedFetchRestaurants]) // Thêm dependency array cụ thể
 
   useEffect(() => {
-    if (routeStops.length > 0) {
+    if (routeStops.length > 0 && userLocation) {
       calculateRouteForStops(routeStops)
     }
-  }, [selectedProfile])
+  }, [selectedProfile, routeStops.length, userLocation]) // Thêm dependency array cụ thể
 
   const getResponsiveStrokeWidth = () => {
     const zoom = mapRegion.latitudeDelta
@@ -245,17 +339,41 @@ export default function MapScreen() {
   }
 
   const handleMyLocation = async () => {
-    const location = await getCurrentUserLocation()
-    if (location) {
-      setUserLocation(location)
-      const { latitude, longitude } = location.coords
-      setMapRegion({
-        latitude,
-        longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      })
+    // Luôn trở về vị trí cứng với ID
+    const mockLocation: Location.LocationObject = {
+      coords: {
+        latitude: HARDCODED_LOCATION.latitude,
+        longitude: HARDCODED_LOCATION.longitude,
+        altitude: null,
+        accuracy: 10,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      },
+      timestamp: Date.now(),
     }
+    
+    setUserLocation(mockLocation)
+    setMapRegion({
+      latitude: HARDCODED_LOCATION.latitude,
+      longitude: HARDCODED_LOCATION.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    })
+    
+    // Hiển thị thông báo về vị trí cứng
+    Alert.alert(
+      'Vị trí hiện tại',
+      `Đã chuyển đến ${HARDCODED_LOCATION.name} (ID: ${HARDCODED_LOCATION.id})\nTọa độ: ${HARDCODED_LOCATION.latitude}, ${HARDCODED_LOCATION.longitude}`,
+      [{ text: 'OK' }]
+    )
+    
+    // Tải lại nhà hàng với bán kính 5km
+    debouncedFetchRestaurants(
+      HARDCODED_LOCATION.latitude, 
+      HARDCODED_LOCATION.longitude,
+      5000 // Bán kính 5km
+    )
   }
 
   const toggleRoutePlanning = () => {
@@ -293,6 +411,25 @@ export default function MapScreen() {
             isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
           />
         ))}
+
+        {/* Challenge Location Marker */}
+        {params.latitude && params.longitude && (
+          <CustomMarker
+            key="challenge-location"
+            restaurant={{
+              id: 999999, // Sử dụng ID số
+              name: params.title as string || 'Địa điểm thử thách',
+              lat: parseFloat(params.latitude as string),
+              lon: parseFloat(params.longitude as string),
+              tags: {
+                cuisine: 'challenge',
+                'addr:street': params.address as string || '' // Sử dụng addr:street
+              }
+            }}
+            onPress={handleMarkerPress}
+            isSelected={false}
+          />
+        )}
 
         {routeCoordinates.length > 0 && (
           <Polyline
@@ -383,7 +520,10 @@ export default function MapScreen() {
       {!routePlanningMode && (
         <View style={styles.counterContainer}>
           <Text style={styles.counterText}>
-            {filteredRestaurants.length} nhà hàng được tìm thấy
+            {loading ? 'Đang tải...' : 
+             apiError ? `Lỗi: ${apiError}` :
+             `${filteredRestaurants.length} nhà hàng trong bán kính 5km từ ${HARDCODED_LOCATION.name}`
+            }
           </Text>
         </View>
       )}
@@ -453,9 +593,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   counterText: {
     color: '#374151',
-    fontWeight: '500',
+    fontWeight: '600',
+    fontSize: 13,
   },
 })

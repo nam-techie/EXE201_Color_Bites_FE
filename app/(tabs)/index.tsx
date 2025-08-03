@@ -127,6 +127,8 @@ export default function HomeScreen() {
                                  } catch (error) {
                                     // Haptics not available
                                  }
+                                 // Navigate to Challenge tab
+                                 // TODO: Implement navigation to challenge tab
                               }}
                            >
                               <Text style={styles.joinButtonText}>Join Challenge</Text>
@@ -276,7 +278,7 @@ function PostCard({
             <View style={styles.captionContainer}>
                <Text style={styles.caption}>{post.caption}</Text>
                <View style={styles.hashtagContainer}>
-                  {post.hashtags.map((tag, tagIndex) => (
+                  {post.hashtags.map((tag: string, tagIndex: number) => (
                      <TouchableOpacity key={tagIndex} style={styles.hashtag}>
                         <Text style={styles.hashtagText}>{tag}</Text>
                      </TouchableOpacity>

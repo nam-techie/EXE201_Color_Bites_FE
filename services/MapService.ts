@@ -1,77 +1,112 @@
 import { DEFAULT_SEARCH_RADIUS } from '@/constants'
 import type { Restaurant } from '@/type/location'
 
+// Hàm retry với delay
+async function retryWithDelay<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn()
+    } catch (error) {
+      if (i === maxRetries - 1) throw error
+      console.log(`Lần thử ${i + 1} thất bại, thử lại sau ${delay}ms...`)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  throw new Error('Tất cả các lần thử đều thất bại')
+}
+
 export async function fetchRestaurantsNearby(
    latitude: number,
    longitude: number,
    radius: number = DEFAULT_SEARCH_RADIUS,
 ): Promise<Restaurant[]> {
    const query = `
-    [out:json][timeout:25];
+    [out:json][timeout:60]; // Tăng timeout từ 25 lên 60 giây
     node["amenity"="restaurant"](around:${radius}, ${latitude}, ${longitude});
     out body;
   `
 
-   const url = 'https://overpass-api.de/api/interpreter'
+   // Danh sách các API endpoints để fallback
+   const apiEndpoints = [
+      'https://overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+   ]
 
-   try {
-      const response = await fetch(url, {
-         method: 'POST',
-         body: query,
-         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-         },
-      })
+   return retryWithDelay(async () => {
+      let lastError: Error | null = null
+      
+      // Thử từng endpoint
+      for (const url of apiEndpoints) {
+         try {
+            const response = await fetch(url, {
+               method: 'POST',
+               body: query,
+               headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+               },
+            })
 
-      if (!response.ok) {
-         throw new Error(`Overpass API error: ${response.status}`)
+            if (!response.ok) {
+               throw new Error(`API error (${url}): ${response.status}`)
+            }
+
+            const data = await response.json()
+
+            return data.elements.map((item: any) => ({
+               id: item.id,
+               name: item.tags?.name || 'Không rõ tên',
+               lat: item.lat,
+               lon: item.lon,
+               tags: item.tags || {},
+            }))
+         } catch (error) {
+            lastError = error instanceof Error ? error : new Error('Unknown error')
+            console.log(`Endpoint ${url} failed:`, error)
+            continue
+         }
       }
-
-      const data = await response.json()
-
-      return data.elements.map((item: any) => ({
-         id: item.id,
-         name: item.tags?.name || 'Không rõ tên',
-         lat: item.lat,
-         lon: item.lon,
-         tags: item.tags || {},
-      }))
-   } catch (error) {
-      console.error('Lỗi khi gọi API Overpass:', error)
-      return []
-   }
+      
+      // Nếu tất cả endpoints đều thất bại
+      throw lastError || new Error('Tất cả API endpoints đều thất bại')
+   }, 2, 3000) // Giảm số lần retry, tăng delay
 }
-export function getCuisineIcon(cuisine: string): { name: string; color: string } {
-   const cuisineMap: { [key: string]: { name: string; color: string } } = {
+export function getCuisineIcon(cuisine: string): { name: string; color: string; iconFamily: 'MaterialCommunityIcons' | 'Ionicons' } {
+   const cuisineMap: { [key: string]: { name: string; color: string; iconFamily: 'MaterialCommunityIcons' | 'Ionicons' } } = {
       // Asian cuisines
-      vietnamese: { name: 'noodles', color: '#22C55E' }, // fallback: rice-based
-      chinese: { name: 'food-fork-drink', color: '#A855F7' },
-      japanese: { name: 'fish', color: '#3B82F6' },
-      korean: { name: 'noodles', color: '#EA580C' },
-      thai: { name: 'chili-mild', color: '#F97316' },
-      indian: { name: 'food-variant', color: '#F59E0B' },
+      vietnamese: { name: 'food-variant', color: '#22C55E', iconFamily: 'MaterialCommunityIcons' },
+      chinese: { name: 'food-fork-drink', color: '#A855F7', iconFamily: 'MaterialCommunityIcons' },
+      japanese: { name: 'fish', color: '#3B82F6', iconFamily: 'MaterialCommunityIcons' },
+      korean: { name: 'food-variant', color: '#EA580C', iconFamily: 'MaterialCommunityIcons' },
+      thai: { name: 'food-variant', color: '#F97316', iconFamily: 'MaterialCommunityIcons' },
+      indian: { name: 'food-variant', color: '#F59E0B', iconFamily: 'MaterialCommunityIcons' },
 
       // Western cuisines
-      italian: { name: 'pasta', color: '#EF4444' },
-      french: { name: 'bread-slice', color: '#E879F9' },
-      american: { name: 'hamburger', color: '#F43F5E' },
-      mexican: { name: 'taco', color: '#10B981' },
-      spanish: { name: 'paella', color: '#0EA5E9' }, // fallback custom
+      italian: { name: 'food-variant', color: '#EF4444', iconFamily: 'MaterialCommunityIcons' },
+      french: { name: 'food-variant', color: '#E879F9', iconFamily: 'MaterialCommunityIcons' },
+      american: { name: 'hamburger', color: '#F43F5E', iconFamily: 'MaterialCommunityIcons' },
+      mexican: { name: 'food-variant', color: '#10B981', iconFamily: 'MaterialCommunityIcons' },
+      spanish: { name: 'food-variant', color: '#0EA5E9', iconFamily: 'MaterialCommunityIcons' },
 
       // Other cuisines
-      pizza: { name: 'pizza', color: '#F87171' },
-      burger: { name: 'hamburger', color: '#FB923C' },
-      seafood: { name: 'fish', color: '#38BDF8' },
-      bbq: { name: 'grill', color: '#DC2626' },
-      vegetarian: { name: 'leaf', color: '#4ADE80' },
-      vegan: { name: 'leaf', color: '#22C55E' },
-      coffee: { name: 'coffee', color: '#A16207' },
-      bakery: { name: 'bread-slice', color: '#FCD34D' },
-      ice_cream: { name: 'ice-cream', color: '#F472B6' },
-      western: { name: 'silverware-fork-knife', color: '#9CA3AF' },
+      pizza: { name: 'pizza', color: '#F87171', iconFamily: 'MaterialCommunityIcons' },
+      burger: { name: 'hamburger', color: '#FB923C', iconFamily: 'MaterialCommunityIcons' },
+      seafood: { name: 'fish', color: '#38BDF8', iconFamily: 'MaterialCommunityIcons' },
+      bbq: { name: 'fire', color: '#DC2626', iconFamily: 'MaterialCommunityIcons' },
+      vegetarian: { name: 'leaf', color: '#4ADE80', iconFamily: 'MaterialCommunityIcons' },
+      vegan: { name: 'leaf', color: '#22C55E', iconFamily: 'MaterialCommunityIcons' },
+      coffee: { name: 'coffee', color: '#A16207', iconFamily: 'MaterialCommunityIcons' },
+      bakery: { name: 'bread-slice', color: '#FCD34D', iconFamily: 'MaterialCommunityIcons' },
+      ice_cream: { name: 'ice-cream', color: '#F472B6', iconFamily: 'MaterialCommunityIcons' },
+      western: { name: 'silverware-fork-knife', color: '#9CA3AF', iconFamily: 'MaterialCommunityIcons' },
+      challenge: { name: 'flag', color: '#F59E0B', iconFamily: 'MaterialCommunityIcons' },
 
       // Default
-      default: { name: 'silverware-fork-knife', color: '#6B7280' },
+      default: { name: 'silverware-fork-knife', color: '#6B7280', iconFamily: 'MaterialCommunityIcons' },
    }
 
    const normalizedCuisine = cuisine.toLowerCase().replace(/[^a-z]/g, '')

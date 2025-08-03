@@ -1,9 +1,10 @@
 import { Ionicons } from '@expo/vector-icons'
+import React from 'react'
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 interface Props {
-  selectedFilter: string
-  onFilterChange: (filter: string) => void
+   selectedFilter: string
+   onFilterChange: (filter: string) => void
 }
 
 const filters = [
@@ -11,7 +12,7 @@ const filters = [
   { key: 'vietnamese', label: 'Việt Nam', icon: 'fast-food' },
   { key: 'vegetarian', label: 'Chay', icon: 'leaf' },
   { key: 'pizza', label: 'Pizza', icon: 'pizza' },
-  { key: 'chinese', label: 'Trung Hoa', icon: 'bowl' }, // gần đúng, có thể thay bằng 'restaurant-outline'
+  { key: 'chinese', label: 'Trung Hoa', icon: 'restaurant-outline' },
   { key: 'coffee', label: 'Cà phê', icon: 'cafe' },
 ]
 
@@ -23,6 +24,8 @@ export default function FilterButtons({ selectedFilter, onFilterChange }: Props)
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollView}
+        decelerationRate="fast"
+        snapToInterval={80}
       >
         {filters.map((filter) => {
           const selected = selectedFilter === filter.key
@@ -37,7 +40,7 @@ export default function FilterButtons({ selectedFilter, onFilterChange }: Props)
             >
               <Ionicons
                 name={filter.icon as any}
-                size={18}
+                size={16}
                 color={selected ? '#ffffff' : '#3b82f6'}
                 style={styles.filterIcon}
               />
@@ -60,44 +63,47 @@ export default function FilterButtons({ selectedFilter, onFilterChange }: Props)
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 112,
+    top: 130, // Tăng từ 118 lên 130 để cách xa hơn
     left: 0,
     right: 0,
     zIndex: 10,
   },
   scrollView: {
-    flexDirection: 'row',
+    flexGrow: 0,
   },
   scrollContent: {
     paddingHorizontal: 16,
+    gap: 8,
   },
   filterButton: {
-    marginRight: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    minWidth: 70,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
   },
   selectedButton: {
     backgroundColor: '#3b82f6',
+    borderWidth: 1,
+    borderColor: '#2563eb',
   },
   unselectedButton: {
     backgroundColor: '#ffffff',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   filterIcon: {
     marginRight: 6,
   },
   filterText: {
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
   },
   selectedText: {
     color: '#ffffff',

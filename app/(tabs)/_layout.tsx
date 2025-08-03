@@ -18,6 +18,8 @@ export default function TabLayout() {
                   iconName = focused ? 'map' : 'map-outline'
                } else if (route.name === 'profile') {
                   iconName = focused ? 'person' : 'person-outline'
+               } else if (route.name === 'challenge') {
+                  iconName = focused ? 'trophy' : 'trophy-outline'
                } else {
                   iconName = 'home-outline'
                }
@@ -65,6 +67,12 @@ export default function TabLayout() {
             name="profile"
             options={{
                title: 'Profile',
+            }}
+         />
+         <Tabs.Screen
+            name="challenge"
+            options={{
+               title: 'Challenge',
             }}
          />
       </Tabs>

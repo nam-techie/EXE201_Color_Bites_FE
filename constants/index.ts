@@ -8,7 +8,7 @@ export const DEFAULT_MAP_REGION = {
    longitudeDelta: 0.05,
 }
 
-export const DEFAULT_SEARCH_RADIUS = 2000 // meters
+export const DEFAULT_SEARCH_RADIUS = 5000 // meters - tăng từ 2km lên 5km
 
 // Route Configuration
 export const DEFAULT_ROUTE_ALTERNATIVES = 2
