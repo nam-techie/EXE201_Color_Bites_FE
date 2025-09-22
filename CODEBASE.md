@@ -62,7 +62,7 @@ export class EntityService {
         `${API_ENDPOINTS.ENTITIES.LIST}?page=${page}&size=${size}`
       )
       
-      if (response.statusCode === 200 && response.data) {
+      if (response.status === 200 && response.data) {
         console.log(`✅ Fetched ${response.data.content.length} entities`)
         return response.data.content
       }
@@ -83,7 +83,7 @@ export class EntityService {
         data
       )
       
-      if (response.statusCode === 201 && response.data) {
+      if (response.status === 201 && response.data) {
         console.log('✅ Entity created:', response.data.id)
         return response.data
       }

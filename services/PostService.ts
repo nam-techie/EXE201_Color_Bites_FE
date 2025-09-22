@@ -1,9 +1,9 @@
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants'
 import type {
-    CreatePostRequest,
-    PaginatedResponse,
-    PostResponse,
-    UpdatePostRequest
+   CreatePostRequest,
+   PaginatedResponse,
+   PostResponse,
+   UpdatePostRequest
 } from '@/type'
 import { apiService } from './ApiService'
 
@@ -23,18 +23,18 @@ export class PostService {
          )
          
          console.log('Raw API Response:', JSON.stringify(response, null, 2))
-         console.log('Response Status Code:', response.statusCode)
+         console.log('Response Status Code:', response.status)
          console.log('Response Message:', response.message)
          console.log('Response Data:', response.data)
          
-         if (response.statusCode === 201 && response.data) {
+         if (response.status === 201 && response.data) {
             console.log('✅ Post created successfully:', response.data)
             return response.data
          }
          
          // Log chi tiết lỗi
          console.error('❌ API Error Details:')
-         console.error('- Status Code:', response.statusCode)
+         console.error('- Status Code:', response.status)
          console.error('- Message:', response.message)
          console.error('- Data:', response.data)
          
@@ -72,7 +72,7 @@ export class PostService {
             `${API_ENDPOINTS.POSTS.LIST}?page=${page}&size=${size}`
          )
          
-         if (response.statusCode === 200 && response.data) {
+         if (response.status === 200 && response.data) {
             console.log('Posts fetched successfully:', response.data.content?.length, 'posts')
             return response.data
          }
@@ -80,7 +80,17 @@ export class PostService {
          throw new Error(response.message || 'Không thể tải danh sách bài viết')
       } catch (error) {
          console.error('Error fetching posts:', error)
-         throw error
+         // Trả về empty response thay vì throw để app không crash
+         console.log('🔄 Returning empty response due to API error')
+         return {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            size: size,
+            number: page - 1,
+            first: true,
+            last: true
+         }
       }
    }
 
@@ -94,7 +104,7 @@ export class PostService {
             `${API_ENDPOINTS.POSTS.BY_ID}/${postId}`
          )
          
-         if (response.statusCode === 200 && response.data) {
+         if (response.status === 200 && response.data) {
             console.log('Post fetched successfully:', response.data.id)
             return response.data
          }
@@ -116,7 +126,7 @@ export class PostService {
             `${API_ENDPOINTS.POSTS.BY_USER}?page=${page}&size=${size}`
          )
          
-         if (response.statusCode === 200 && response.data) {
+         if (response.status === 200 && response.data) {
             console.log('User posts fetched successfully:', response.data.content?.length, 'posts')
             return response.data
          }
@@ -138,7 +148,7 @@ export class PostService {
             `${API_ENDPOINTS.POSTS.BY_MOOD}/${mood}?page=${page}&size=${size}`
          )
          
-         if (response.statusCode === 200 && response.data) {
+         if (response.status === 200 && response.data) {
             console.log('Posts by mood fetched successfully:', response.data.content?.length, 'posts')
             return response.data
          }
@@ -160,7 +170,7 @@ export class PostService {
             `${API_ENDPOINTS.POSTS.SEARCH}?keyword=${encodeURIComponent(keyword)}&page=${page}&size=${size}`
          )
          
-         if (response.statusCode === 200 && response.data) {
+         if (response.status === 200 && response.data) {
             console.log('Search results:', response.data.content?.length, 'posts found')
             return response.data
          }
@@ -183,7 +193,7 @@ export class PostService {
             updateData
          )
          
-         if (response.statusCode === 200 && response.data) {
+         if (response.status === 200 && response.data) {
             console.log('Post updated successfully:', response.data.id)
             return response.data
          }
@@ -205,7 +215,7 @@ export class PostService {
             `${API_ENDPOINTS.POSTS.DELETE}/${postId}`
          )
          
-         if (response.statusCode === 200) {
+         if (response.status === 200) {
             console.log('Post deleted successfully')
             return
          }
@@ -228,7 +238,7 @@ export class PostService {
             { reactionType }
          )
          
-         if (response.statusCode === 200) {
+         if (response.status === 200) {
             console.log('Reaction toggled successfully')
             return
          }
@@ -248,7 +258,7 @@ export class PostService {
          console.log('Fetching user post count')
          const response = await apiService.get<number>(API_ENDPOINTS.POSTS.COUNT_USER)
          
-         if (response.statusCode === 200 && response.data !== undefined) {
+         if (response.status === 200 && response.data !== undefined) {
             console.log('User post count:', response.data)
             return response.data
          }

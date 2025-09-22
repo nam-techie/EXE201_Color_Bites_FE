@@ -67,7 +67,7 @@ export interface PostResponse {
 }
 
 export interface ApiResponse<T> {
-   statusCode: number
+   status: number
    message: string
    data: T
 }

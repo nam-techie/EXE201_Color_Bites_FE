@@ -15,7 +15,12 @@ export function useMoods() {
       const moodList = await moodService.getAllMoods()
       setMoods(moodList)
       
-      console.log('Moods loaded successfully:', moodList.length)
+      if (moodList.length === 0) {
+        console.log('⚠️ No moods returned from API')
+        setError('Không có dữ liệu cảm xúc')
+      } else {
+        console.log('Moods loaded successfully:', moodList.length)
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Không thể tải danh sách mood'
       setError(errorMessage)

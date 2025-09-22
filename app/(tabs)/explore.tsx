@@ -100,7 +100,7 @@ export default function ExploreScreen() {
                   <Text style={styles.sectionTitle}>Trending This Week</Text>
                </View>
                <View style={styles.sectionContent}>
-                  {trendingHashtags.map((item, index) => (
+                  {(trendingHashtags || []).map((item, index) => (
                      <TouchableOpacity key={index} style={styles.hashtagCard}>
                         <View style={styles.hashtagContent}>
                            <View>
@@ -132,7 +132,7 @@ export default function ExploreScreen() {
                   <Text style={styles.sectionTitle}>Featured Foodies</Text>
                </View>
                <View style={styles.sectionContent}>
-                  {featuredUsers.map((user) => (
+                  {(featuredUsers || []).map((user) => (
                      <TouchableOpacity key={user.id} style={styles.userCard}>
                         <View style={styles.userContent}>
                            <View style={styles.userInfo}>
@@ -165,7 +165,7 @@ export default function ExploreScreen() {
                   <Text style={styles.sectionTitle}>Nearby Places</Text>
                </View>
                <View style={styles.sectionContent}>
-                  {nearbyPlaces.map((place) => (
+                  {(nearbyPlaces || []).map((place) => (
                      <TouchableOpacity key={place.id} style={styles.placeCard}>
                         <View style={styles.placeContent}>
                            <Image

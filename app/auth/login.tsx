@@ -7,7 +7,7 @@ import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useState } from 'react'
-import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 export default function LoginScreen() {
    const [email, setEmail] = useState('test123')  // Pre-fill for testing
@@ -15,11 +15,15 @@ export default function LoginScreen() {
    const [isLoading, setIsLoading] = useState(false)
    const [showPassword, setShowPassword] = useState(false)
    const [rememberMe, setRememberMe] = useState(false)
+   const [errorMessage, setErrorMessage] = useState('')
    const { login } = useAuth()
 
    const handleLogin = async () => {
+      // Clear previous error
+      setErrorMessage('')
+      
       if (!email || !password) {
-         Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin')
+         setErrorMessage('Vui lòng nhập đầy đủ thông tin')
          return
       }
 
@@ -27,12 +31,10 @@ export default function LoginScreen() {
       try {
          // Use real AuthProvider login
          await login(email, password)
-         
-         Alert.alert('Thành công', `Đăng nhập thành công!${rememberMe ? '\nĐã bật ghi nhớ.' : ''}`)
          router.replace('/(tabs)')
       } catch (error) {
          console.error('Login error:', error)
-         Alert.alert('Lỗi', error instanceof Error ? error.message : 'Đăng nhập thất bại. Vui lòng thử lại.')
+         setErrorMessage(error instanceof Error ? error.message : 'Đăng nhập thất bại. Vui lòng thử lại.')
       } finally {
          setIsLoading(false)
       }
@@ -104,6 +106,14 @@ export default function LoginScreen() {
                            leftIcon="lock-closed"
                         />
                      </View>
+
+                     {/* Error Message */}
+                     {errorMessage ? (
+                        <View style={styles.errorContainer}>
+                           <Ionicons name="alert-circle" size={16} color="#dc2626" />
+                           <Text style={styles.errorText}>{errorMessage}</Text>
+                        </View>
+                     ) : null}
 
                      {/* Remember / Forgot */}
                      <View style={styles.rowBetween}>
@@ -335,5 +345,23 @@ const styles = StyleSheet.create({
       fontSize: 13,
       color: '#f97316',
       fontWeight: '700',
+   },
+   errorContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#fef2f2',
+      borderColor: '#fecaca',
+      borderWidth: 1,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      marginTop: 8,
+      gap: 8,
+   },
+   errorText: {
+      flex: 1,
+      fontSize: 13,
+      color: '#dc2626',
+      fontWeight: '500',
    },
 })

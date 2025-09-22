@@ -2,9 +2,7 @@ import { commonStyles } from '@/styles/commonStyles'
 import { theme } from '@/styles/theme'
 import type { Mood } from '@/type'
 import React, { useState } from 'react'
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, ScrollView, Dimensions } from 'react-native'
-
-const { width } = Dimensions.get('window')
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 interface MoodSelectorProps {
   moods: Mood[]
@@ -58,7 +56,7 @@ export function MoodSelector({ moods, selectedMoodId, onMoodSelected, isLoading 
         style={styles.scrollContainer}
         contentContainerStyle={styles.scrollContent}
       >
-        {displayMoods.map((mood) => (
+        {(displayMoods || []).map((mood) => (
           <TouchableOpacity
             key={mood.id}
             onPress={() => onMoodSelected(mood.id)}
@@ -124,7 +122,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     fontSize: theme.fontSize.sm,
-    color: theme.colors.error,
+    color: '#dc2626',
     textAlign: 'center',
     fontWeight: '500',
   },

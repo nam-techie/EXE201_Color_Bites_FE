@@ -14,8 +14,8 @@ export class MoodService {
          const firstPageResponse = await this.getMoodsPaginated(1, 50) // Lấy 50 items per page
          
          if (!firstPageResponse) {
-            console.log('⚠️ No response from API')
-            throw new Error('Không thể tải danh sách cảm xúc từ server')
+            console.log('⚠️ No response from API - returning empty array')
+            return []
          }
          
          let allMoods: Mood[] = this.transformMoodResponses(firstPageResponse.content)
@@ -48,8 +48,9 @@ export class MoodService {
          
       } catch (error) {
          console.error('❌ Error fetching moods from API:', error)
-         // Không dùng fallback - để user biết API lỗi
-         throw new Error('Không thể tải danh sách cảm xúc từ server')
+         // Trả về array rỗng thay vì throw error để app không crash
+         console.log('🔄 Returning empty array due to API error')
+         return []
       }
    }
 
@@ -64,7 +65,7 @@ export class MoodService {
             `${API_ENDPOINTS.MOODS.LIST}?page=${page}&size=${size}`
          )
          
-         if (response.statusCode === 200 && response.data) {
+         if (response.status === 200 && response.data) {
             console.log(`✅ Page ${page} fetched: ${response.data.content.length} moods`)
             return response.data
          }

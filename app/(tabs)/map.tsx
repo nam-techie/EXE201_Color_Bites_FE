@@ -12,15 +12,15 @@ import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert,
-  Animated,
-  GestureResponderEvent,
-  PanResponder,
-  PanResponderGestureState,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    Alert,
+    Animated,
+    GestureResponderEvent,
+    PanResponder,
+    PanResponderGestureState,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
 } from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
 
@@ -285,7 +285,7 @@ export default function MapScreen() {
         showsCompass={true}
         showsScale={true}
       >
-        {filteredRestaurants.map((restaurant) => (
+        {(filteredRestaurants || []).map((restaurant) => (
           <CustomMarker
             key={restaurant.id}
             restaurant={restaurant}

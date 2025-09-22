@@ -1,18 +1,19 @@
 'use client'
 
+import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { useState } from 'react'
 import {
-    Alert,
-    Dimensions,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+   Alert,
+   Dimensions,
+   SafeAreaView,
+   ScrollView,
+   StyleSheet,
+   Text,
+   TouchableOpacity,
+   View,
 } from 'react-native'
 
 const { width } = Dimensions.get('window')
@@ -92,12 +93,12 @@ export default function ProfileScreen() {
             {/* Profile Info */}
             <View style={styles.profileSection}>
                <Image
-                  source={{ uri: 'https://i.pravatar.cc/96?img=12' }}
+                  source={{ uri: user?.avatar || getDefaultAvatar(user?.name, user?.email) }}
                   style={styles.profileImage}
                   contentFit="cover"
                />
                <View style={styles.nameContainer}>
-                  <Text style={styles.userName}>John Doe</Text>
+                  <Text style={styles.userName}>{user?.name || 'User'}</Text>
                   <View style={styles.proBadge}>
                      <Ionicons name="star" size={12} color="white" />
                      <Text style={styles.proBadgeText}>PRO</Text>
@@ -203,7 +204,7 @@ export default function ProfileScreen() {
             {/* Content */}
             {activeTab === 'posts' ? (
                <View style={styles.postsGrid}>
-                  {userPosts.map((post, index) => (
+                  {(userPosts || []).map((post, index) => (
                      <View
                         key={post.id}
                         style={[styles.postItem, { marginRight: (index + 1) % 3 === 0 ? 0 : 2 }]}

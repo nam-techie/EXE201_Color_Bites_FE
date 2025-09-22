@@ -1,5 +1,6 @@
 'use client'
 
+import { getDefaultAvatar } from '@/constants/defaultImages'
 import { authService } from '@/services/AuthService'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type React from 'react'
@@ -38,27 +39,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          const token = await AsyncStorage.getItem('authToken')
          const userData = await AsyncStorage.getItem('user')
          
-         // FORCE CLEAR: Xóa bất kỳ fake token nào
-         if (token && (
-            token.includes('fake-signature-for-testing') ||
-            token.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0MTIzQGV4YW1wbGUuY29tIg==')
-         )) {
-            console.log('🧹 FORCE CLEARING fake/mock tokens...')
-            await AsyncStorage.removeItem('authToken')
-            await AsyncStorage.removeItem('user')
-            setUser(null)
-            setIsLoading(false)
-            return
-         }
-         
          // Chỉ set user nếu có BOTH token và userData
          if (token && userData) {
             try {
                const parsedUser = JSON.parse(userData)
                console.log('✅ Found valid auth state for user:', parsedUser.name)
                setUser(parsedUser)
-            } catch (parseError) {
-               console.error('❌ Error parsing user data, clearing auth state')
+            } catch (error) {
+               console.error('❌ Error parsing user data, clearing auth state:', error)
                await AsyncStorage.removeItem('authToken')
                await AsyncStorage.removeItem('user')
                setUser(null)
@@ -98,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: userData.id,
             name: userData.userName,
             email: userData.email,
-            avatar: undefined,
+            avatar: getDefaultAvatar(userData.userName, userData.email),
             isPremium: userData.role === 'PREMIUM',
          }
          
@@ -130,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: userData.id,
             name: userData.userName,
             email: userData.email,
-            avatar: undefined,
+            avatar: getDefaultAvatar(userData.userName, userData.email),
             isPremium: userData.role === 'PREMIUM',
          }
          

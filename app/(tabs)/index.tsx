@@ -1,6 +1,7 @@
 'use client'
 
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
+import { DEFAULT_POST_IMAGE, getDefaultAvatar } from '@/constants/defaultImages'
 import { mockPosts } from '@/data/mockData'
 import { postService } from '@/services/PostService'
 import type { PostResponse } from '@/type'
@@ -8,20 +9,20 @@ import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import React, { useEffect, useState } from 'react'
 import {
-    ActivityIndicator,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+   ActivityIndicator,
+   RefreshControl,
+   SafeAreaView,
+   ScrollView,
+   StyleSheet,
+   Text,
+   TouchableOpacity,
+   View,
 } from 'react-native'
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+   useAnimatedStyle,
+   useSharedValue,
+   withSpring,
+   withTiming,
 } from 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
 
@@ -250,7 +251,7 @@ export default function HomeScreen() {
                      <Text style={styles.emptySubtext}>Hãy tạo bài viết đầu tiên của bạn!</Text>
                   </View>
                ) : (
-                  posts.map((post, index) => (
+                  (posts || []).map((post, index) => (
                   <PostCard
                      key={post.id}
                      post={post}
@@ -346,13 +347,13 @@ function PostCard({
             <View style={styles.postHeaderContent}>
                <View style={styles.userInfo}>
                   <Image
-                     source={{ uri: post.user.avatar }}
+                     source={{ uri: post.user?.avatar || getDefaultAvatar(post.user?.name, post.user?.email) }}
                      style={styles.avatar}
                      contentFit="cover"
                      transition={200}
                   />
                   <View>
-                     <Text style={styles.userName}>{post.user.name}</Text>
+                     <Text style={styles.userName}>{post.user?.name || 'Unknown User'}</Text>
                      <View style={styles.locationContainer}>
                         <Ionicons name="location-outline" size={12} color="#9CA3AF" />
                         <Text style={styles.locationText}>{post.location}</Text>
@@ -379,7 +380,7 @@ function PostCard({
          {/* Post Image */}
          <View style={styles.imageContainer}>
             <Image
-               source={{ uri: post.image }}
+               source={{ uri: post.image || DEFAULT_POST_IMAGE }}
                style={styles.postImage}
                contentFit="cover"
                transition={300}
@@ -399,7 +400,7 @@ function PostCard({
             <View style={styles.captionContainer}>
                <Text style={styles.caption}>{post.caption}</Text>
                <View style={styles.hashtagContainer}>
-                  {post.hashtags.map((tag: string, tagIndex: number) => (
+                  {(post.hashtags || []).map((tag: string, tagIndex: number) => (
                      <TouchableOpacity key={tagIndex} style={styles.hashtag}>
                         <Text style={styles.hashtagText}>{tag}</Text>
                      </TouchableOpacity>
