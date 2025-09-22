@@ -14,8 +14,8 @@ export class MoodService {
          const firstPageResponse = await this.getMoodsPaginated(1, 50) // Lấy 50 items per page
          
          if (!firstPageResponse) {
-            console.log('⚠️ No response from API, using fallback moods')
-            return this.getDefaultMoods()
+            console.log('⚠️ No response from API')
+            throw new Error('Không thể tải danh sách cảm xúc từ server')
          }
          
          let allMoods: Mood[] = this.transformMoodResponses(firstPageResponse.content)
@@ -47,9 +47,9 @@ export class MoodService {
          return allMoods
          
       } catch (error) {
-         console.error('❌ Error fetching moods from API, using fallback:', error)
-         // Return default moods as fallback - không show toast error để không làm phiền user
-         return this.getDefaultMoods()
+         console.error('❌ Error fetching moods from API:', error)
+         // Không dùng fallback - để user biết API lỗi
+         throw new Error('Không thể tải danh sách cảm xúc từ server')
       }
    }
 
@@ -103,21 +103,6 @@ export class MoodService {
       return this.getMoodsPaginated(page, size)
    }
 
-   /**
-    * Default moods as fallback
-    */
-   private getDefaultMoods(): Mood[] {
-      return [
-         { id: '1', name: 'Delicious', emoji: '😋', description: 'Ngon tuyệt vời' },
-         { id: '2', name: 'Amazing', emoji: '🔥', description: 'Tuyệt vời' },
-         { id: '3', name: 'Love it', emoji: '❤️', description: 'Yêu thích' },
-         { id: '4', name: 'Perfect', emoji: '😍', description: 'Hoàn hảo' },
-         { id: '5', name: 'Craving', emoji: '🤤', description: 'Thèm thuồng' },
-         { id: '6', name: 'Excellent', emoji: '👌', description: 'Xuất sắc' },
-         { id: '7', name: 'Outstanding', emoji: '💯', description: 'Nổi bật' },
-         { id: '8', name: 'Celebration', emoji: '🎉', description: 'Ăn mừng' },
-      ]
-   }
 }
 
 // Export singleton instance

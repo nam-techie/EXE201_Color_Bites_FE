@@ -1,8 +1,10 @@
-import React from 'react'
-import { View, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native'
 import { commonStyles } from '@/styles/commonStyles'
 import { theme } from '@/styles/theme'
 import type { Mood } from '@/type'
+import React, { useState } from 'react'
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View, ScrollView, Dimensions } from 'react-native'
+
+const { width } = Dimensions.get('window')
 
 interface MoodSelectorProps {
   moods: Mood[]
@@ -12,23 +14,51 @@ interface MoodSelectorProps {
 }
 
 export function MoodSelector({ moods, selectedMoodId, onMoodSelected, isLoading }: MoodSelectorProps) {
+  const [showAll, setShowAll] = useState(false)
+  
   if (isLoading) {
     return (
       <View style={commonStyles.section}>
         <Text style={commonStyles.label}>Cảm xúc về món ăn?</Text>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Đang tải moods...</Text>
+          <Text style={styles.loadingText}>Đang tải danh sách cảm xúc...</Text>
         </View>
       </View>
     )
   }
 
+  if (!moods || moods.length === 0) {
+    return (
+      <View style={commonStyles.section}>
+        <Text style={commonStyles.label}>Cảm xúc về món ăn?</Text>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.errorText}>❌ Không thể tải danh sách cảm xúc</Text>
+          <Text style={styles.errorSubText}>Vui lòng kiểm tra kết nối mạng</Text>
+        </View>
+      </View>
+    )
+  }
+
+  // Hiển thị tối đa 8 moods đầu tiên, có nút "Xem thêm"
+  const displayMoods = showAll ? moods : moods.slice(0, 8)
+  const hasMore = moods.length > 8
+
   return (
     <View style={commonStyles.section}>
-      <Text style={commonStyles.label}>Cảm xúc về món ăn?</Text>
-      <View style={styles.moodContainer}>
-        {moods.map((mood) => (
+      <View style={styles.headerContainer}>
+        <Text style={commonStyles.label}>Cảm xúc về món ăn?</Text>
+        <Text style={styles.countText}>({moods.length} cảm xúc)</Text>
+      </View>
+      
+      {/* Horizontal scrollable mood list */}
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false}
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {displayMoods.map((mood) => (
           <TouchableOpacity
             key={mood.id}
             onPress={() => onMoodSelected(mood.id)}
@@ -46,7 +76,28 @@ export function MoodSelector({ moods, selectedMoodId, onMoodSelected, isLoading 
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+        
+        {/* Nút xem thêm */}
+        {hasMore && !showAll && (
+          <TouchableOpacity
+            onPress={() => setShowAll(true)}
+            style={styles.moreButton}
+          >
+            <Text style={styles.moreText}>+{moods.length - 8}</Text>
+            <Text style={styles.moreSubText}>Xem thêm</Text>
+          </TouchableOpacity>
+        )}
+      </ScrollView>
+      
+      {/* Collapse button khi đã mở rộng */}
+      {showAll && hasMore && (
+        <TouchableOpacity
+          onPress={() => setShowAll(false)}
+          style={styles.collapseButton}
+        >
+          <Text style={styles.collapseText}>Thu gọn</Text>
+        </TouchableOpacity>
+      )}
     </View>
   )
 }
@@ -62,13 +113,45 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     color: theme.colors.text.secondary,
   },
-  moodContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  emptyContainer: {
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
     marginTop: theme.spacing.md,
   },
-  moodButton: {
+  errorText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.error,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  errorSubText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+    marginTop: theme.spacing.xs,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: theme.spacing.sm,
+  },
+  countText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+    fontWeight: '500',
+  },
+  scrollContainer: {
+    marginTop: theme.spacing.sm,
+  },
+  scrollContent: {
+    paddingRight: theme.spacing.md,
+  },
+  moodButton: {
     marginRight: theme.spacing.sm,
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
@@ -77,22 +160,70 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     alignItems: 'center',
-    minWidth: 70,
+    minWidth: 80,
+    maxWidth: 90,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   selectedMoodButton: {
     borderColor: theme.colors.primary,
     backgroundColor: theme.colors.primary,
+    shadowColor: theme.colors.primary,
+    shadowOpacity: 0.3,
   },
   moodEmoji: {
-    fontSize: theme.fontSize.lg,
+    fontSize: theme.fontSize.xl,
+    marginBottom: theme.spacing.xs,
   },
   moodName: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
     textAlign: 'center',
+    fontWeight: '500',
   },
   selectedMoodName: {
     color: theme.colors.text.white,
+    fontWeight: '600',
+  },
+  moreButton: {
+    marginRight: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+    backgroundColor: theme.colors.background,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    alignItems: 'center',
+    minWidth: 80,
+    borderStyle: 'dashed',
+  },
+  moreText: {
+    fontSize: theme.fontSize.lg,
+    color: theme.colors.primary,
+    fontWeight: '600',
+    marginBottom: theme.spacing.xs,
+  },
+  moreSubText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+    textAlign: 'center',
+  },
+  collapseButton: {
+    alignSelf: 'center',
+    marginTop: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border.light,
+  },
+  collapseText: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.text.secondary,
+    fontWeight: '500',
   },
 })

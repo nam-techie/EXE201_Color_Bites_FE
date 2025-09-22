@@ -9,11 +9,9 @@ const getApiBaseUrl = () => {
   if (envUrl) return envUrl
   
   // Default URLs for development
-  // Android Emulator: use 10.0.2.2
-  // Physical device: use your computer's IP (e.g., 192.168.1.100)
+//   return 'http://localhost:8080'  // Backend đã hoạt động trên localhost
 //   return 'http://10.0.2.2:8080'  // Android Emulator
-   return 'http://172.24.16.1:8080'  // Physical device
-  // return 'http://localhost:8080'  // iOS Simulator/Web
+  return 'http://172.24.16.1:8080'  // Physical device
 }
 
 export const API_BASE_URL = getApiBaseUrl()
@@ -35,11 +33,14 @@ export const API_ENDPOINTS = {
    MOODS: {
       LIST: '/api/moods/list',
    },
-   // Auth endpoints (for future use)
+   // Auth endpoints
    AUTH: {
       LOGIN: '/api/auth/login',
       REGISTER: '/api/auth/register',
+      LOGOUT: '/api/auth/logout',
       REFRESH: '/api/auth/refresh',
+      VERIFY_TOKEN: '/api/auth/verify',
+      ME: '/api/auth/me',
    },
 }
 
