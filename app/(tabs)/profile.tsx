@@ -5,14 +5,14 @@ import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { useState } from 'react'
 import {
-   Alert,
-   Dimensions,
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View,
+    Alert,
+    Dimensions,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 
 const { width } = Dimensions.get('window')
@@ -40,19 +40,19 @@ export default function ProfileScreen() {
 
    const handleLogout = async () => {
       Alert.alert(
-         'Logout',
-         'Are you sure you want to logout?',
+         'Đăng xuất',
+         'Bạn có chắc chắn muốn đăng xuất?',
          [
-            { text: 'Cancel', style: 'cancel' },
+            { text: 'Hủy', style: 'cancel' },
             { 
-               text: 'Logout', 
+               text: 'Đăng xuất', 
                style: 'destructive',
                onPress: async () => {
                   try {
                      await logout()
-                     console.log('Logout successful')
                   } catch (error) {
                      console.error('Logout error:', error)
+                     Alert.alert('Lỗi', 'Không thể đăng xuất')
                   }
                }
             }
@@ -67,12 +67,22 @@ export default function ProfileScreen() {
             <View style={styles.headerContent}>
                <Text style={styles.headerTitle}>Profile</Text>
                                <View style={styles.headerActions}>
-                   <TouchableOpacity style={styles.headerButton}>
-                      <Ionicons name="share-outline" size={16} color="#6B7280" />
+                   <TouchableOpacity 
+                      style={styles.headerButton}
+                      onPress={() => Alert.alert('Chia sẻ', 'Tính năng chia sẻ sắp ra mắt!')}
+                      activeOpacity={0.8}
+                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                   >
+                      <Ionicons name="share-outline" size={20} color="#6B7280" />
                    </TouchableOpacity>
-                   <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                   <TouchableOpacity 
+                      style={styles.logoutButton} 
+                      onPress={handleLogout}
+                      activeOpacity={0.8}
+                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
+                   >
                       <Ionicons name="log-out-outline" size={16} color="#DC2626" />
-                      <Text style={styles.logoutText}>Logout</Text>
+                      <Text style={styles.logoutText}>Đăng xuất</Text>
                    </TouchableOpacity>
                 </View>
             </View>
@@ -115,23 +125,15 @@ export default function ProfileScreen() {
                   </View>
                </View>
 
-                               <TouchableOpacity style={styles.editProfileButton}>
-                   <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-                </TouchableOpacity>
-                
-                {/* Test Logout Button */}
-                <TouchableOpacity 
-                   style={[styles.editProfileButton, { backgroundColor: '#DC2626', marginTop: 8 }]}
-                   onPress={async () => {
-                      try {
-                         await logout()
-                         console.log('Direct logout successful')
-                      } catch (error) {
-                         console.error('Direct logout error:', error)
-                      }
+                               <TouchableOpacity 
+                   style={styles.editProfileButton}
+                   onPress={() => {
+                      Alert.alert('Edit Profile', 'Edit profile feature coming soon!')
                    }}
+                   activeOpacity={0.8}
+                   hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
                 >
-                   <Text style={styles.editProfileButtonText}>Test Logout</Text>
+                   <Text style={styles.editProfileButtonText}>Edit Profile</Text>
                 </TouchableOpacity>
             </View>
 

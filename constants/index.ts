@@ -2,6 +2,47 @@
 export const OPENROUTE_API_KEY =
    'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImFiMWU5ZjI3MzkzYjRhZTJhOGY5MWNjMDU1OTk4M2E3IiwiaCI6Im11cm11cjY0In0='
 
+// Backend API Configuration
+// For Android Emulator, use 10.0.2.2 instead of localhost
+const getApiBaseUrl = () => {
+  const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL
+  if (envUrl) return envUrl
+  
+  // Default URLs for development
+  // Android Emulator: use 10.0.2.2
+  // Physical device: use your computer's IP (e.g., 192.168.1.100)
+//   return 'http://10.0.2.2:8080'  // Android Emulator
+   return 'http://172.24.16.1:8080'  // Physical device
+  // return 'http://localhost:8080'  // iOS Simulator/Web
+}
+
+export const API_BASE_URL = getApiBaseUrl()
+export const API_ENDPOINTS = {
+   // Post endpoints
+   POSTS: {
+      CREATE: '/api/posts/create',
+      LIST: '/api/posts/list',
+      BY_ID: '/api/posts/read',
+      BY_USER: '/api/posts/read/user',
+      BY_MOOD: '/api/posts/read/mood',
+      SEARCH: '/api/posts/search',
+      UPDATE: '/api/posts/edit',
+      DELETE: '/api/posts/delete',
+      REACT: '/api/posts/react',
+      COUNT_USER: '/api/posts/count/user',
+   },
+   // Mood endpoints
+   MOODS: {
+      LIST: '/api/moods/list',
+   },
+   // Auth endpoints (for future use)
+   AUTH: {
+      LOGIN: '/api/auth/login',
+      REGISTER: '/api/auth/register',
+      REFRESH: '/api/auth/refresh',
+   },
+}
+
 // Map Configuration
 export const DEFAULT_MAP_REGION = {
    latitudeDelta: 0.05,

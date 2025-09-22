@@ -30,6 +30,58 @@ export interface Post {
    updatedAt: string
 }
 
+// API Request/Response Types (match backend exactly)
+export interface CreatePostRequest {
+   title: string        // @NotBlank, max 200 chars
+   content: string      // @NotBlank, max 5000 chars  
+   moodId: string       // max 50 chars
+   imageUrls?: string[] // max 10 images
+   videoUrl?: string    // optional
+}
+
+export interface UpdatePostRequest {
+   caption?: string
+   location?: string
+   mood?: string
+   hashtags?: string[]
+   isPrivate?: boolean
+}
+
+export interface PostResponse {
+   id: string
+   userId: string
+   user: User
+   image?: string
+   video?: string
+   caption: string
+   location?: string
+   mood: string
+   hashtags: string[]
+   reactionCount: number
+   commentCount: number
+   shareCount: number
+   isPinned: boolean
+   isPrivate: boolean
+   createdAt: string
+   updatedAt: string
+}
+
+export interface ApiResponse<T> {
+   statusCode: number
+   message: string
+   data: T
+}
+
+export interface PaginatedResponse<T> {
+   content: T[]
+   totalElements: number
+   totalPages: number
+   size: number
+   number: number
+   first: boolean
+   last: boolean
+}
+
 export interface Comment {
    id: string
    user: User
@@ -63,6 +115,54 @@ export interface Challenge {
    participants: number
    isPremium: boolean
    reward?: string
+}
+
+export interface Mood {
+   id: string
+   name: string
+   emoji: string
+   description?: string
+   createdAt?: string
+   postCount?: number
+}
+
+// Backend mood response từ API
+export interface MoodResponse {
+   id: string
+   name: string
+   emoji: string
+   createdAt: string
+   postCount: number
+}
+
+// Paginated mood list response
+export interface MoodListResponse {
+   content: MoodResponse[]
+   totalElements: number
+   totalPages: number
+   size: number
+   number: number
+   first: boolean
+   last: boolean
+   pageable: {
+      pageNumber: number
+      pageSize: number
+      sort: {
+         empty: boolean
+         sorted: boolean
+         unsorted: boolean
+      }
+      offset: number
+      paged: boolean
+      unpaged: boolean
+   }
+   sort: {
+      empty: boolean
+      sorted: boolean
+      unsorted: boolean
+   }
+   numberOfElements: number
+   empty: boolean
 }
 export interface RouteProfile {
    id: string

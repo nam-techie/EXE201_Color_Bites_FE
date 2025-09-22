@@ -2,31 +2,34 @@
 
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { mockPosts } from '@/data/mockData'
+import { postService } from '@/services/PostService'
+import type { PostResponse } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
-   Dimensions,
-   Pressable,
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View,
+    ActivityIndicator,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 import Animated, {
-   useAnimatedStyle,
-   useSharedValue,
-   withSpring,
-   withTiming,
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
+    withTiming,
 } from 'react-native-reanimated'
+import Toast from 'react-native-toast-message'
 
 // Conditional haptics import
 let Haptics: any = null
 try {
    Haptics = require('expo-haptics')
-} catch (error) {
+} catch {
    // Haptics not available, create mock
    Haptics = {
       impactAsync: () => Promise.resolve(),
@@ -38,12 +41,74 @@ try {
    }
 }
 
-const { width } = Dimensions.get('window')
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable)
+// Removed unused width and AnimatedPressable to avoid lint/runtime errors
 
 export default function HomeScreen() {
    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
    const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set())
+   const [posts, setPosts] = useState<PostResponse[]>([])
+   const [isLoading, setIsLoading] = useState(true)
+   const [isRefreshing, setIsRefreshing] = useState(false)
+   const [page, setPage] = useState(1)
+   const [hasMorePosts, setHasMorePosts] = useState(true)
+
+   // Load posts from API
+   const loadPosts = async (pageNumber: number = 1, append: boolean = false) => {
+      try {
+         console.log(`Loading posts - page: ${pageNumber}`)
+         
+         const response = await postService.getAllPosts(pageNumber, 10)
+         
+         if (response.content) {
+            if (append) {
+               setPosts(prevPosts => [...prevPosts, ...response.content])
+            } else {
+               setPosts(response.content)
+            }
+            
+            setHasMorePosts(!response.last)
+            setPage(pageNumber)
+            
+            console.log(`Loaded ${response.content.length} posts, total: ${response.totalElements}`)
+         }
+      } catch (error) {
+         console.error('Error loading posts:', error)
+         
+         // Fallback to mock data if API fails
+         if (!append && posts.length === 0) {
+            console.log('Falling back to mock data')
+            setPosts(mockPosts as any)
+         }
+         
+         Toast.show({
+            type: 'error',
+            text1: 'Lỗi',
+            text2: error instanceof Error ? error.message : 'Không thể tải bài viết',
+         })
+      } finally {
+         setIsLoading(false)
+         setIsRefreshing(false)
+      }
+   }
+
+   // Load posts on component mount
+   useEffect(() => {
+      loadPosts(1, false)
+   }, [loadPosts])
+
+   // Refresh posts
+   const handleRefresh = async () => {
+      setIsRefreshing(true)
+      await loadPosts(1, false)
+   }
+
+   // Load more posts (pagination)
+   const loadMorePosts = async () => {
+      if (!isLoading && hasMorePosts) {
+         setIsLoading(true)
+         await loadPosts(page + 1, true)
+      }
+   }
 
    const toggleLike = async (postId: string) => {
       try {
@@ -51,9 +116,23 @@ export default function HomeScreen() {
       } catch (error) {
          // Haptics not available
       }
+
+      try {
+         // Call API to toggle reaction
+         await postService.toggleReaction(postId, 'LIKE')
+         
+         // Update local state
       const newLiked = new Set(likedPosts)
       newLiked.has(postId) ? newLiked.delete(postId) : newLiked.add(postId)
       setLikedPosts(newLiked)
+      } catch (error) {
+         console.error('Error toggling like:', error)
+         Toast.show({
+            type: 'error',
+            text1: 'Lỗi',
+            text2: 'Không thể cập nhật reaction',
+         })
+      }
    }
 
    const toggleSave = async (postId: string) => {
@@ -96,6 +175,23 @@ export default function HomeScreen() {
             style={styles.scrollView}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.scrollContent}
+            refreshControl={
+               <RefreshControl
+                  refreshing={isRefreshing}
+                  onRefresh={handleRefresh}
+                  colors={['#F97316']}
+                  tintColor="#F97316"
+               />
+            }
+            onScroll={({ nativeEvent }) => {
+               // Load more posts when near bottom
+               const { layoutMeasurement, contentOffset, contentSize } = nativeEvent
+               const paddingToBottom = 20
+               if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+                  loadMorePosts()
+               }
+            }}
+            scrollEventThrottle={400}
          >
             {/* Enhanced Weekly Theme Card */}
             <View style={styles.themeCardContainer}>
@@ -117,7 +213,7 @@ export default function HomeScreen() {
                   >
                      <View style={styles.themeCardContent}>
                         <View style={styles.themeTextContainer}>
-                           <Text style={styles.themeTitle}>This Week's Theme</Text>
+                           <Text style={styles.themeTitle}>This Week&apos;s Theme</Text>
                            <Text style={styles.themeHashtag}>#ComfortFoodVibes</Text>
                            <TouchableOpacity
                               style={styles.joinButton}
@@ -142,7 +238,19 @@ export default function HomeScreen() {
 
             {/* Enhanced Posts Feed */}
             <View style={styles.postsContainer}>
-               {mockPosts.map((post, index) => (
+               {isLoading && posts.length === 0 ? (
+                  <View style={styles.loadingContainer}>
+                     <ActivityIndicator size="large" color="#F97316" />
+                     <Text style={styles.loadingText}>Đang tải bài viết...</Text>
+                  </View>
+               ) : posts.length === 0 ? (
+                  <View style={styles.emptyContainer}>
+                     <Ionicons name="document-text-outline" size={48} color="#9CA3AF" />
+                     <Text style={styles.emptyText}>Chưa có bài viết nào</Text>
+                     <Text style={styles.emptySubtext}>Hãy tạo bài viết đầu tiên của bạn!</Text>
+                  </View>
+               ) : (
+                  posts.map((post, index) => (
                   <PostCard
                      key={post.id}
                      post={post}
@@ -152,7 +260,22 @@ export default function HomeScreen() {
                      onToggleSave={() => toggleSave(post.id)}
                      index={index}
                   />
-               ))}
+               )))}
+
+               {/* Loading more indicator */}
+               {isLoading && posts.length > 0 && (
+                  <View style={styles.loadMoreContainer}>
+                     <ActivityIndicator size="small" color="#F97316" />
+                     <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
+                  </View>
+               )}
+               
+               {/* No more posts indicator */}
+               {!hasMorePosts && posts.length > 0 && (
+                  <View style={styles.endContainer}>
+                     <Text style={styles.endText}>Bạn đã xem hết tất cả bài viết</Text>
+                  </View>
+               )}
             </View>
          </ScrollView>
       </SafeAreaView>
@@ -263,7 +386,7 @@ function PostCard({
             />
             {post.isPinned && (
                <View style={styles.pinnedBadge}>
-                  <Text style={styles.pinnedText}>📌 Featured</Text>
+                  <Text style={styles.pinnedText}>Featured</Text>
                </View>
             )}
             <View style={styles.moodBadge}>
@@ -276,7 +399,7 @@ function PostCard({
             <View style={styles.captionContainer}>
                <Text style={styles.caption}>{post.caption}</Text>
                <View style={styles.hashtagContainer}>
-                  {post.hashtags.map((tag, tagIndex) => (
+                  {post.hashtags.map((tag: string, tagIndex: number) => (
                      <TouchableOpacity key={tagIndex} style={styles.hashtag}>
                         <Text style={styles.hashtagText}>{tag}</Text>
                      </TouchableOpacity>
@@ -358,6 +481,55 @@ const styles = StyleSheet.create({
    container: {
       flex: 1,
       backgroundColor: '#F9FAFB',
+   },
+   loadingContainer: {
+      padding: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+   },
+   loadingText: {
+      marginTop: 16,
+      fontSize: 16,
+      color: '#6B7280',
+      textAlign: 'center',
+   },
+   emptyContainer: {
+      padding: 40,
+      alignItems: 'center',
+      justifyContent: 'center',
+   },
+   emptyText: {
+      marginTop: 16,
+      fontSize: 18,
+      fontWeight: '600',
+      color: '#374151',
+      textAlign: 'center',
+   },
+   emptySubtext: {
+      marginTop: 8,
+      fontSize: 14,
+      color: '#6B7280',
+      textAlign: 'center',
+   },
+   loadMoreContainer: {
+      padding: 20,
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'center',
+   },
+   loadMoreText: {
+      marginLeft: 8,
+      fontSize: 14,
+      color: '#6B7280',
+   },
+   endContainer: {
+      padding: 20,
+      alignItems: 'center',
+   },
+   endText: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      textAlign: 'center',
    },
    header: {
       borderBottomWidth: 1,

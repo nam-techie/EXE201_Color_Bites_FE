@@ -2,6 +2,7 @@
 
 import Button from '@/components/common/Button'
 import Input from '@/components/common/Input'
+import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
@@ -9,11 +10,12 @@ import { useState } from 'react'
 import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 export default function LoginScreen() {
-   const [email, setEmail] = useState('')
-   const [password, setPassword] = useState('')
+   const [email, setEmail] = useState('test123')  // Pre-fill for testing
+   const [password, setPassword] = useState('test123')  // Pre-fill for testing
    const [isLoading, setIsLoading] = useState(false)
    const [showPassword, setShowPassword] = useState(false)
    const [rememberMe, setRememberMe] = useState(false)
+   const { login } = useAuth()
 
    const handleLogin = async () => {
       if (!email || !password) {
@@ -23,12 +25,14 @@ export default function LoginScreen() {
 
       setIsLoading(true)
       try {
-         // Simulate API call
-         await new Promise(resolve => setTimeout(resolve, 1200))
+         // Use real AuthProvider login
+         await login(email, password)
+         
          Alert.alert('Thành công', `Đăng nhập thành công!${rememberMe ? '\nĐã bật ghi nhớ.' : ''}`)
          router.replace('/(tabs)')
       } catch (error) {
-         Alert.alert('Lỗi', 'Đăng nhập thất bại. Vui lòng thử lại.')
+         console.error('Login error:', error)
+         Alert.alert('Lỗi', error instanceof Error ? error.message : 'Đăng nhập thất bại. Vui lòng thử lại.')
       } finally {
          setIsLoading(false)
       }

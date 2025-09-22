@@ -54,7 +54,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isPremium: false,
          }
 
+         // Mock JWT token cho backend authentication
+         const mockToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZW1haWwiOiJ0ZXN0MTIzQGV4YW1wbGUuY29tIiwibmFtZSI6IlRlc3QgVXNlciIsImF1dGhvcml0aWVzIjpbIlVTRVIiXSwiaWF0IjoxNzM3NTUyNjAwLCJleHAiOjk5OTk5OTk5OTl9.fake-signature-for-testing'
+
          await AsyncStorage.setItem('user', JSON.stringify(mockUser))
+         await AsyncStorage.setItem('authToken', mockToken)
+         
+         console.log('✅ Mock login successful - user and token saved')
          setUser(mockUser)
       } else {
          throw new Error('Invalid credentials')
@@ -78,10 +84,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    const logout = async () => {
       try {
          await AsyncStorage.removeItem('user')
+         await AsyncStorage.removeItem('authToken')
          setUser(null)
-         console.log('User logged out successfully')
+         console.log('✅ User logged out successfully - user and token cleared')
       } catch (error) {
-         console.error('Error during logout:', error)
+         console.error('❌ Error during logout:', error)
          throw error
       }
    }
