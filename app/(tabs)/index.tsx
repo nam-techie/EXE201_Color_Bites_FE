@@ -73,7 +73,6 @@ function normalizePost(p: any): PostResponse {
       accountId: p.accountId ?? '',
       authorName,
       authorAvatar,
-      title: p.title ?? '',
       content: p.content ?? '',
       moodId: p.moodId ?? '',
       moodName: p.moodName ?? '',
@@ -126,31 +125,11 @@ export default function HomeScreen() {
    // Load posts from API - Wrapped với useCallback để tránh infinite loop
    const loadPosts = useCallback(async (pageNumber: number = 1, append: boolean = false) => {
       try {
-         console.log(`Loading posts - page: ${pageNumber}`)
-         
          const response = await postService.getAllPosts(pageNumber, 10)
          
          if (response.content) {
-            console.log('=== DEBUGGING POSTS DATA ===')
-            console.log('Response content length:', response.content.length)
-            console.log('First post raw data:', response.content[0])
-            console.log('authorName:', response.content[0]?.authorName)
-            console.log('authorAvatar:', response.content[0]?.authorAvatar)
-            console.log('title:', response.content[0]?.title)
-            console.log('content:', response.content[0]?.content)
-            console.log('moodName:', response.content[0]?.moodName)
-            console.log('moodEmoji:', response.content[0]?.moodEmoji)
-            console.log('reactionCount:', response.content[0]?.reactionCount)
-            console.log('commentCount:', response.content[0]?.commentCount)
-            console.log('imageUrls:', response.content[0]?.imageUrls)
-            console.log('tags:', response.content[0]?.tags)
-            console.log('=== END DEBUG ===')
-            
             // Normalize data trước khi set vào state
             const normalizedPosts = response.content.map(normalizePost)
-            console.log('=== NORMALIZED DATA ===')
-            console.log('First normalized post:', normalizedPosts[0])
-            console.log('=== END NORMALIZED ===')
             
             if (append) {
                setPosts(prevPosts => [...prevPosts, ...normalizedPosts])
@@ -160,15 +139,12 @@ export default function HomeScreen() {
             
             setHasMorePosts(!response.last)
             setPage(pageNumber)
-            
-            console.log(`Loaded ${response.content.length} posts, total: ${response.totalElements}`)
          }
       } catch (error) {
          console.error('Error loading posts:', error)
          
          // Fallback to mock data if API fails
          if (!append && posts.length === 0) {
-            console.log('Falling back to mock data')
             setPosts(mockPosts as any)
          }
          
@@ -477,12 +453,6 @@ function PostCard({
             </View>
          </View>
 
-         {/* Post Content (Title) */}
-         {post.title && (
-            <View style={styles.postTitleContainer}>
-               <Text style={styles.postTitle}>{post.title}</Text>
-            </View>
-         )}
 
          {/* Post Images/Video */}
          {(post.imageUrls && Array.isArray(post.imageUrls) && post.imageUrls.length > 0) || post.videoUrl ? (
@@ -814,16 +784,6 @@ const styles = StyleSheet.create({
       fontSize: 12,
       color: '#6B7280',
       fontWeight: '500',
-   },
-   postTitleContainer: {
-      paddingHorizontal: 16,
-      paddingTop: 8,
-   },
-   postTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#111827',
-      lineHeight: 22,
    },
    videoContainer: {
       height: 320,

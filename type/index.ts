@@ -57,7 +57,6 @@ export interface PostResponse {
    accountId: string
    authorName: string        // Tên tác giả từ UserInformation
    authorAvatar: string      // Avatar tác giả từ UserInformation
-   title: string
    content: string
    moodId: string
    moodName: string          // Tên mood
