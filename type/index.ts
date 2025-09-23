@@ -47,21 +47,29 @@ export interface UpdatePostRequest {
    isPrivate?: boolean
 }
 
+export interface TagResponse {
+   id: string
+   name: string
+}
+
 export interface PostResponse {
    id: string
-   userId: string
-   user: User
-   image?: string
-   video?: string
-   caption: string
-   location?: string
-   mood: string
-   hashtags: string[]
+   accountId: string
+   authorName: string        // Tên tác giả từ UserInformation
+   authorAvatar: string      // Avatar tác giả từ UserInformation
+   title: string
+   content: string
+   moodId: string
+   moodName: string          // Tên mood
+   moodEmoji: string         // Emoji mood
+   imageUrls: string[]       // Danh sách URL hình ảnh
+   videoUrl?: string         // URL video
    reactionCount: number
    commentCount: number
-   shareCount: number
-   isPinned: boolean
-   isPrivate: boolean
+   tags: TagResponse[]       // Danh sách tags
+   isOwner: boolean          // Người xem có phải chủ bài viết không
+   hasReacted: boolean       // Người xem đã react chưa
+   userReactionType?: string // Loại reaction của người xem
    createdAt: string
    updatedAt: string
 }

@@ -74,6 +74,9 @@ export class PostService {
          
          if (response.status === 200 && response.data) {
             console.log('Posts fetched successfully:', response.data.content?.length, 'posts')
+            console.log('=== RAW API RESPONSE ===')
+            console.log('Full response:', JSON.stringify(response, null, 2))
+            console.log('=== END RAW RESPONSE ===')
             return response.data
          }
          

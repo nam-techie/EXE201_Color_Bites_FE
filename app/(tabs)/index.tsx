@@ -1,13 +1,13 @@
 'use client'
 
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
-import { DEFAULT_POST_IMAGE, getDefaultAvatar } from '@/constants/defaultImages'
+import { getDefaultAvatar } from '@/constants/defaultImages'
 import { mockPosts } from '@/data/mockData'
 import { postService } from '@/services/PostService'
 import type { PostResponse } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
    ActivityIndicator,
    RefreshControl,
@@ -44,6 +44,76 @@ try {
 
 // Removed unused width and AnimatedPressable to avoid lint/runtime errors
 
+// Normalize post data từ API response
+function normalizePost(p: any): PostResponse {
+   // Gộp đủ fallback để hiển thị mượt
+   const authorName = p.authorName ?? 'Unknown User'
+   const authorAvatar = p.authorAvatar ?? null
+
+   // Ép số an toàn, nếu null/undef ⇒ 0
+   const reactionCount = Number(p.reactionCount ?? 0) || 0
+   const commentCount = Number(p.commentCount ?? 0) || 0
+
+   // Chuẩn hóa createdAt về ISO string để formatTimeAgo không lỗi
+   let createdAt: string = p.createdAt
+   if (Array.isArray(p.createdAt)) {
+      // Trường hợp LocalDateTime về dạng [yyyy, mm, dd, HH, MM, SS, nano]
+      const [y, m, d, hh = 0, mm = 0, ss = 0] = p.createdAt
+      createdAt = new Date(y, (m ?? 1) - 1, d, hh, mm, ss).toISOString()
+   } else if (p.createdAt && typeof p.createdAt === 'object' && p.createdAt.year) {
+      // Trường hợp object {year, month, day, hour...}
+      const { year, month, day, hour = 0, minute = 0, second = 0 } = p.createdAt
+      createdAt = new Date(year, month - 1, day, hour, minute, second).toISOString()
+   } else if (!p.createdAt) {
+      createdAt = new Date().toISOString()
+   }
+
+   return {
+      id: String(p.id),
+      accountId: p.accountId ?? '',
+      authorName,
+      authorAvatar,
+      title: p.title ?? '',
+      content: p.content ?? '',
+      moodId: p.moodId ?? '',
+      moodName: p.moodName ?? '',
+      moodEmoji: p.moodEmoji ?? '',
+      imageUrls: Array.isArray(p.imageUrls) ? p.imageUrls : [],
+      videoUrl: p.videoUrl ?? null,
+      reactionCount,
+      commentCount,
+      tags: Array.isArray(p.tags) ? p.tags : [],
+      isOwner: Boolean(p.isOwner),
+      hasReacted: Boolean(p.hasReacted),
+      userReactionType: p.userReactionType ?? null,
+      createdAt,
+      updatedAt: p.updatedAt ?? ''
+   } as PostResponse
+}
+
+// Format time ago helper function
+function formatTimeAgo(dateString: string): string {
+   const now = new Date()
+   const postDate = new Date(dateString)
+   
+   // Check if date is valid
+   if (isNaN(postDate.getTime())) {
+      return 'Không xác định'
+   }
+   
+   const diffMs = now.getTime() - postDate.getTime()
+   const diffMins = Math.floor(diffMs / (1000 * 60))
+   const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+   if (diffMins < 1) return 'Vừa xong'
+   if (diffMins < 60) return `${diffMins} phút trước`
+   if (diffHours < 24) return `${diffHours} giờ trước`
+   if (diffDays < 7) return `${diffDays} ngày trước`
+   
+   return postDate.toLocaleDateString('vi-VN')
+}
+
 export default function HomeScreen() {
    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
    const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set())
@@ -53,18 +123,39 @@ export default function HomeScreen() {
    const [page, setPage] = useState(1)
    const [hasMorePosts, setHasMorePosts] = useState(true)
 
-   // Load posts from API
-   const loadPosts = async (pageNumber: number = 1, append: boolean = false) => {
+   // Load posts from API - Wrapped với useCallback để tránh infinite loop
+   const loadPosts = useCallback(async (pageNumber: number = 1, append: boolean = false) => {
       try {
          console.log(`Loading posts - page: ${pageNumber}`)
          
          const response = await postService.getAllPosts(pageNumber, 10)
          
          if (response.content) {
+            console.log('=== DEBUGGING POSTS DATA ===')
+            console.log('Response content length:', response.content.length)
+            console.log('First post raw data:', response.content[0])
+            console.log('authorName:', response.content[0]?.authorName)
+            console.log('authorAvatar:', response.content[0]?.authorAvatar)
+            console.log('title:', response.content[0]?.title)
+            console.log('content:', response.content[0]?.content)
+            console.log('moodName:', response.content[0]?.moodName)
+            console.log('moodEmoji:', response.content[0]?.moodEmoji)
+            console.log('reactionCount:', response.content[0]?.reactionCount)
+            console.log('commentCount:', response.content[0]?.commentCount)
+            console.log('imageUrls:', response.content[0]?.imageUrls)
+            console.log('tags:', response.content[0]?.tags)
+            console.log('=== END DEBUG ===')
+            
+            // Normalize data trước khi set vào state
+            const normalizedPosts = response.content.map(normalizePost)
+            console.log('=== NORMALIZED DATA ===')
+            console.log('First normalized post:', normalizedPosts[0])
+            console.log('=== END NORMALIZED ===')
+            
             if (append) {
-               setPosts(prevPosts => [...prevPosts, ...response.content])
+               setPosts(prevPosts => [...prevPosts, ...normalizedPosts])
             } else {
-               setPosts(response.content)
+               setPosts(normalizedPosts)
             }
             
             setHasMorePosts(!response.last)
@@ -90,26 +181,27 @@ export default function HomeScreen() {
          setIsLoading(false)
          setIsRefreshing(false)
       }
-   }
+   }, [posts.length]) // Chỉ depend vào posts.length thay vì toàn bộ posts array
 
-   // Load posts on component mount
+   // Load posts on component mount - Chỉ chạy 1 lần khi mount
    useEffect(() => {
       loadPosts(1, false)
-   }, [loadPosts])
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, []) // Empty dependency để tránh infinite loop
 
-   // Refresh posts
-   const handleRefresh = async () => {
+   // Refresh posts - Wrapped với useCallback
+   const handleRefresh = useCallback(async () => {
       setIsRefreshing(true)
       await loadPosts(1, false)
-   }
+   }, [loadPosts])
 
-   // Load more posts (pagination)
-   const loadMorePosts = async () => {
+   // Load more posts (pagination) - Với proper throttling
+   const loadMorePosts = useCallback(async () => {
       if (!isLoading && hasMorePosts) {
          setIsLoading(true)
          await loadPosts(page + 1, true)
       }
-   }
+   }, [isLoading, hasMorePosts, page, loadPosts])
 
    const toggleLike = async (postId: string) => {
       try {
@@ -185,14 +277,19 @@ export default function HomeScreen() {
                />
             }
             onScroll={({ nativeEvent }) => {
-               // Load more posts when near bottom
+               // Load more posts when near bottom - Giống Facebook
                const { layoutMeasurement, contentOffset, contentSize } = nativeEvent
-               const paddingToBottom = 20
-               if (layoutMeasurement.height + contentOffset.y >= contentSize.height - paddingToBottom) {
+               const paddingToBottom = 100 // Tăng lên để load sớm hơn
+               if (
+                  layoutMeasurement.height + contentOffset.y >= 
+                  contentSize.height - paddingToBottom &&
+                  !isLoading &&
+                  hasMorePosts
+               ) {
                   loadMorePosts()
                }
             }}
-            scrollEventThrottle={400}
+            scrollEventThrottle={1000} // Giảm frequency để tránh spam
          >
             {/* Enhanced Weekly Theme Card */}
             <View style={styles.themeCardContainer}>
@@ -292,7 +389,7 @@ function PostCard({
    onToggleSave,
    index,
 }: {
-   post: any
+   post: PostResponse
    isLiked: boolean
    isSaved: boolean
    onToggleLike: () => void
@@ -347,18 +444,21 @@ function PostCard({
             <View style={styles.postHeaderContent}>
                <View style={styles.userInfo}>
                   <Image
-                     source={{ uri: post.user?.avatar || getDefaultAvatar(post.user?.name, post.user?.email) }}
+                     source={{ uri: post.authorAvatar || getDefaultAvatar(post.authorName) }}
                      style={styles.avatar}
                      contentFit="cover"
                      transition={200}
                   />
                   <View>
-                     <Text style={styles.userName}>{post.user?.name || 'Unknown User'}</Text>
+                     <Text style={styles.userName}>{post.authorName || 'Unknown User'}</Text>
                      <View style={styles.locationContainer}>
-                        <Ionicons name="location-outline" size={12} color="#9CA3AF" />
-                        <Text style={styles.locationText}>{post.location}</Text>
-                        <Text style={styles.separator}>•</Text>
-                        <Text style={styles.timeText}>{post.timeAgo}</Text>
+                        <Text style={styles.timeText}>{formatTimeAgo(post.createdAt)}</Text>
+                        {post.moodName && (
+                           <>
+                              <Text style={styles.separator}>•</Text>
+                              <Text style={styles.moodText}>{post.moodEmoji} {post.moodName}</Text>
+                           </>
+                        )}
                      </View>
                   </View>
                </View>
@@ -377,32 +477,45 @@ function PostCard({
             </View>
          </View>
 
-         {/* Post Image */}
-         <View style={styles.imageContainer}>
-            <Image
-               source={{ uri: post.image || DEFAULT_POST_IMAGE }}
-               style={styles.postImage}
-               contentFit="cover"
-               transition={300}
-            />
-            {post.isPinned && (
-               <View style={styles.pinnedBadge}>
-                  <Text style={styles.pinnedText}>Featured</Text>
-               </View>
-            )}
-            <View style={styles.moodBadge}>
-               <Text style={styles.moodText}>{post.mood}</Text>
+         {/* Post Content (Title) */}
+         {post.title && (
+            <View style={styles.postTitleContainer}>
+               <Text style={styles.postTitle}>{post.title}</Text>
             </View>
-         </View>
+         )}
+
+         {/* Post Images/Video */}
+         {(post.imageUrls && Array.isArray(post.imageUrls) && post.imageUrls.length > 0) || post.videoUrl ? (
+            <View style={styles.imageContainer}>
+               {post.imageUrls && Array.isArray(post.imageUrls) && post.imageUrls.length > 0 ? (
+                  <Image
+                     source={{ uri: post.imageUrls[0] }}
+                     style={styles.postImage}
+                     contentFit="cover"
+                     transition={300}
+                  />
+               ) : post.videoUrl ? (
+                  <View style={styles.videoContainer}>
+                     <Text style={styles.videoPlaceholder}>📹 Video Content</Text>
+                  </View>
+               ) : null}
+               
+               {post.imageUrls && Array.isArray(post.imageUrls) && post.imageUrls.length > 1 && (
+                  <View style={styles.imageCountBadge}>
+                     <Text style={styles.imageCountText}>+{post.imageUrls.length - 1}</Text>
+                  </View>
+               )}
+            </View>
+         ) : null}
 
          {/* Post Content */}
          <View style={styles.postContent}>
             <View style={styles.captionContainer}>
-               <Text style={styles.caption}>{post.caption}</Text>
+               <Text style={styles.caption}>{post.content}</Text>
                <View style={styles.hashtagContainer}>
-                  {(post.hashtags || []).map((tag: string, tagIndex: number) => (
-                     <TouchableOpacity key={tagIndex} style={styles.hashtag}>
-                        <Text style={styles.hashtagText}>{tag}</Text>
+                  {(post.tags && Array.isArray(post.tags) ? post.tags : []).map((tag, tagIndex: number) => (
+                     <TouchableOpacity key={tag?.id || tagIndex} style={styles.hashtag}>
+                        <Text style={styles.hashtagText}>#{tag?.name || 'tag'}</Text>
                      </TouchableOpacity>
                   ))}
                </View>
@@ -419,12 +532,12 @@ function PostCard({
                         accessibilityRole="button"
                      >
                         <Ionicons
-                           name={isLiked ? 'heart' : 'heart-outline'}
+                           name={post.hasReacted ? 'heart' : 'heart-outline'}
                            size={22}
-                           color={isLiked ? '#EF4444' : '#6B7280'}
+                           color={post.hasReacted ? '#EF4444' : '#6B7280'}
                         />
-                        <Text style={[styles.actionText, isLiked && styles.likedText]}>
-                           {post.likes + (isLiked ? 1 : 0)}
+                        <Text style={[styles.actionText, post.hasReacted && styles.likedText]}>
+                           {Number.isFinite(post.reactionCount) ? post.reactionCount : 0}
                         </Text>
                      </TouchableOpacity>
                   </Animated.View>
@@ -440,7 +553,7 @@ function PostCard({
                      }}
                   >
                      <Ionicons name="chatbubble-outline" size={22} color="#6B7280" />
-                     <Text style={styles.actionText}>{post.comments}</Text>
+                     <Text style={styles.actionText}>{Number.isFinite(post.commentCount) ? post.commentCount : 0}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -697,6 +810,47 @@ const styles = StyleSheet.create({
       fontSize: 12,
       color: '#6B7280',
    },
+   moodText: {
+      fontSize: 12,
+      color: '#6B7280',
+      fontWeight: '500',
+   },
+   postTitleContainer: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+   },
+   postTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#111827',
+      lineHeight: 22,
+   },
+   videoContainer: {
+      height: 320,
+      width: '100%',
+      backgroundColor: '#F3F4F6',
+      justifyContent: 'center',
+      alignItems: 'center',
+   },
+   videoPlaceholder: {
+      fontSize: 16,
+      color: '#6B7280',
+      fontWeight: '500',
+   },
+   imageCountBadge: {
+      position: 'absolute',
+      bottom: 12,
+      right: 12,
+      borderRadius: 12,
+      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+   },
+   imageCountText: {
+      fontSize: 12,
+      fontWeight: '600',
+      color: '#FFFFFF',
+   },
    moreButton: {
       padding: 8,
       borderRadius: 9999,
@@ -739,11 +893,6 @@ const styles = StyleSheet.create({
       backgroundColor: 'rgba(0, 0, 0, 0.6)',
       paddingHorizontal: 12,
       paddingVertical: 6,
-   },
-   moodText: {
-      fontSize: 12,
-      fontWeight: '500',
-      color: '#FFFFFF',
    },
    postContent: {
       padding: 16,
