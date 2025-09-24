@@ -1,8 +1,8 @@
 'use client'
 
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
+import ImageGallery from '@/components/common/ImageGallery'
 import { getDefaultAvatar } from '@/constants/defaultImages'
-import { mockPosts } from '@/data/mockData'
 import { postService } from '@/services/PostService'
 import type { PostResponse } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
@@ -26,29 +26,26 @@ import Animated, {
 } from 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
 
-// Conditional haptics import
-let Haptics: any = null
-try {
-   Haptics = require('expo-haptics')
-} catch {
-   // Haptics not available, create mock
-   Haptics = {
-      impactAsync: () => Promise.resolve(),
-      ImpactFeedbackStyle: {
-         Light: 'light',
-         Medium: 'medium',
-         Heavy: 'heavy',
-      },
-   }
+// Import haptics with error handling
+import * as ExpoHaptics from 'expo-haptics'
+
+// Create haptics wrapper with fallback
+const Haptics = ExpoHaptics || {
+   impactAsync: () => Promise.resolve(),
+   ImpactFeedbackStyle: {
+      Light: 'light',
+      Medium: 'medium',
+      Heavy: 'heavy',
+   },
 }
 
 // Removed unused width and AnimatedPressable to avoid lint/runtime errors
 
 // Normalize post data từ API response
 function normalizePost(p: any): PostResponse {
-   // Gộp đủ fallback để hiển thị mượt
-   const authorName = p.authorName ?? 'Unknown User'
-   const authorAvatar = p.authorAvatar ?? null
+   // Gộp đủ fallback để hiển thị mượt - Fix author structure mapping
+   const authorName = p.author?.authorName ?? p.authorName ?? 'Unknown User'
+   const authorAvatar = p.author?.authorAvatar ?? p.authorAvatar ?? null
 
    // Ép số an toàn, nếu null/undef ⇒ 0
    const reactionCount = Number(p.reactionCount ?? 0) || 0
@@ -68,16 +65,37 @@ function normalizePost(p: any): PostResponse {
       createdAt = new Date().toISOString()
    }
 
+   // Parse imageUrls từ JSON string format thành array URL
+   let parsedImageUrls: string[] = []
+   if (Array.isArray(p.imageUrls)) {
+      parsedImageUrls = p.imageUrls
+         .map((item: any) => {
+            try {
+               // Nếu là JSON string, parse nó
+               if (typeof item === 'string' && item.includes('{"url":')) {
+                  const parsed = JSON.parse(item)
+                  return parsed.url
+               }
+               // Nếu đã là URL string thuần
+               return typeof item === 'string' ? item : null
+            } catch {
+               console.warn('Failed to parse image URL:', item)
+               return null
+            }
+         })
+         .filter((url: string | null) => url && url.trim())
+   }
+
    return {
       id: String(p.id),
-      accountId: p.accountId ?? '',
+      accountId: p.author?.accountId ?? p.accountId ?? '',
       authorName,
       authorAvatar,
       content: p.content ?? '',
       moodId: p.moodId ?? '',
       moodName: p.moodName ?? '',
       moodEmoji: p.moodEmoji ?? '',
-      imageUrls: Array.isArray(p.imageUrls) ? p.imageUrls : [],
+      imageUrls: parsedImageUrls,
       videoUrl: p.videoUrl ?? null,
       reactionCount,
       commentCount,
@@ -143,11 +161,6 @@ export default function HomeScreen() {
       } catch (error) {
          console.error('Error loading posts:', error)
          
-         // Fallback to mock data if API fails
-         if (!append && posts.length === 0) {
-            setPosts(mockPosts as any)
-         }
-         
          Toast.show({
             type: 'error',
             text1: 'Lỗi',
@@ -157,7 +170,7 @@ export default function HomeScreen() {
          setIsLoading(false)
          setIsRefreshing(false)
       }
-   }, [posts.length]) // Chỉ depend vào posts.length thay vì toàn bộ posts array
+   }, []) // Remove unnecessary dependency
 
    // Load posts on component mount - Chỉ chạy 1 lần khi mount
    useEffect(() => {
@@ -182,7 +195,7 @@ export default function HomeScreen() {
    const toggleLike = async (postId: string) => {
       try {
          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-      } catch (error) {
+      } catch {
          // Haptics not available
       }
 
@@ -191,9 +204,13 @@ export default function HomeScreen() {
          await postService.toggleReaction(postId, 'LIKE')
          
          // Update local state
-      const newLiked = new Set(likedPosts)
-      newLiked.has(postId) ? newLiked.delete(postId) : newLiked.add(postId)
-      setLikedPosts(newLiked)
+         const newLiked = new Set(likedPosts)
+         if (newLiked.has(postId)) {
+            newLiked.delete(postId)
+         } else {
+            newLiked.add(postId)
+         }
+         setLikedPosts(newLiked)
       } catch (error) {
          console.error('Error toggling like:', error)
          Toast.show({
@@ -207,11 +224,15 @@ export default function HomeScreen() {
    const toggleSave = async (postId: string) => {
       try {
          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-      } catch (error) {
+      } catch {
          // Haptics not available
       }
       const newSaved = new Set(savedPosts)
-      newSaved.has(postId) ? newSaved.delete(postId) : newSaved.add(postId)
+      if (newSaved.has(postId)) {
+         newSaved.delete(postId)
+      } else {
+         newSaved.add(postId)
+      }
       setSavedPosts(newSaved)
    }
 
@@ -229,7 +250,7 @@ export default function HomeScreen() {
                   onPress={async () => {
                      try {
                         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                     } catch (error) {
+                     } catch {
                         // Haptics not available
                      }
                   }}
@@ -274,7 +295,7 @@ export default function HomeScreen() {
                   onPress={async () => {
                      try {
                         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
-                     } catch (error) {
+                     } catch {
                         // Haptics not available
                      }
                   }}
@@ -294,7 +315,7 @@ export default function HomeScreen() {
                               onPress={async () => {
                                  try {
                                     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                                 } catch (error) {
+                                 } catch {
                                     // Haptics not available
                                  }
                               }}
@@ -384,7 +405,7 @@ function PostCard({
          damping: 15,
          stiffness: 100,
       })
-   }, [])
+   }, [cardOpacity, cardTranslateY])
 
    const animatedCardStyle = useAnimatedStyle(() => ({
       opacity: cardOpacity.value,
@@ -443,7 +464,7 @@ function PostCard({
                   onPress={async () => {
                      try {
                         await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                     } catch (error) {
+                     } catch {
                         // Haptics not available
                      }
                   }}
@@ -458,23 +479,12 @@ function PostCard({
          {(post.imageUrls && Array.isArray(post.imageUrls) && post.imageUrls.length > 0) || post.videoUrl ? (
             <View style={styles.imageContainer}>
                {post.imageUrls && Array.isArray(post.imageUrls) && post.imageUrls.length > 0 ? (
-                  <Image
-                     source={{ uri: post.imageUrls[0] }}
-                     style={styles.postImage}
-                     contentFit="cover"
-                     transition={300}
-                  />
+                  <ImageGallery imageUrls={post.imageUrls} />
                ) : post.videoUrl ? (
                   <View style={styles.videoContainer}>
                      <Text style={styles.videoPlaceholder}>📹 Video Content</Text>
                   </View>
                ) : null}
-               
-               {post.imageUrls && Array.isArray(post.imageUrls) && post.imageUrls.length > 1 && (
-                  <View style={styles.imageCountBadge}>
-                     <Text style={styles.imageCountText}>+{post.imageUrls.length - 1}</Text>
-                  </View>
-               )}
             </View>
          ) : null}
 
@@ -517,7 +527,7 @@ function PostCard({
                      onPress={async () => {
                         try {
                            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                        } catch (error) {
+                        } catch {
                            // Haptics not available
                         }
                      }}
@@ -531,7 +541,7 @@ function PostCard({
                      onPress={async () => {
                         try {
                            await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-                        } catch (error) {
+                        } catch {
                            // Haptics not available
                         }
                      }}
