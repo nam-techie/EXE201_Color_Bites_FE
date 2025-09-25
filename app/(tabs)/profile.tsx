@@ -15,6 +15,7 @@ import {
    BackHandler,
    Dimensions,
    FlatList,
+   Modal,
    RefreshControl,
    SafeAreaView,
    ScrollView,
@@ -115,6 +116,8 @@ export default function ProfileScreen() {
    })
    const [viewMode, setViewMode] = useState<'profile' | 'list'>('profile') // Switch between profile view and list view
    const [selectedPostForList, setSelectedPostForList] = useState<PostResponse | null>(null)
+   const [showPremiumModal, setShowPremiumModal] = useState(false)
+   const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('premium')
 
    // Filter posts based on whether they have images or not
    const postsWithImages = posts.filter(post => post.imageUrls && post.imageUrls.length > 0)
@@ -392,15 +395,7 @@ export default function ProfileScreen() {
             <View style={styles.headerContent}>
                <Text style={styles.headerTitle}>Profile</Text>
                                <View style={styles.headerActions}>
-                   <TouchableOpacity 
-                      style={styles.headerButton}
-                      onPress={() => Alert.alert('Chia sẻ', 'Tính năng chia sẻ sắp ra mắt!')}
-                      activeOpacity={0.8}
-                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                   >
-                      <Ionicons name="share-outline" size={20} color="#6B7280" />
-                   </TouchableOpacity>
-                   <TouchableOpacity 
+                  <TouchableOpacity 
                       style={styles.logoutButton} 
                       onPress={handleLogout}
                       activeOpacity={0.8}
@@ -439,16 +434,18 @@ export default function ProfileScreen() {
                {/* Stats */}
                <View style={styles.statsContainer}>
                      <TouchableOpacity style={styles.statItem}>
-                     <Text style={styles.statNumber}>{userStats.posts}</Text>
-                        <Text style={styles.statLabel}>Bài viết</Text>
+                        <Text style={styles.statNumber}>{userStats.posts}</Text>
+                        <Text style={styles.statLabel} numberOfLines={1}>Bài viết</Text>
                      </TouchableOpacity>
+                     <View style={styles.statDivider} />
                      <TouchableOpacity style={styles.statItem}>
-                     <Text style={styles.statNumber}>{userStats.followers}</Text>
-                        <Text style={styles.statLabel}>Người theo dõi</Text>
+                        <Text style={styles.statNumber}>{userStats.followers}</Text>
+                        <Text style={styles.statLabel} numberOfLines={1}>Người theo dõi</Text>
                      </TouchableOpacity>
+                     <View style={styles.statDivider} />
                      <TouchableOpacity style={styles.statItem}>
-                     <Text style={styles.statNumber}>{userStats.following}</Text>
-                        <Text style={styles.statLabel}>Đang theo dõi</Text>
+                        <Text style={styles.statNumber}>{userStats.following}</Text>
+                        <Text style={styles.statLabel} numberOfLines={1}>Đang theo dõi</Text>
                      </TouchableOpacity>
                   </View>
                   </View>
@@ -483,17 +480,53 @@ export default function ProfileScreen() {
                   </Text>
                </View>
 
-               {/* Action Button */}
-                               <TouchableOpacity 
-                   style={styles.editProfileButton}
-                   onPress={() => {
-                      Alert.alert('Edit Profile', 'Edit profile feature coming soon!')
-                   }}
-                   activeOpacity={0.8}
-                >
-                  <Text style={styles.editProfileButtonText}>Chỉnh sửa trang cá nhân</Text>
-                </TouchableOpacity>
+               {/* Action Buttons Row */}
+               <View style={styles.buttonsRow}>
+                  <TouchableOpacity 
+                     style={[styles.editProfileButton, { marginRight: 8 }]}
+                     onPress={() => {
+                        Alert.alert('Chỉnh sửa', 'Tính năng chỉnh sửa sắp ra mắt!')
+                     }}
+                     activeOpacity={0.85}
+                  >
+                     <Text style={styles.editProfileButtonText}>Chỉnh sửa</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                     style={styles.shareProfileButton}
+                     onPress={() => {
+                        Alert.alert('Chia sẻ', 'Chia sẻ trang cá nhân sắp ra mắt!')
+                     }}
+                     activeOpacity={0.85}
+                  >
+                     <Text style={styles.shareProfileButtonText}>Chia sẻ trang cá nhân</Text>
+                  </TouchableOpacity>
+               </View>
             </View>
+
+            {/* Premium Banner */}
+            {userInfo?.subscriptionPlan !== 'PREMIUM' && !user?.isPremium && (
+               <TouchableOpacity 
+                  style={styles.premiumBanner}
+                  onPress={() => setShowPremiumModal(true)}
+                  activeOpacity={0.8}
+               >
+                  <View style={styles.premiumBannerContent}>
+                     <View style={styles.premiumBannerLeft}>
+                        <View style={styles.premiumBannerIcon}>
+                           <Ionicons name="star" size={24} color="#FFFFFF" />
+                        </View>
+                        <View style={styles.premiumBannerText}>
+                           <Text style={styles.premiumBannerTitle}>Premium</Text>
+                           <Text style={styles.premiumBannerSubtitle}>Không giới hạn, nhiều đặc quyền chờ bạn khám phá!</Text>
+                        </View>
+                     </View>
+                     <View style={styles.premiumBannerButton}>
+                        <Text style={styles.premiumBannerButtonText}>Nâng cấp</Text>
+                        <Ionicons name="chevron-forward" size={16} color="#8B5CF6" />
+                     </View>
+                  </View>
+               </TouchableOpacity>
+            )}
 
             {/* Premium Analytics */}
             <View style={styles.analyticsSection}>
@@ -666,6 +699,156 @@ export default function ProfileScreen() {
                )
             )}
          </ScrollView>
+
+         {/* Premium Modal */}
+         <Modal
+            visible={showPremiumModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => setShowPremiumModal(false)}
+         >
+            <View style={styles.modalOverlay}>
+               <View style={styles.modalContainer}>
+                  {/* Modal Header */}
+                  <View style={styles.modalHeader}>
+                     <TouchableOpacity
+                        onPress={() => setShowPremiumModal(false)}
+                        style={styles.modalCloseButton}
+                     >
+                        <Ionicons name="close" size={24} color="#6B7280" />
+                     </TouchableOpacity>
+                  </View>
+
+                  {/* Plan Selection Tabs */}
+                  <View style={styles.planTabs}>
+                     <TouchableOpacity 
+                        style={[styles.planTab, selectedPlan === 'free' && styles.planTabActive]}
+                        onPress={() => setSelectedPlan('free')}
+                     >
+                        <Text style={selectedPlan === 'free' ? styles.planTabTextActive : styles.planTabTextInactive}>Free</Text>
+                     </TouchableOpacity>
+                     <TouchableOpacity 
+                        style={[styles.planTab, selectedPlan === 'premium' && styles.planTabActive]}
+                        onPress={() => setSelectedPlan('premium')}
+                     >
+                        <Text style={selectedPlan === 'premium' ? styles.planTabTextActive : styles.planTabTextInactive}>Premium</Text>
+                     </TouchableOpacity>
+                  </View>
+
+                  {/* Plan Card */}
+                  {selectedPlan === 'free' ? (
+                     <View style={styles.freeCard}>
+                        <View style={styles.freeCardContent}>
+                           <View style={styles.freeCardTitle}>
+                              <Ionicons name="gift-outline" size={20} color="#6B7280" />
+                              <Text style={styles.freeCardTitleText}>Free</Text>
+                           </View>
+                           
+                           <Text style={styles.freeCardPrice}>0đ/tháng</Text>
+                           
+                           <View style={styles.freeFeatures}>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.freeFeatureText}>Trắc nghiệm AI màu sắc (5 lần/ngày)</Text>
+                              </View>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.freeFeatureText}>Gợi ý quán ăn theo giá (3 lần/ngày)</Text>
+                              </View>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="close" size={16} color="#EF4444" />
+                                 <Text style={styles.freeFeatureTextDisabled}>Đăng bài premium (công thức + video)</Text>
+                              </View>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.freeFeatureText}>Xem bài viết cộng đồng (10 bài/ngày)</Text>
+                              </View>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="close" size={16} color="#EF4444" />
+                                 <Text style={styles.freeFeatureTextDisabled}>Tìm kiếm nâng cao (AI-powered)</Text>
+                              </View>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.freeFeatureText}>Lưu quán ăn yêu thích (tối đa 5 quán)</Text>
+                              </View>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="close" size={16} color="#EF4444" />
+                                 <Text style={styles.freeFeatureTextDisabled}>Premium Food Planner</Text>
+                              </View>
+                              <View style={styles.freeFeature}>
+                                 <Ionicons name="close" size={16} color="#EF4444" />
+                                 <Text style={styles.freeFeatureTextDisabled}>Đăng công thức chi tiết</Text>
+                              </View>
+                           </View>
+                        </View>
+                     </View>
+                  ) : (
+                     <View style={styles.premiumCard}>
+                        <View style={styles.premiumCardHeader}>
+                           <Text style={styles.premiumCardBadge}>Phổ biến nhất</Text>
+                        </View>
+                        
+                        <View style={styles.premiumCardContent}>
+                           <View style={styles.premiumCardTitle}>
+                              <Ionicons name="diamond" size={20} color="#8B5CF6" />
+                              <Text style={styles.premiumCardTitleText}>Premium</Text>
+                           </View>
+                           
+                           <Text style={styles.premiumCardPrice}>36.000đ/tháng</Text>
+                           
+                           <View style={styles.premiumFeatures}>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Trắc nghiệm AI màu sắc không giới hạn</Text>
+                              </View>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Gợi ý quán ăn theo giá không giới hạn</Text>
+                              </View>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Đăng bài premium (công thức + video)</Text>
+                              </View>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Xem bài viết cộng đồng không giới hạn</Text>
+                              </View>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Tìm kiếm nâng cao (AI-powered)</Text>
+                              </View>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Lưu quán ăn yêu thích không giới hạn</Text>
+                              </View>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Premium Food Planner</Text>
+                              </View>
+                              <View style={styles.premiumFeature}>
+                                 <Ionicons name="checkmark" size={16} color="#10B981" />
+                                 <Text style={styles.premiumFeatureText}>Đăng công thức chi tiết</Text>
+                              </View>
+                           </View>
+                        </View>
+                     </View>
+                  )}
+
+                  {/* Subscribe Button - Only show for Premium plan */}
+                  {selectedPlan === 'premium' && (
+                     <TouchableOpacity 
+                        style={styles.subscribeButton}
+                        onPress={() => {
+                           setShowPremiumModal(false)
+                           Alert.alert('Đăng ký Premium', 'Tính năng thanh toán sắp ra mắt!')
+                        }}
+                     >
+                        <Text style={styles.subscribeButtonText}>Đăng ký ngay</Text>
+                     </TouchableOpacity>
+                  )}
+               </View>
+            </View>
+         </Modal>
       </SafeAreaView>
    )
 }
@@ -872,35 +1055,38 @@ const styles = StyleSheet.create({
       paddingBottom: 20,
    },
    profileSection: {
-      marginBottom: 16,
+      marginBottom: 12,
       backgroundColor: '#FFFFFF',
       paddingHorizontal: 16,
-      paddingVertical: 16,
-      marginHorizontal: 16,
+      paddingVertical: 12,
+      marginHorizontal: 12,
       borderRadius: 12,
       shadowColor: '#000',
       shadowOffset: {
          width: 0,
          height: 1,
       },
-      shadowOpacity: 0.05,
-      shadowRadius: 3,
-      elevation: 2,
+      shadowOpacity: 0.04,
+      shadowRadius: 2,
+      elevation: 1,
    },
    profileTopRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      marginBottom: 16,
+      justifyContent: 'space-between',
+      marginBottom: 12,
    },
    profileImage: {
-      height: 80,
-      width: 80,
-      borderRadius: 40,
+      height: 88,
+      width: 88,
+      borderRadius: 44,
       marginRight: 16,
+      borderWidth: 2,
+      borderColor: '#F3F4F6',
    },
    profileInfo: {
       alignItems: 'flex-start',
-      marginBottom: 16,
+      marginBottom: 12,
    },
    nameContainer: {
       marginBottom: 8,
@@ -908,8 +1094,8 @@ const styles = StyleSheet.create({
       alignItems: 'center',
    },
    userName: {
-      fontSize: 20,
-      fontWeight: 'bold',
+      fontSize: 22,
+      fontWeight: '800',
       color: '#111827',
       marginRight: 8,
    },
@@ -934,7 +1120,7 @@ const styles = StyleSheet.create({
       fontWeight: '500',
    },
    userBio: {
-      marginBottom: 16,
+      marginBottom: 12,
       color: '#4B5563',
       fontSize: 14,
       lineHeight: 20,
@@ -942,33 +1128,49 @@ const styles = StyleSheet.create({
    statsContainer: {
       flex: 1,
       flexDirection: 'row',
-      justifyContent: 'space-around',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: '#F9FAFB',
+      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 6,
+      marginLeft: 12,
    },
    statItem: {
       alignItems: 'center',
+      justifyContent: 'center',
       flex: 1,
    },
+   statDivider: {
+      height: '70%',
+      width: 1,
+      backgroundColor: '#E5E7EB',
+      marginHorizontal: 4,
+   },
    statNumber: {
-      fontSize: 20,
-      fontWeight: 'bold',
+      fontSize: 22,
+      fontWeight: '800',
       color: '#111827',
+      textAlign: 'center',
    },
    statLabel: {
-      fontSize: 14,
+      fontSize: 10,
       color: '#6B7280',
+      marginTop: 2,
+      textAlign: 'center',
+      lineHeight: 12,
    },
    editProfileButton: {
-      width: '100%',
-      borderRadius: 8,
-      backgroundColor: '#F3F4F6',
-      borderWidth: 1,
-      borderColor: '#D1D5DB',
-      paddingVertical: 8,
+      flex: 1,
+      borderRadius: 10,
+      backgroundColor: '#111827',
+      borderWidth: 0,
+      paddingVertical: 10,
    },
    editProfileButtonText: {
       textAlign: 'center',
       fontWeight: '600',
-      color: '#374151',
+      color: '#FFFFFF',
    },
    analyticsSection: {
       marginBottom: 16,
@@ -1036,6 +1238,23 @@ const styles = StyleSheet.create({
       shadowOpacity: 0.05,
       shadowRadius: 3,
       elevation: 2,
+   },
+   buttonsRow: {
+      flexDirection: 'row',
+      width: '100%',
+   },
+   shareProfileButton: {
+      flex: 1,
+      borderRadius: 10,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#D1D5DB',
+      paddingVertical: 10,
+   },
+   shareProfileButtonText: {
+      textAlign: 'center',
+      fontWeight: '600',
+      color: '#111827',
    },
    tabsWrapper: {
       flexDirection: 'row',
@@ -1381,5 +1600,263 @@ const styles = StyleSheet.create({
     },
     postCardSaveButton: {
        padding: 4,
+    },
+    // Premium Banner styles - Modern Design
+    premiumBanner: {
+       marginHorizontal: 16,
+       marginBottom: 16,
+       borderRadius: 16,
+       overflow: 'hidden',
+       shadowColor: '#8B5CF6',
+       shadowOffset: {
+          width: 0,
+          height: 8,
+       },
+       shadowOpacity: 0.3,
+       shadowRadius: 16,
+       elevation: 12,
+    },
+    premiumBannerContent: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       justifyContent: 'space-between',
+       padding: 18,
+       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+       backgroundColor: '#8B5CF6', // Fallback for React Native
+       position: 'relative',
+    },
+    premiumBannerLeft: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       flex: 1,
+       zIndex: 2,
+    },
+    premiumBannerIcon: {
+       width: 44,
+       height: 44,
+       borderRadius: 22,
+       backgroundColor: 'rgba(255, 255, 255, 0.2)',
+       alignItems: 'center',
+       justifyContent: 'center',
+       marginRight: 14,
+       borderWidth: 1.5,
+       borderColor: 'rgba(255, 255, 255, 0.3)',
+    },
+    premiumBannerText: {
+       flex: 1,
+       paddingRight: 12,
+    },
+    premiumBannerTitle: {
+       fontSize: 16,
+       fontWeight: '700',
+       color: '#FFFFFF',
+       marginBottom: 3,
+       textShadowColor: 'rgba(0, 0, 0, 0.3)',
+       textShadowOffset: { width: 0, height: 1 },
+       textShadowRadius: 2,
+       lineHeight: 20,
+    },
+    premiumBannerSubtitle: {
+       fontSize: 13,
+       color: 'rgba(255, 255, 255, 0.85)',
+       fontWeight: '500',
+       lineHeight: 16,
+    },
+    premiumBannerButton: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       backgroundColor: 'rgba(255, 255, 255, 0.95)',
+       borderRadius: 10,
+       paddingHorizontal: 14,
+       paddingVertical: 9,
+       shadowColor: '#000',
+       shadowOffset: {
+          width: 0,
+          height: 2,
+       },
+       shadowOpacity: 0.1,
+       shadowRadius: 4,
+       elevation: 3,
+       minWidth: 90,
+       justifyContent: 'center',
+    },
+    premiumBannerButtonText: {
+       fontSize: 14,
+       fontWeight: '700',
+       color: '#8B5CF6',
+       marginRight: 6,
+    },
+    // Premium Modal styles
+    modalOverlay: {
+       flex: 1,
+       backgroundColor: 'rgba(0, 0, 0, 0.5)',
+       justifyContent: 'flex-end',
+    },
+    modalContainer: {
+       backgroundColor: '#F3F4F6',
+       borderTopLeftRadius: 20,
+       borderTopRightRadius: 20,
+       paddingBottom: 34,
+       maxHeight: '90%',
+    },
+    modalHeader: {
+       flexDirection: 'row',
+       justifyContent: 'flex-end',
+       paddingHorizontal: 16,
+       paddingTop: 16,
+       paddingBottom: 8,
+    },
+    modalCloseButton: {
+       width: 32,
+       height: 32,
+       borderRadius: 16,
+       backgroundColor: '#E5E7EB',
+       alignItems: 'center',
+       justifyContent: 'center',
+    },
+    planTabs: {
+       flexDirection: 'row',
+       marginHorizontal: 16,
+       marginBottom: 16,
+       backgroundColor: '#E5E7EB',
+       borderRadius: 8,
+       padding: 4,
+    },
+    planTab: {
+       flex: 1,
+       paddingVertical: 8,
+       paddingHorizontal: 16,
+       borderRadius: 6,
+       alignItems: 'center',
+    },
+    planTabActive: {
+       backgroundColor: '#8B5CF6',
+    },
+    planTabTextInactive: {
+       fontSize: 14,
+       fontWeight: '500',
+       color: '#6B7280',
+    },
+    planTabTextActive: {
+       fontSize: 14,
+       fontWeight: '500',
+       color: '#FFFFFF',
+    },
+
+    premiumCard: {
+       marginHorizontal: 16,
+       backgroundColor: '#FFFFFF',
+       borderRadius: 12,
+       marginBottom: 20,
+       overflow: 'hidden',
+    },
+    premiumCardHeader: {
+       backgroundColor: '#FEE2E2',
+       paddingVertical: 8,
+       paddingHorizontal: 16,
+       alignItems: 'center',
+    },
+    premiumCardBadge: {
+       fontSize: 12,
+       fontWeight: '500',
+       color: '#DC2626',
+    },
+    premiumCardContent: {
+       padding: 16,
+    },
+    premiumCardTitle: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       marginBottom: 8,
+    },
+    premiumCardTitleText: {
+       fontSize: 18,
+       fontWeight: '600',
+       color: '#111827',
+       marginLeft: 8,
+    },
+    premiumCardPrice: {
+       fontSize: 24,
+       fontWeight: '700',
+       color: '#8B5CF6',
+       marginBottom: 16,
+    },
+    premiumFeatures: {
+       gap: 12,
+    },
+    premiumFeature: {
+       flexDirection: 'row',
+       alignItems: 'flex-start',
+    },
+    premiumFeatureText: {
+       fontSize: 14,
+       color: '#374151',
+       marginLeft: 8,
+       flex: 1,
+       lineHeight: 20,
+    },
+    subscribeButton: {
+       marginHorizontal: 16,
+       backgroundColor: '#8B5CF6',
+       borderRadius: 12,
+       paddingVertical: 16,
+       alignItems: 'center',
+    },
+    subscribeButtonText: {
+       fontSize: 16,
+       fontWeight: '600',
+       color: '#FFFFFF',
+    },
+    // Free Plan Card styles
+    freeCard: {
+       marginHorizontal: 16,
+       backgroundColor: '#FFFFFF',
+       borderRadius: 12,
+       marginBottom: 20,
+       overflow: 'hidden',
+       borderWidth: 1,
+       borderColor: '#E5E7EB',
+    },
+    freeCardContent: {
+       padding: 16,
+    },
+    freeCardTitle: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       marginBottom: 8,
+    },
+    freeCardTitleText: {
+       fontSize: 18,
+       fontWeight: '600',
+       color: '#111827',
+       marginLeft: 8,
+    },
+    freeCardPrice: {
+       fontSize: 24,
+       fontWeight: '700',
+       color: '#6B7280',
+       marginBottom: 16,
+    },
+    freeFeatures: {
+       gap: 12,
+    },
+    freeFeature: {
+       flexDirection: 'row',
+       alignItems: 'flex-start',
+    },
+    freeFeatureText: {
+       fontSize: 14,
+       color: '#374151',
+       marginLeft: 8,
+       flex: 1,
+       lineHeight: 20,
+    },
+    freeFeatureTextDisabled: {
+       fontSize: 14,
+       color: '#9CA3AF',
+       marginLeft: 8,
+       flex: 1,
+       lineHeight: 20,
+       textDecorationLine: 'line-through',
     },
  })
