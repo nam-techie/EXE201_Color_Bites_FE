@@ -2,6 +2,7 @@
 
 import Button from '@/components/common/Button'
 import Input from '@/components/common/Input'
+import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
@@ -18,6 +19,7 @@ import {
 } from 'react-native'
 
 export default function SignUpFormScreen() {
+   const { register } = useAuth()
    const [formData, setFormData] = useState({
       username: '',
       email: '',
@@ -25,6 +27,7 @@ export default function SignUpFormScreen() {
       confirmPassword: ''
    })
    const [errors, setErrors] = useState<{[key: string]: string}>({})
+   const [isLoading, setIsLoading] = useState(false)
 
    // Password validation functions
    const hasMinLength = (password: string) => password.length >= 6
@@ -71,10 +74,36 @@ export default function SignUpFormScreen() {
       return Object.keys(newErrors).length === 0
    }
 
-   const handleSubmit = () => {
-      if (validateForm()) {
-         Alert.alert('Thành công', 'Tài khoản đã được tạo thành công!')
-         router.replace('/(tabs)')
+   const handleSubmit = async () => {
+      if (!validateForm()) return
+
+      setIsLoading(true)
+      try {
+         const message = await register(
+            formData.username, 
+            formData.email, 
+            formData.password, 
+            formData.confirmPassword
+         )
+         
+         Alert.alert(
+            'Đăng ký thành công!', 
+            'Tài khoản đã được tạo. Vui lòng đăng nhập để tiếp tục.',
+            [
+               {
+                  text: 'Đăng nhập ngay',
+                  onPress: () => router.replace('/auth/login')
+               }
+            ]
+         )
+      } catch (error) {
+         console.error('Register error:', error)
+         Alert.alert(
+            'Đăng ký thất bại',
+            error instanceof Error ? error.message : 'Đã xảy ra lỗi không xác định'
+         )
+      } finally {
+         setIsLoading(false)
       }
    }
 
@@ -209,7 +238,7 @@ export default function SignUpFormScreen() {
                               title="Tạo tài khoản"
                               onPress={() => { if (disabled) return; handleSubmit() }}
                               variant="ghost"
-                              loading={false}
+                              loading={isLoading}
                               style={styles.ctaButton}
                               textStyle={styles.ctaText}
                            />

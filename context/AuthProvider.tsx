@@ -18,8 +18,9 @@ interface AuthContextType {
    user: User | null
    isLoading: boolean
    login: (email: string, password: string) => Promise<void>
-   register: (name: string, email: string, password: string) => Promise<void>
+   register: (username: string, email: string, password: string, confirmPassword: string) => Promise<string>
    logout: () => Promise<void>
+   updateUserAvatar: (avatarUrl: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
    }
 
-   const register = async (name: string, email: string, password: string) => {
+   const register = async (username: string, email: string, password: string, confirmPassword: string) => {
       try {
          console.log('📝 Starting register process for:', email)
          
@@ -112,18 +113,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          await AsyncStorage.removeItem('authToken')
          await AsyncStorage.removeItem('user')
          
-         const userData = await authService.register(name, email, password)
+         const message = await authService.register(username, email, password, confirmPassword)
          
-         const user: User = {
-            id: userData.id,
-            name: userData.userName,
-            email: userData.email,
-            avatar: getDefaultAvatar(userData.userName, userData.email),
-            isPremium: userData.role === 'PREMIUM',
-         }
+         console.log('✅ Register successful! No auto-login:', message)
          
-         setUser(user)
-         console.log('✅ Register successful! Token saved for API calls.')
+         // Không set user - yêu cầu login riêng
+         return message
          
       } catch (error) {
          console.error('❌ Register failed:', error)
@@ -156,8 +151,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
    }
 
+   const updateUserAvatar = async (avatarUrl: string) => {
+      try {
+         if (user) {
+            const updatedUser = { ...user, avatar: avatarUrl }
+            setUser(updatedUser)
+            
+            // Update in AsyncStorage
+            await AsyncStorage.setItem('user', JSON.stringify(updatedUser))
+            console.log('✅ User avatar updated in context:', avatarUrl)
+         }
+      } catch (error) {
+         console.error('❌ Error updating user avatar:', error)
+         throw error
+      }
+   }
+
    return (
-      <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+      <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUserAvatar }}>
          {children}
       </AuthContext.Provider>
    )

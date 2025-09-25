@@ -18,9 +18,10 @@ interface LoginResponse {
 }
 
 interface RegisterRequest {
-  name: string
+  username: string
   email: string
   password: string
+  confirmPassword: string
 }
 
 export class AuthService {
@@ -101,40 +102,31 @@ export class AuthService {
   }
 
   /**
-   * Register với BE thật
+   * Register với BE thật - Chỉ đăng ký, không auto-login
    */
-  async register(name: string, email: string, password: string): Promise<LoginResponse> {
+  async register(username: string, email: string, password: string, confirmPassword: string): Promise<string> {
     try {
-      console.log('📝 Attempting register with:', { name, email })
+      console.log('📝 Attempting register with:', { username, email })
       
-      const response = await this.axiosInstance.post<ApiResponse<LoginResponse>>(
+      const response = await this.axiosInstance.post<ApiResponse<string>>(
         API_ENDPOINTS.AUTH.REGISTER,
-        { name, email, password }
+        { username, email, password, confirmPassword }
       )
 
       console.log('📥 Register response:', response.data)
 
-      if (response.data.status === 201 && response.data.data) {
-        const userData = response.data.data
-        
-        // Lưu token và user info
-        await AsyncStorage.setItem('authToken', userData.token)
-        await AsyncStorage.setItem('user', JSON.stringify({
-          id: userData.id,
-          name: userData.userName,
-          email: userData.email,
-          role: userData.role,
-          active: userData.active
-        }))
-        
-        console.log('✅ Register successful - token and user saved')
-        
-        return userData
+      if (response.data.status === 200) {
+        console.log('✅ Register successful - no auto-login')
+        return response.data.data || 'Đăng ký thành công'
       }
 
       // Handle error response từ BE
       if (response.data.status === 409) {
         throw new Error(response.data.message || 'Email đã được sử dụng')
+      }
+      
+      if (response.data.status === 400) {
+        throw new Error(response.data.message || 'Dữ liệu không hợp lệ')
       }
 
       throw new Error(response.data.message || 'Đăng ký thất bại')
