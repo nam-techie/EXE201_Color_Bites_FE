@@ -89,6 +89,25 @@ export interface PaginatedResponse<T> {
    last: boolean
 }
 
+// Comment API Types (match backend exactly)
+export interface CreateCommentRequest {
+   content: string
+   parentCommentId?: string
+}
+
+export interface CommentResponse {
+   id: string
+   postId: string
+   accountId: string
+   authorName: string
+   authorAvatar: string
+   content: string
+   parentCommentId?: string
+   depth: number
+   createdAt: string
+   updatedAt: string
+}
+
 export interface Comment {
    id: string
    user: User

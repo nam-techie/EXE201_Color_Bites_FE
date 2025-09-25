@@ -32,14 +32,6 @@ export function useCreatePost() {
   }
 
   const validateForm = (): string | null => {
-    if (!form.title.trim()) {
-      return 'Vui lòng nhập tiêu đề bài viết'
-    }
-
-    if (form.title.length > 200) {
-      return 'Tiêu đề không được vượt quá 200 ký tự'
-    }
-
     if (!form.content.trim()) {
       return 'Vui lòng nhập nội dung bài viết'
     }
@@ -69,12 +61,15 @@ export function useCreatePost() {
     setIsLoading(true)
 
       try {
+         // Tự động tạo title từ content (50 ký tự đầu)
+         const autoTitle = form.content.trim().substring(0, 50) + (form.content.trim().length > 50 ? '...' : '')
+         
          const postData: CreatePostRequest = {
-            title: form.title.trim(),
+            title: autoTitle || 'Bài viết mới',
             content: form.content.trim(),
             moodId: form.selectedMoodId,
             imageUrls: form.selectedImage ? [form.selectedImage] : undefined,
-            videoUrl: form.videoUrl.trim() || undefined,
+            // Bỏ videoUrl
          }
 
       console.log('Submitting post data:', postData)

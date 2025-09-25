@@ -1,11 +1,13 @@
 'use client'
 
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
+import { CommentModal } from '@/components/common/CommentModal'
 import ImageGallery from '@/components/common/ImageGallery'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { postService } from '@/services/PostService'
 import type { PostResponse } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
+import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
@@ -139,6 +141,8 @@ export default function HomeScreen() {
    const [isRefreshing, setIsRefreshing] = useState(false)
    const [page, setPage] = useState(1)
    const [hasMorePosts, setHasMorePosts] = useState(true)
+   const [commentModalVisible, setCommentModalVisible] = useState(false)
+   const [selectedPostId, setSelectedPostId] = useState<string>('')
 
    // Load posts from API - Wrapped với useCallback để tránh infinite loop
    const loadPosts = useCallback(async (pageNumber: number = 1, append: boolean = false) => {
@@ -172,17 +176,28 @@ export default function HomeScreen() {
       }
    }, []) // Remove unnecessary dependency
 
+   // Refresh posts - Wrapped với useCallback
+   const handleRefresh = useCallback(async () => {
+      setIsRefreshing(true)
+      await loadPosts(1, false)
+   }, [loadPosts])
+
    // Load posts on component mount - Chỉ chạy 1 lần khi mount
    useEffect(() => {
       loadPosts(1, false)
    // eslint-disable-next-line react-hooks/exhaustive-deps
    }, []) // Empty dependency để tránh infinite loop
 
-   // Refresh posts - Wrapped với useCallback
-   const handleRefresh = useCallback(async () => {
-      setIsRefreshing(true)
-      await loadPosts(1, false)
-   }, [loadPosts])
+   // Refresh posts when tab is focused (when user taps Home tab)
+   useFocusEffect(
+      useCallback(() => {
+         // Chỉ refresh nếu đã có posts (không phải lần đầu load)
+         if (posts.length > 0) {
+            console.log('🏠 Home tab focused - refreshing posts...')
+            handleRefresh()
+         }
+      }, [posts.length, handleRefresh])
+   )
 
    // Load more posts (pagination) - Với proper throttling
    const loadMorePosts = useCallback(async () => {
@@ -200,17 +215,32 @@ export default function HomeScreen() {
       }
 
       try {
-         // Call API to toggle reaction
-         await postService.toggleReaction(postId, 'LIKE')
+         // Call API to toggle reaction and get response data
+         const reactionData = await postService.toggleReaction(postId)
          
-         // Update local state
+         // Update local state based on API response
          const newLiked = new Set(likedPosts)
-         if (newLiked.has(postId)) {
-            newLiked.delete(postId)
-         } else {
+         if (reactionData.isLiked) {
             newLiked.add(postId)
+         } else {
+            newLiked.delete(postId)
          }
          setLikedPosts(newLiked)
+
+         // Update posts state with new reaction count
+         setPosts(prevPosts => 
+            prevPosts.map(post => 
+               post.id === postId 
+                  ? { 
+                     ...post, 
+                     reactionCount: reactionData.reactionCount,
+                     hasReacted: reactionData.isLiked
+                   }
+                  : post
+            )
+         )
+
+         // Success - no toast needed, visual feedback from heart icon is sufficient
       } catch (error) {
          console.error('Error toggling like:', error)
          Toast.show({
@@ -234,6 +264,16 @@ export default function HomeScreen() {
          newSaved.add(postId)
       }
       setSavedPosts(newSaved)
+   }
+
+   const openCommentModal = (postId: string) => {
+      setSelectedPostId(postId)
+      setCommentModalVisible(true)
+   }
+
+   const closeCommentModal = () => {
+      setCommentModalVisible(false)
+      setSelectedPostId('')
    }
 
    return (
@@ -353,6 +393,7 @@ export default function HomeScreen() {
                      isSaved={savedPosts.has(post.id)}
                      onToggleLike={() => toggleLike(post.id)}
                      onToggleSave={() => toggleSave(post.id)}
+                     onCommentPress={() => openCommentModal(post.id)}
                      index={index}
                   />
                )))}
@@ -373,6 +414,13 @@ export default function HomeScreen() {
                )}
             </View>
          </ScrollView>
+
+         {/* Comment Modal */}
+         <CommentModal
+            visible={commentModalVisible}
+            postId={selectedPostId}
+            onClose={closeCommentModal}
+         />
       </SafeAreaView>
    )
 }
@@ -384,6 +432,7 @@ function PostCard({
    isSaved,
    onToggleLike,
    onToggleSave,
+   onCommentPress,
    index,
 }: {
    post: PostResponse
@@ -391,6 +440,7 @@ function PostCard({
    isSaved: boolean
    onToggleLike: () => void
    onToggleSave: () => void
+   onCommentPress: () => void
    index: number
 }) {
    const likeScale = useSharedValue(1)
@@ -530,6 +580,7 @@ function PostCard({
                         } catch {
                            // Haptics not available
                         }
+                        onCommentPress()
                      }}
                   >
                      <Ionicons name="chatbubble-outline" size={22} color="#6B7280" />

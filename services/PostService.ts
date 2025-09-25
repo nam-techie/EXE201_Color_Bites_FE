@@ -1,9 +1,9 @@
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants'
 import type {
-   CreatePostRequest,
-   PaginatedResponse,
-   PostResponse,
-   UpdatePostRequest
+    CreatePostRequest,
+    PaginatedResponse,
+    PostResponse,
+    UpdatePostRequest
 } from '@/type'
 import { apiService } from './ApiService'
 
@@ -231,19 +231,19 @@ export class PostService {
    }
 
    /**
-    * React/Unreact bài viết
+    * Toggle reaction bài viết (Like/Unlike)
+    * Sử dụng API mới tự động detect trạng thái và toggle
     */
-   async toggleReaction(postId: string, reactionType: string): Promise<void> {
+   async toggleReaction(postId: string): Promise<{isLiked: boolean, reactionCount: number, action: string}> {
       try {
-         console.log('Toggling reaction:', postId, reactionType)
-         const response = await apiService.put<string>(
-            `${API_ENDPOINTS.POSTS.REACT}/${postId}`,
-            { reactionType }
+         console.log('Toggling reaction for post:', postId)
+         const response = await apiService.post<{isLiked: boolean, reactionCount: number, action: string}>(
+            `${API_ENDPOINTS.POSTS.TOGGLE_REACTION}/${postId}`
          )
          
-         if (response.status === 200) {
-            console.log('Reaction toggled successfully')
-            return
+         if (response.status === 200 && response.data) {
+            console.log('Reaction toggled successfully:', response.data)
+            return response.data
          }
          
          throw new Error(response.message || 'Không thể cập nhật reaction')

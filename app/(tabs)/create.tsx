@@ -103,16 +103,7 @@ export default function CreatePostScreen() {
           onImageRemoved={() => updateForm({ selectedImage: null })}
         />
 
-        {/* 2. Title Field (required, max 200) */}
-        <FormField
-          label="Tiêu đề *"
-          placeholder="Nhập tiêu đề cho bài viết... (tối đa 200 ký tự)"
-          value={form.title}
-          onChangeText={(title) => updateForm({ title: title.slice(0, 200) })}
-          maxLength={200}
-        />
-
-        {/* 3. Content Field (required, max 5000) */}
+        {/* 2. Content Field (required, max 5000) */}
         <FormField
           label="Nội dung *"
           placeholder="Chia sẻ trải nghiệm ẩm thực của bạn... (tối đa 5000 ký tự)"
@@ -124,20 +115,12 @@ export default function CreatePostScreen() {
           maxLength={5000}
         />
 
-        {/* 4. Mood Selector (moodId) */}
+        {/* 3. Mood Selector (moodId) */}
         <MoodSelector
           moods={moods}
           selectedMoodId={form.selectedMoodId}
           onMoodSelected={(moodId) => updateForm({ selectedMoodId: moodId })}
           isLoading={loadingMoods}
-        />
-
-        {/* 5. Video URL (optional) */}
-        <FormField
-          label="Video URL (tùy chọn)"
-          placeholder="https://example.com/video.mp4"
-          value={form.videoUrl || ''}
-          onChangeText={(videoUrl) => updateForm({ videoUrl })}
         />
 
         {/* Submit Button - Moved to bottom */}

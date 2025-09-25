@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
   // Default URLs for development
 //   return 'http://localhost:8080'  // Backend đã hoạt động trên localhost
 //   return 'http://10.0.2.2:8080'  // Android Emulator
-  return 'http://172.24.16.1:8080'  // Physical device
+  return 'http://192.168.10.13:8080'  // Physical device
 }
 
 export const API_BASE_URL = getApiBaseUrl()
@@ -27,7 +27,13 @@ export const API_ENDPOINTS = {
       UPDATE: '/api/posts/edit',
       DELETE: '/api/posts/delete',
       REACT: '/api/posts/react',
+      TOGGLE_REACTION: '/api/reactions/toggle',
       COUNT_USER: '/api/posts/count/user',
+   },
+   // Comment endpoints  
+   COMMENTS: {
+      CREATE: '/api/comments/create/posts',
+      LIST: '/api/comments/read/posts',
    },
    // Mood endpoints
    MOODS: {
