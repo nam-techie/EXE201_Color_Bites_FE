@@ -11,7 +11,7 @@ const getApiBaseUrl = () => {
   // Default URLs for development
 //   return 'http://localhost:8080'  // Backend đã hoạt động trên localhost
 //   return 'http://10.0.2.2:8080'  // Android Emulator
-  return 'http://192.168.10.13:8080'  // Physical device
+  return 'http://192.168.1.106:8080'  // Physical device
 }
 
 export const API_BASE_URL = getApiBaseUrl()
@@ -47,6 +47,10 @@ export const API_ENDPOINTS = {
       REFRESH: '/api/auth/refresh',
       VERIFY_TOKEN: '/api/auth/verify',
       ME: '/api/auth/me',
+   },
+   // User Information endpoints
+   USER_INFO: {
+      GET: '/api/user-info',
    },
 }
 
