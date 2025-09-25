@@ -5,18 +5,18 @@ import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
-    ActivityIndicator,
-    FlatList,
-    Keyboard,
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+   ActivityIndicator,
+   FlatList,
+   Keyboard,
+   KeyboardAvoidingView,
+   Modal,
+   Platform,
+   SafeAreaView,
+   StyleSheet,
+   Text,
+   TextInput,
+   TouchableOpacity,
+   View,
 } from 'react-native'
 import Toast from 'react-native-toast-message'
 
@@ -32,6 +32,11 @@ interface CommentItemProps {
 }
 
 function CommentItem({ comment, onReply }: CommentItemProps) {
+   // Debug comment data
+   console.log('🔍 CommentItem rendering:', comment)
+   console.log('👤 Author name:', comment.authorName)
+   console.log('🖼️ Author avatar:', comment.authorAvatar)
+
    const formatTimeAgo = (dateString: string): string => {
       const now = new Date()
       const commentDate = new Date(dateString)
@@ -93,7 +98,40 @@ export function CommentModal({ visible, postId, onClose }: CommentModalProps) {
       setIsLoading(true)
       try {
          const response = await commentService.getCommentsByPost(postId, 1, 50)
-         setComments(response.content || [])
+         console.log('📝 Comments API response:', response)
+         console.log('📝 Comments data:', response.content)
+         
+         if (response.content && response.content.length > 0) {
+            const firstComment = response.content[0]
+            console.log('📝 First comment raw data:', firstComment)
+            
+            // Check if author is nested object
+            if (firstComment.author) {
+               console.log('👤 Author object:', firstComment.author)
+               console.log('👤 Author name from nested:', firstComment.author.authorName)
+               console.log('🖼️ Author avatar from nested:', firstComment.author.authorAvatar)
+            }
+            
+            console.log('👤 Direct author name:', firstComment.authorName)
+            console.log('🖼️ Direct author avatar:', firstComment.authorAvatar)
+         }
+         
+         // Normalize comment data if needed
+         const normalizedComments = (response.content || []).map((comment: any) => ({
+            id: comment.id,
+            postId: comment.postId,
+            accountId: comment.accountId,
+            authorName: comment.author?.authorName || comment.authorName || 'Unknown User',
+            authorAvatar: comment.author?.authorAvatar || comment.authorAvatar || '',
+            content: comment.content,
+            parentCommentId: comment.parentCommentId,
+            depth: comment.depth || 0,
+            createdAt: comment.createdAt,
+            updatedAt: comment.updatedAt,
+         }))
+         
+         console.log('📝 Normalized comments:', normalizedComments)
+         setComments(normalizedComments)
       } catch (error) {
          console.error('Error loading comments:', error)
          Toast.show({
@@ -125,9 +163,26 @@ export function CommentModal({ visible, postId, onClose }: CommentModalProps) {
          }
 
          const newComment = await commentService.createComment(postId, commentData)
+         console.log('📝 New comment created:', newComment)
+         
+         // Normalize new comment data
+         const normalizedNewComment = {
+            id: newComment.id,
+            postId: newComment.postId,
+            accountId: newComment.accountId,
+            authorName: newComment.author?.authorName || newComment.authorName || 'Unknown User',
+            authorAvatar: newComment.author?.authorAvatar || newComment.authorAvatar || '',
+            content: newComment.content,
+            parentCommentId: newComment.parentCommentId,
+            depth: newComment.depth || 0,
+            createdAt: newComment.createdAt,
+            updatedAt: newComment.updatedAt,
+         }
+         
+         console.log('📝 Normalized new comment:', normalizedNewComment)
          
          // Add new comment to list
-         setComments(prev => [...prev, newComment])
+         setComments(prev => [...prev, normalizedNewComment])
          setCommentText('')
          setReplyingTo(null)
          Keyboard.dismiss()

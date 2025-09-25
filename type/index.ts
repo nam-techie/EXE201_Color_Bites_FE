@@ -106,6 +106,12 @@ export interface CommentResponse {
    depth: number
    createdAt: string
    updatedAt: string
+   // Backend có thể trả về nested author object
+   author?: {
+      accountId: string
+      authorName: string
+      authorAvatar: string
+   }
 }
 
 export interface Comment {
