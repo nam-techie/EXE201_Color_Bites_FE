@@ -2,6 +2,7 @@
 
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
+import { paymentService } from '@/services/PaymentService'
 import { postService } from '@/services/PostService'
 import { userService, type UserInformationResponse } from '@/services/UserService'
 import type { PostResponse } from '@/type'
@@ -27,11 +28,6 @@ import {
 import Toast from 'react-native-toast-message'
 
 const { width } = Dimensions.get('window')
-const GRID_SPACING = 1 // Minimal gap between posts
-const SIDE_MARGIN = 16 // Left and right margins
-// Calculate exact width for 3 columns: (total width - side margins - 2 gaps) / 3
-const availableWidth = width - (SIDE_MARGIN * 2)
-const postWidth = Math.floor((availableWidth - (GRID_SPACING * 2)) / 3)
 
 // Perfect 3-column Instagram-like grid using FlatList
 
@@ -118,6 +114,7 @@ export default function ProfileScreen() {
    const [selectedPostForList, setSelectedPostForList] = useState<PostResponse | null>(null)
    const [showPremiumModal, setShowPremiumModal] = useState(false)
    const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('premium')
+   const [isCreatingPayment, setIsCreatingPayment] = useState(false)
 
    // Filter posts based on whether they have images or not
    const postsWithImages = posts.filter(post => post.imageUrls && post.imageUrls.length > 0)
@@ -224,7 +221,7 @@ export default function ProfileScreen() {
          setIsLoading(false)
          setIsRefreshing(false)
       }
-   }, [])
+   }, [user?.avatar, user?.id, user?.name])
 
    // Load user profile data from API
    const loadUserProfile = useCallback(async () => {
@@ -319,6 +316,55 @@ export default function ProfileScreen() {
             }
          ]
       )
+   }
+
+   // Handle Premium subscription payment
+   const handleCreatePayment = async () => {
+      try {
+         setIsCreatingPayment(true)
+         console.log('🚀 Bắt đầu tạo thanh toán Premium...')
+         
+         // Tạo payment request
+         const paymentRequest = paymentService.createPremiumPaymentRequest()
+         console.log('📝 Payment request:', paymentRequest)
+         
+         // Gọi API tạo thanh toán
+         const paymentResponse = await paymentService.createSubscriptionPayment(paymentRequest)
+         console.log('✅ Payment created successfully:', paymentResponse)
+         
+         // Đóng modal
+         setShowPremiumModal(false)
+         
+         // Hiển thị thông báo thành công và redirect đến trang thanh toán
+         Alert.alert(
+            'Thanh toán đã được tạo',
+            'Bạn sẽ được chuyển đến trang thanh toán. Vui lòng hoàn tất thanh toán để kích hoạt gói Premium.',
+            [
+               {
+                  text: 'Đến trang thanh toán',
+                  onPress: () => {
+                     // Mở URL thanh toán trong browser
+                     console.log('🔗 Opening payment URL:', paymentResponse.checkoutUrl)
+                     // TODO: Implement web browser opening
+                     // Linking.openURL(paymentResponse.checkoutUrl)
+                     Alert.alert('Thông báo', 'Tính năng mở trình duyệt sắp được triển khai!')
+                  }
+               }
+            ]
+         )
+         
+      } catch (error) {
+         console.error('❌ Error creating payment:', error)
+         setIsCreatingPayment(false)
+         
+         Alert.alert(
+            'Lỗi tạo thanh toán',
+            error instanceof Error ? error.message : 'Không thể tạo thanh toán. Vui lòng thử lại sau.',
+            [{ text: 'Đóng' }]
+         )
+      } finally {
+         setIsCreatingPayment(false)
+      }
    }
 
    // Render list view when a post is selected
@@ -837,13 +883,19 @@ export default function ProfileScreen() {
                   {/* Subscribe Button - Only show for Premium plan */}
                   {selectedPlan === 'premium' && (
                      <TouchableOpacity 
-                        style={styles.subscribeButton}
-                        onPress={() => {
-                           setShowPremiumModal(false)
-                           Alert.alert('Đăng ký Premium', 'Tính năng thanh toán sắp ra mắt!')
-                        }}
+                        style={[styles.subscribeButton, isCreatingPayment && styles.subscribeButtonDisabled]}
+                        onPress={handleCreatePayment}
+                        disabled={isCreatingPayment}
+                        activeOpacity={isCreatingPayment ? 1 : 0.8}
                      >
-                        <Text style={styles.subscribeButtonText}>Đăng ký ngay</Text>
+                        {isCreatingPayment ? (
+                           <View style={styles.subscribeButtonLoading}>
+                              <ActivityIndicator size="small" color="#FFFFFF" />
+                              <Text style={styles.subscribeButtonText}>Đang tạo thanh toán...</Text>
+                           </View>
+                        ) : (
+                           <Text style={styles.subscribeButtonText}>Đăng ký ngay</Text>
+                        )}
                      </TouchableOpacity>
                   )}
                </View>
@@ -1621,7 +1673,6 @@ const styles = StyleSheet.create({
        alignItems: 'center',
        justifyContent: 'space-between',
        padding: 18,
-       background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
        backgroundColor: '#8B5CF6', // Fallback for React Native
        position: 'relative',
     },
@@ -1806,6 +1857,15 @@ const styles = StyleSheet.create({
        fontSize: 16,
        fontWeight: '600',
        color: '#FFFFFF',
+    },
+    subscribeButtonDisabled: {
+       backgroundColor: '#9CA3AF',
+       opacity: 0.7,
+    },
+    subscribeButtonLoading: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       justifyContent: 'center',
     },
     // Free Plan Card styles
     freeCard: {

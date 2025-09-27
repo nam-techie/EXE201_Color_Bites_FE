@@ -221,3 +221,41 @@ export interface DirectionResult {
    steps: RouteStep[]
    geometry: string
 }
+
+// Payment Types
+export interface CreatePaymentRequest {
+  amount: number
+  description: string
+  currency: string
+  returnUrl?: string
+  cancelUrl?: string
+  items: PaymentItem[]
+}
+
+export interface PaymentItem {
+  name: string
+  quantity: number
+  price: number
+}
+
+export interface PaymentResponse {
+  checkoutUrl: string
+  paymentLinkId: string
+  orderCode: number
+  qrCode?: string
+  status: string
+  createdAt: string
+  message: string
+}
+
+export interface PaymentStatusResponse {
+  transactionId: string
+  orderCode: number
+  status: string
+  amount: number
+  description: string
+  gatewayName: string
+  message: string
+  createdAt: string
+  updatedAt: string
+}
