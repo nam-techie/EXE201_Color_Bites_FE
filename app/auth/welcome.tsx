@@ -6,7 +6,7 @@ import { router } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import {
    Animated,
-   Dimensions,
+   Easing,
    SafeAreaView,
    StatusBar,
    StyleSheet,
@@ -15,12 +15,17 @@ import {
    View
 } from 'react-native'
 
-const { width, height } = Dimensions.get('window')
+// no Dimensions needed
 
 export default function WelcomeScreen() {
    const fadeAnim = useRef(new Animated.Value(0)).current
    const slideAnim = useRef(new Animated.Value(50)).current
    const scaleAnim = useRef(new Animated.Value(0.8)).current
+   const gradientAnim = useRef(new Animated.Value(0)).current
+   const float1 = useRef(new Animated.Value(0)).current
+   const float2 = useRef(new Animated.Value(0)).current
+   const float3 = useRef(new Animated.Value(0)).current
+   const joinPulse = useRef(new Animated.Value(1)).current
 
    useEffect(() => {
       // Staggered animations
@@ -43,18 +48,80 @@ export default function WelcomeScreen() {
             }),
          ]),
       ]).start()
+
+      // Crossfade gradients
+      Animated.loop(
+         Animated.sequence([
+            Animated.timing(gradientAnim, {
+               toValue: 1,
+               duration: 8000,
+               easing: Easing.inOut(Easing.quad),
+               useNativeDriver: false,
+            }),
+            Animated.timing(gradientAnim, {
+               toValue: 0,
+               duration: 8000,
+               easing: Easing.inOut(Easing.quad),
+               useNativeDriver: false,
+            }),
+         ])
+      ).start()
+
+      const floatLoop = (val: Animated.Value, delay = 0, duration = 3800) => {
+         Animated.loop(
+            Animated.sequence([
+               Animated.timing(val, { toValue: 1, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true, delay }),
+               Animated.timing(val, { toValue: 0, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+            ])
+         ).start()
+      }
+      floatLoop(float1, 0, 4200)
+      floatLoop(float2, 600, 3600)
+      floatLoop(float3, 1200, 4000)
+
+      // CTA pulse animation
+      Animated.loop(
+         Animated.sequence([
+            Animated.timing(joinPulse, { toValue: 1.04, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+            Animated.timing(joinPulse, { toValue: 1.0, duration: 900, easing: Easing.inOut(Easing.quad), useNativeDriver: true }),
+         ])
+      ).start()
    }, [])
+
+   const gradAOpacity = gradientAnim
+   const gradBOpacity = gradientAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0] })
+   const floatTranslate = (val: Animated.Value) => ({
+      transform: [
+         { translateY: val.interpolate({ inputRange: [0, 1], outputRange: [-8, 8] }) },
+      ],
+   })
 
    return (
       <SafeAreaView style={styles.container}>
-         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+         <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
          
-         <LinearGradient
-            colors={['#FDF6E3', '#FFE4B5', '#FFD700']}
-            style={styles.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-         >
+         <View style={styles.gradient}>
+            {/* Animated layered gradients */}
+            <Animated.View style={[styles.gradientLayer, { opacity: gradAOpacity }]}> 
+               <LinearGradient
+                  colors={["#FFF1EA", "#FFD9E0", "#FFC06F"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+               />
+            </Animated.View>
+            <Animated.View style={[styles.gradientLayer, { opacity: gradBOpacity }]}> 
+               <LinearGradient
+                  colors={["#FFF7ED", "#FFE3C4", "#FFD36A"]}
+                  start={{ x: 1, y: 0 }}
+                  end={{ x: 0, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+               />
+            </Animated.View>
+            {/* Floating food emojis */}
+            <Animated.Text style={[styles.floatingIcon, styles.floatA, floatTranslate(float1)]}>🍣</Animated.Text>
+            <Animated.Text style={[styles.floatingIcon, styles.floatB, floatTranslate(float2)]}>🍜</Animated.Text>
+            <Animated.Text style={[styles.floatingIcon, styles.floatC, floatTranslate(float3)]}>🧁</Animated.Text>
             {/* Header */}
             <View style={styles.header}>
                <TouchableOpacity 
@@ -123,11 +190,20 @@ export default function WelcomeScreen() {
                <View style={styles.buttonContainer}>
                   <TouchableOpacity 
                      style={styles.joinButton}
-                     onPress={() => router.push('/auth/signup-options')}
-                     activeOpacity={0.8}
+                     onPress={() => router.push('/auth/signup-form')}
+                     activeOpacity={0.9}
                   >
-                     <Ionicons name="person-add" size={20} color="#FFF" style={styles.buttonIcon} />
-                     <Text style={styles.joinButtonText}>Tham Gia</Text>
+                     <Animated.View style={[styles.joinButtonGradientWrap, { transform: [{ scale: joinPulse }] }]}>
+                        <LinearGradient
+                           colors={["#FF8A00", "#FF6B00"]}
+                           start={{ x: 0, y: 0 }}
+                           end={{ x: 1, y: 1 }}
+                           style={styles.joinButtonGradient}
+                        >
+                           <Ionicons name="person-add" size={20} color="#FFF" style={styles.buttonIcon} />
+                           <Text style={styles.joinButtonText}>Tham Gia</Text>
+                        </LinearGradient>
+                     </Animated.View>
                   </TouchableOpacity>
                   
                   <TouchableOpacity 
@@ -145,7 +221,7 @@ export default function WelcomeScreen() {
                   <Text style={styles.footerText}>Bắt đầu hành trình ẩm thực ngay hôm nay!</Text>
                </View>
             </Animated.View>
-         </LinearGradient>
+         </View>
       </SafeAreaView>
    )
 }
@@ -156,7 +232,19 @@ const styles = StyleSheet.create({
    },
    gradient: {
       flex: 1,
+      position: 'relative',
    },
+   gradientLayer: {
+      ...StyleSheet.absoluteFillObject,
+   },
+   floatingIcon: {
+      position: 'absolute',
+      fontSize: 22,
+      opacity: 0.7,
+   },
+   floatA: { top: 80, right: 24 },
+   floatB: { top: 140, left: 18 },
+   floatC: { top: 220, right: 60 },
    header: {
       paddingHorizontal: 20,
       paddingTop: 20,
@@ -270,13 +358,13 @@ const styles = StyleSheet.create({
    },
    joinButton: {
       flex: 1,
-      backgroundColor: '#FF9500',
+      backgroundColor: 'transparent',
       borderRadius: 16,
-      paddingVertical: 18,
+      overflow: 'hidden',
       alignItems: 'center',
       flexDirection: 'row',
       justifyContent: 'center',
-      shadowColor: '#FF9500',
+      shadowColor: '#FF8A00',
       shadowOffset: {
          width: 0,
          height: 6,
@@ -285,9 +373,23 @@ const styles = StyleSheet.create({
       shadowRadius: 12,
       elevation: 8,
    },
+   joinButtonGradientWrap: {
+      width: '100%',
+      borderRadius: 16,
+   },
+   joinButtonGradient: {
+      width: '100%',
+      paddingVertical: 18,
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexDirection: 'row',
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.8)',
+   },
    joinButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: 17,
+      fontWeight: '700',
       color: '#FFF',
    },
    signInButton: {

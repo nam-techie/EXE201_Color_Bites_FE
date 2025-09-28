@@ -140,21 +140,37 @@ export default function LoginScreen() {
                         <Text style={styles.dividerText}>Hoặc</Text>
                         <View style={styles.divider} />
                      </View>
+{/* Social Buttons */}
+<View style={styles.socialRow}>
+  <TouchableOpacity
+    style={styles.socialBtn}
+    activeOpacity={0.8}
+    onPress={() => Alert.alert('Sắp ra mắt', 'Đăng nhập Google sẽ có sớm')}
+  >
+    <Ionicons name="logo-google" size={18} color="#DB4437" />
+  </TouchableOpacity>
 
-                     {/* Social Buttons */}
-                     <View style={styles.socialRow}>
-                        <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8}>
-                           <Ionicons name="logo-google" size={18} color="#DB4437" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8}>
-                           <Ionicons name="logo-facebook" size={18} color="#1877F2" />
-                        </TouchableOpacity>
-                     </View>
+  <TouchableOpacity
+    style={styles.socialBtn}
+    activeOpacity={0.8}
+    onPress={() => Alert.alert('Sắp ra mắt', 'Đăng nhập Facebook sẽ có sớm')}
+  >
+    <Ionicons name="logo-facebook" size={18} color="#1877F2" />
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={styles.socialBtn}
+    activeOpacity={0.8}
+    onPress={() => Alert.alert('Sắp ra mắt', 'Đăng nhập Apple sẽ có sớm')}
+  >
+    <Ionicons name="logo-apple" size={18} color="#111" />
+  </TouchableOpacity>
+</View>
 
                      {/* Signup */}
                      <View style={styles.signUpContainer}>
                         <Text style={styles.signUpText}>Chưa có tài khoản?</Text>
-                        <TouchableOpacity onPress={() => router.push('/auth/signup-options')}>
+                        <TouchableOpacity onPress={() => router.push('/auth/signup-form')}>
                            <Text style={styles.signUpLink}> Đăng ký</Text>
                         </TouchableOpacity>
                      </View>

@@ -3,15 +3,25 @@
 import { Ionicons } from '@expo/vector-icons'
 import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
-import { SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Animated, Easing, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 
 export default function SignUpOptionsScreen() {
+   const scaleEmail = new Animated.Value(1)
+   const scaleFb = new Animated.Value(1)
+   const scaleGg = new Animated.Value(1)
+   const scaleApple = new Animated.Value(1)
+
+   const pressIn = (val: Animated.Value) =>
+      Animated.timing(val, { toValue: 0.98, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }).start()
+   const pressOut = (val: Animated.Value) =>
+      Animated.timing(val, { toValue: 1, duration: 120, easing: Easing.out(Easing.quad), useNativeDriver: true }).start()
+
    return (
       <SafeAreaView style={styles.container}>
          <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
          
          <LinearGradient
-            colors={['#FDF6E3', '#FFE4B5', '#FFD700']}
+            colors={["#FFF1EA", "#FFE3C4", "#FFD36A"]}
             style={styles.gradient}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
@@ -30,6 +40,11 @@ export default function SignUpOptionsScreen() {
             <View style={styles.content}>
                {/* Title */}
                <Text style={styles.title}>Chọn cách đăng ký</Text>
+               <View style={styles.pillWrap}>
+                  <LinearGradient colors={["#FF8A00", "#FF6B00"]} start={{x:0,y:0}} end={{x:1,y:1}} style={styles.pill}>
+                     <Text style={styles.pillText}>Nhanh chóng & an toàn</Text>
+                  </LinearGradient>
+               </View>
                
                {/* Description */}
                <Text style={styles.description}>
@@ -38,10 +53,13 @@ export default function SignUpOptionsScreen() {
                
                {/* Social Login Options */}
                <View style={styles.optionsContainer}>
+                  <Animated.View style={{ transform: [{ scale: scaleEmail }] }}>
                   <TouchableOpacity 
                      style={styles.socialButton}
                      onPress={() => router.push('/auth/signup-form')}
-                     activeOpacity={0.8}
+                     activeOpacity={0.9}
+                     onPressIn={() => pressIn(scaleEmail)}
+                     onPressOut={() => pressOut(scaleEmail)}
                   >
                      <View style={styles.socialIconContainer}>
                         <Ionicons name="mail" size={24} color="#FF9500" />
@@ -52,10 +70,14 @@ export default function SignUpOptionsScreen() {
                      </View>
                      <Ionicons name="chevron-forward" size={20} color="#666" />
                   </TouchableOpacity>
+                  </Animated.View>
 
+                  <Animated.View style={{ transform: [{ scale: scaleFb }] }}>
                   <TouchableOpacity 
                      style={styles.socialButton}
-                     activeOpacity={0.8}
+                     activeOpacity={0.9}
+                     onPressIn={() => pressIn(scaleFb)}
+                     onPressOut={() => pressOut(scaleFb)}
                   >
                      <View style={[styles.socialIconContainer, { backgroundColor: '#1877F2' }]}>
                         <Ionicons name="logo-facebook" size={24} color="#FFF" />
@@ -66,10 +88,14 @@ export default function SignUpOptionsScreen() {
                      </View>
                      <Ionicons name="chevron-forward" size={20} color="#666" />
                   </TouchableOpacity>
+                  </Animated.View>
 
+                  <Animated.View style={{ transform: [{ scale: scaleGg }] }}>
                   <TouchableOpacity 
                      style={styles.socialButton}
-                     activeOpacity={0.8}
+                     activeOpacity={0.9}
+                     onPressIn={() => pressIn(scaleGg)}
+                     onPressOut={() => pressOut(scaleGg)}
                   >
                      <View style={[styles.socialIconContainer, { backgroundColor: '#DB4437' }]}>
                         <Ionicons name="logo-google" size={24} color="#FFF" />
@@ -80,10 +106,14 @@ export default function SignUpOptionsScreen() {
                      </View>
                      <Ionicons name="chevron-forward" size={20} color="#666" />
                   </TouchableOpacity>
+                  </Animated.View>
 
+                  <Animated.View style={{ transform: [{ scale: scaleApple }] }}>
                   <TouchableOpacity 
                      style={styles.socialButton}
-                     activeOpacity={0.8}
+                     activeOpacity={0.9}
+                     onPressIn={() => pressIn(scaleApple)}
+                     onPressOut={() => pressOut(scaleApple)}
                   >
                      <View style={[styles.socialIconContainer, { backgroundColor: '#000' }]}>
                         <Ionicons name="logo-apple" size={24} color="#FFF" />
@@ -94,6 +124,14 @@ export default function SignUpOptionsScreen() {
                      </View>
                      <Ionicons name="chevron-forward" size={20} color="#666" />
                   </TouchableOpacity>
+                  </Animated.View>
+               </View>
+
+               {/* Divider */}
+               <View style={styles.dividerWrap}>
+                  <View style={styles.divider} />
+                  <Text style={styles.dividerText}>Hoặc</Text>
+                  <View style={styles.divider} />
                </View>
 
                {/* Terms */}
@@ -117,6 +155,7 @@ const styles = StyleSheet.create({
    },
    gradient: {
       flex: 1,
+      paddingBottom: 10,
    },
    header: {
       paddingHorizontal: 20,
@@ -130,6 +169,22 @@ const styles = StyleSheet.create({
       backgroundColor: 'rgba(0, 0, 0, 0.1)',
       justifyContent: 'center',
       alignItems: 'center',
+   },
+   pillWrap: {
+      alignItems: 'center',
+      marginTop: 4,
+      marginBottom: 20,
+   },
+   pill: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 999,
+   },
+   pillText: {
+      color: '#FFF',
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.2,
    },
    content: {
       flex: 1,
@@ -157,10 +212,12 @@ const styles = StyleSheet.create({
    socialButton: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#FFF',
+      backgroundColor: 'rgba(255,255,255,0.95)',
       borderRadius: 16,
       padding: 20,
       marginBottom: 15,
+      borderWidth: 1,
+      borderColor: 'rgba(0,0,0,0.05)',
       shadowColor: '#000',
       shadowOffset: {
          width: 0,
@@ -202,6 +259,25 @@ const styles = StyleSheet.create({
    },
    termsContainer: {
       paddingHorizontal: 20,
+      marginTop: 10,
+   },
+   dividerWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      marginBottom: 20,
+      paddingHorizontal: 10,
+   },
+   divider: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: 'rgba(0,0,0,0.15)',
+   },
+   dividerText: {
+      color: '#666',
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.2,
    },
    termsText: {
       fontSize: 14,

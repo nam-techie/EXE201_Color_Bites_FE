@@ -214,7 +214,38 @@ export default function SignUpFormScreen() {
                               textStyle={styles.ctaText}
                            />
                         </LinearGradient>
+                        {/* Divider and Social Signup */}
+<View style={styles.dividerWrap}>
+  <View style={styles.divider} />
+  <Text style={styles.dividerText}>Hoặc đăng ký nhanh</Text>
+  <View style={styles.divider} />
+</View>
 
+<View style={styles.socialRow}>
+  <TouchableOpacity
+    style={[styles.socialIconBtn, { backgroundColor: '#1877F2' }]}
+    activeOpacity={0.8}
+    onPress={() => Alert.alert('Sắp ra mắt', 'Đăng ký Facebook sẽ có sớm')}
+  >
+    <Ionicons name="logo-facebook" size={22} color="#FFF" />
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={[styles.socialIconBtn, { backgroundColor: '#DB4437' }]}
+    activeOpacity={0.8}
+    onPress={() => Alert.alert('Sắp ra mắt', 'Đăng ký Google sẽ có sớm')}
+  >
+    <Ionicons name="logo-google" size={22} color="#FFF" />
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    style={[styles.socialIconBtn, { backgroundColor: '#000' }]}
+    activeOpacity={0.8}
+    onPress={() => Alert.alert('Sắp ra mắt', 'Đăng ký Apple sẽ có sớm')}
+  >
+    <Ionicons name="logo-apple" size={22} color="#FFF" />
+  </TouchableOpacity>
+</View>
                         {/* Back to login */}
                         <View style={styles.signInRow}>
                            <Text style={styles.signInText}>Đã có tài khoản?</Text>
@@ -343,4 +374,43 @@ const styles = StyleSheet.create({
       color: '#f97316',
       fontWeight: '700',
    },
+   dividerWrap: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 10,
+      paddingHorizontal: 8,
+      marginTop: 14,
+      marginBottom: 8,
+    },
+    divider: {
+      flex: 1,
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: 'rgba(0,0,0,0.15)',
+    },
+    dividerText: {
+      color: '#6b7280',
+      fontSize: 12,
+      fontWeight: '600',
+      letterSpacing: 0.2,
+    },
+    socialRow: {
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: 14,
+      marginBottom: 4,
+    },
+    socialIconBtn: {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+   
 }) 
