@@ -18,9 +18,10 @@ interface Props {
    restaurant: Restaurant | null
    visible: boolean
    onClose: () => void
+   onNavigateToRestaurant?: (restaurant: Restaurant) => void
 }
 
-export default function RestaurantDetailModal({ restaurant, visible, onClose }: Props) {
+export default function RestaurantDetailModal({ restaurant, visible, onClose, onNavigateToRestaurant }: Props) {
    if (!restaurant) return null
 
    const handleCall = () => {
@@ -41,8 +42,15 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose }: 
    }
 
    const handleDirections = () => {
-      const url = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lon}`
-      Linking.openURL(url)
+      if (onNavigateToRestaurant) {
+         // Đóng modal và chuyển về map với route planning
+         onClose()
+         onNavigateToRestaurant(restaurant)
+      } else {
+         // Fallback: mở Google Maps nếu không có callback
+         const url = `https://www.google.com/maps/dir/?api=1&destination=${restaurant.lat},${restaurant.lon}`
+         Linking.openURL(url)
+      }
    }
 
    const getAddress = () => {

@@ -83,7 +83,25 @@ EXE201_MUMII_FE/
    yarn install
    ```
 
-3. **Khởi chạy development server**
+3. **Setup Environment Variables**
+
+   Tạo file `.env` trong thư mục gốc:
+   ```bash
+   touch .env
+   ```
+
+   Thêm các biến môi trường cần thiết:
+   ```bash
+   # OpenRouteService API Key (bắt buộc cho tính năng map)
+   EXPO_PUBLIC_OPENROUTE_API_KEY=your_api_key_here
+   
+   # Backend API URL (optional)
+   EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+   ```
+
+   📋 **Hướng dẫn chi tiết**: Xem file [ENV_SETUP.md](./ENV_SETUP.md)
+
+4. **Khởi chạy development server**
    ```bash
    npm start
    # hoặc
@@ -280,6 +298,11 @@ npx expo build:ios
    ```bash
    npx expo start --ios --simulator
    ```
+
+4. **Environment variables không hoạt động**
+   - Kiểm tra file `.env` có tồn tại không
+   - Restart development server: `npx expo start --clear`
+   - Xem hướng dẫn chi tiết trong [ENV_SETUP.md](./ENV_SETUP.md)
 
 ## 📚 Tài liệu tham khảo
 

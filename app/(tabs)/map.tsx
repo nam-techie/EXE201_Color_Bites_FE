@@ -12,15 +12,15 @@ import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-    Alert,
-    Animated,
-    GestureResponderEvent,
-    PanResponder,
-    PanResponderGestureState,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  Animated,
+  GestureResponderEvent,
+  PanResponder,
+  PanResponderGestureState,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
 
@@ -161,6 +161,26 @@ export default function MapScreen() {
 
     setRouteStops(newRouteStops)
     setRouteCoordinates(allCoordinates)
+  }
+
+  // Function xử lý navigation từ RestaurantDetailModal
+  const handleNavigateToRestaurant = (restaurant: Restaurant) => {
+    // Bật route planning mode
+    setRoutePlanningMode(true)
+    setShowProfileSelector(true)
+    
+    // Thêm nhà hàng vào route
+    const newStops = [{ restaurant }]
+    setRouteStops(newStops)
+    calculateRouteForStops(newStops)
+    
+    // Di chuyển map đến vị trí nhà hàng
+    setMapRegion({
+      latitude: restaurant.lat,
+      longitude: restaurant.lon,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    })
   }
 
   useEffect(() => {
@@ -395,6 +415,7 @@ export default function MapScreen() {
           setModalVisible(false)
           setSelectedRestaurant(null)
         }}
+        onNavigateToRestaurant={handleNavigateToRestaurant}
       />
     </View>
   )

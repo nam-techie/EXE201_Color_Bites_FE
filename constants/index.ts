@@ -1,6 +1,5 @@
 // API Configuration
-export const OPENROUTE_API_KEY =
-   'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImFiMWU5ZjI3MzkzYjRhZTJhOGY5MWNjMDU1OTk4M2E3IiwiaCI6Im11cm11cjY0In0='
+export const OPENROUTE_API_KEY = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY || ''
 
 // Backend API Configuration
 // For Android Emulator, use 10.0.2.2 instead of localhost

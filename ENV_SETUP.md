@@ -1,39 +1,70 @@
-# 🔧 Cấu hình Environment Variables
+# 🔐 Environment Variables Setup
 
-## Tạo file .env
+## 📋 Các biến môi trường cần thiết
 
-Tạo file `.env` trong thư mục root của dự án với nội dung sau:
+### 1. OpenRouteService API Key
 
-```env
-# Backend API Configuration
-EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+**Mục đích**: Sử dụng cho tính năng chỉ đường và tính toán lộ trình
 
-# OpenRoute Service API Key (for map functionality) 
-EXPO_PUBLIC_OPENROUTE_API_KEY=your_openroute_api_key_here
+**Cách lấy API key:**
+1. Truy cập: https://openrouteservice.org/dev/#/signup
+2. Đăng ký tài khoản miễn phí
+3. Copy API key từ dashboard
 
-# Environment
-EXPO_PUBLIC_ENV=development
+**Cách setup:**
+1. Tạo file `.env` trong thư mục gốc của dự án
+2. Thêm dòng sau vào file `.env`:
+```bash
+EXPO_PUBLIC_OPENROUTE_API_KEY=your_api_key_here
 ```
 
-## Cấu hình chi tiết:
+**Ví dụ:**
+```bash
+EXPO_PUBLIC_OPENROUTE_API_KEY=your_api_key_here
+```
 
-### 1. **EXPO_PUBLIC_API_BASE_URL**
-- **Development**: `http://localhost:8080` (nếu backend chạy local)
-- **Production**: URL của server production
-- **Emulator Android**: `http://10.0.2.2:8080` (nếu backend chạy trên máy host)
-- **Physical Device**: IP address của máy (ví dụ: `http://192.168.1.100:8080`)
+### 2. Backend API Base URL (Optional)
 
-### 2. **EXPO_PUBLIC_OPENROUTE_API_KEY**
-- Lấy free API key tại: https://openrouteservice.org/
-- Hoặc sử dụng key có sẵn trong constants/index.ts
+**Mục đích**: URL của backend API
 
-## Test kết nối API:
+**Cách setup:**
+```bash
+EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+```
 
-1. **Khởi động backend server**
-2. **Kiểm tra URL trong browser**: `http://localhost:8080/api/posts/list`
-3. **Chạy app và test tạo post**
+## 🚀 Cách sử dụng
 
-## Lưu ý:
-- File `.env` không được commit lên git
-- Prefix `EXPO_PUBLIC_` là bắt buộc cho Expo
-- Restart app sau khi thay đổi env variables
+1. **Tạo file .env:**
+   ```bash
+   touch .env
+   ```
+
+2. **Thêm các biến môi trường vào .env:**
+   ```bash
+   EXPO_PUBLIC_OPENROUTE_API_KEY=your_api_key_here
+   EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+   ```
+
+3. **Restart development server:**
+   ```bash
+   npx expo start --clear
+   ```
+
+## ⚠️ Lưu ý bảo mật
+
+- ✅ File `.env` đã được thêm vào `.gitignore`
+- ✅ Không commit API key lên Git
+- ✅ Chia sẻ API key qua kênh bảo mật khác
+- ✅ Sử dụng API key riêng cho production
+
+## 🔧 Troubleshooting
+
+**Lỗi "OpenRouteService API key not configured":**
+- Kiểm tra file `.env` có tồn tại không
+- Kiểm tra tên biến có đúng `EXPO_PUBLIC_OPENROUTE_API_KEY` không
+- Restart development server sau khi thêm biến môi trường
+
+**Lỗi "Invalid API key":**
+- Kiểm tra API key có đúng không
+- Kiểm tra API key có hết hạn không
+- Tạo API key mới nếu cần
