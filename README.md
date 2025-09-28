@@ -1,12 +1,12 @@
-# 🍎 Color Bites - Frontend Application
+# 🍎 MUMII - Frontend Application
 
-![Color Bites Logo](./assets/images/icon.png)
+![MUMII Logo](./assets/images/icon.png)
 
-**Color Bites** là một ứng dụng di động được phát triển bằng React Native và Expo, tập trung vào trải nghiệm người dùng với giao diện hiện đại và hỗ trợ đa nền tảng.
+**MUMII** là một ứng dụng di động được phát triển bằng React Native và Expo, tập trung vào trải nghiệm người dùng với giao diện hiện đại và hỗ trợ đa nền tảng.
 
 ## 📱 Tổng quan dự án
 
-- **Tên dự án**: Color Bites (color-bite)
+- **Tên dự án**: MUMII (mumii)
 - **Phiên bản**: 1.0.0
 - **Framework**: Expo SDK 53 với React Native 0.79.5
 - **Ngôn ngữ**: TypeScript
@@ -16,7 +16,7 @@
 ## 🏗️ Kiến trúc dự án
 
 ```
-EXE201_Color_Bites_FE/
+EXE201_MUMII_FE/
 ├── app/                          # Thư mục chính chứa các màn hình (File-based routing)
 │   ├── (tabs)/                   # Tab navigation group
 │   │   ├── _layout.tsx          # Layout cho tab navigation
@@ -72,7 +72,7 @@ EXE201_Color_Bites_FE/
 
    ```bash
    git clone <repository-url>
-   cd EXE201_Color_Bites_FE
+   cd EXE201_MUMII_FE
    ```
 
 2. **Cài đặt dependencies**
@@ -184,11 +184,11 @@ npx expo start --web
 ```json
 {
    "expo": {
-      "name": "color-bite",
-      "slug": "color-bite",
+      "name": "mumii",
+      "slug": "mumii",
       "version": "1.0.0",
       "orientation": "portrait",
-      "scheme": "colorbite",
+      "scheme": "mumii",
       "newArchEnabled": true
    }
 }
@@ -298,11 +298,11 @@ npx expo build:ios
 
 ## 📄 License
 
-Dự án này là private và thuộc về team phát triển EXE201_Color_Bites.
+Dự án này là private và thuộc về team phát triển EXE201_MUMII.
 
 ## 👥 Team
 
-**EXE201 - Color Bites Development Team**
+**EXE201 - MUMII Development Team**
 
 ---
 

@@ -282,7 +282,7 @@ export default function HomeScreen() {
          <View style={styles.header}>
             <View style={styles.headerContent}>
                <View>
-                  <Text style={styles.headerTitle}>ColorBite</Text>
+                  <Text style={styles.headerTitle}>MUMII</Text>
                   <Text style={styles.headerSubtitle}>Discover amazing food</Text>
                </View>
                <TouchableOpacity

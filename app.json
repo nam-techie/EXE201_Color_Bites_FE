@@ -1,14 +1,14 @@
 {
    "expo": {
-     "name": "color-bite",
-     "slug": "color-bite",
+     "name": "mumii",
+     "slug": "mumii",
      "version": "1.0.0",
      "orientation": "portrait",
      "icon": "./assets/images/icon.png",
-     "scheme": "colorbite",
+     "scheme": "mumii",
      "userInterfaceStyle": "automatic",
      "android": {
-       "package": "com.phuongnam.colorbite",
+       "package": "com.phuongnam.mumii",
        "adaptiveIcon": {
          "foregroundImage": "./assets/images/adaptive-icon.png",
          "backgroundColor": "#ffffff"

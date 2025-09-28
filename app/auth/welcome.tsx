@@ -5,14 +5,14 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useEffect, useRef } from 'react'
 import {
-   Animated,
-   Dimensions,
-   SafeAreaView,
-   StatusBar,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View
+    Animated,
+    Dimensions,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native'
 
 const { width, height } = Dimensions.get('window')
@@ -83,7 +83,7 @@ export default function WelcomeScreen() {
                   <View style={styles.logoCircle}>
                      <Text style={styles.logoEmoji}>🍎</Text>
                   </View>
-                  <Text style={styles.appTitle}>ColorBite</Text>
+                  <Text style={styles.appTitle}>MUMII</Text>
                   <Text style={styles.appSubtitle}>Khám phá ẩm thực đầy màu sắc</Text>
                </View>
                
@@ -113,7 +113,7 @@ export default function WelcomeScreen() {
                
                {/* Welcome Message */}
                <View style={styles.messageContainer}>
-                  <Text style={styles.welcomeText}>Mang đến cho thành viên ColorBite</Text>
+                  <Text style={styles.welcomeText}>Mang đến cho thành viên MUMII</Text>
                   <Text style={styles.descriptionText}>
                      Những trải nghiệm ẩm thực tuyệt vời nhất, cảm hứng và câu chuyện trong ẩm thực.
                   </Text>
