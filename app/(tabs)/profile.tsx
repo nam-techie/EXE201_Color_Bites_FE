@@ -1,5 +1,6 @@
 'use client'
 
+import PaymentWebView from '@/components/common/PaymentWebView'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
 import { paymentService } from '@/services/PaymentService'
@@ -11,19 +12,19 @@ import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import { useCallback, useEffect, useState } from 'react'
 import {
-   ActivityIndicator,
-   Alert,
-   BackHandler,
-   Dimensions,
-   FlatList,
-   Modal,
-   RefreshControl,
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    Dimensions,
+    FlatList,
+    Modal,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native'
 import Toast from 'react-native-toast-message'
 
@@ -115,6 +116,8 @@ export default function ProfileScreen() {
    const [showPremiumModal, setShowPremiumModal] = useState(false)
    const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('premium')
    const [isCreatingPayment, setIsCreatingPayment] = useState(false)
+   const [showPaymentWebView, setShowPaymentWebView] = useState(false)
+   const [paymentCheckoutUrl, setPaymentCheckoutUrl] = useState('')
 
    // Filter posts based on whether they have images or not
    const postsWithImages = posts.filter(post => post.imageUrls && post.imageUrls.length > 0)
@@ -332,26 +335,14 @@ export default function ProfileScreen() {
          const paymentResponse = await paymentService.createSubscriptionPayment(paymentRequest)
          console.log('✅ Payment created successfully:', paymentResponse)
          
-         // Đóng modal
+         // Đóng modal premium
          setShowPremiumModal(false)
          
-         // Hiển thị thông báo thành công và redirect đến trang thanh toán
-         Alert.alert(
-            'Thanh toán đã được tạo',
-            'Bạn sẽ được chuyển đến trang thanh toán. Vui lòng hoàn tất thanh toán để kích hoạt gói Premium.',
-            [
-               {
-                  text: 'Đến trang thanh toán',
-                  onPress: () => {
-                     // Mở URL thanh toán trong browser
-                     console.log('🔗 Opening payment URL:', paymentResponse.checkoutUrl)
-                     // TODO: Implement web browser opening
-                     // Linking.openURL(paymentResponse.checkoutUrl)
-                     Alert.alert('Thông báo', 'Tính năng mở trình duyệt sắp được triển khai!')
-                  }
-               }
-            ]
-         )
+         // Mở PaymentWebView với checkout URL
+         setPaymentCheckoutUrl(paymentResponse.checkoutUrl)
+         setShowPaymentWebView(true)
+         
+         console.log('🔗 Opening payment WebView with URL:', paymentResponse.checkoutUrl)
          
       } catch (error) {
          console.error('❌ Error creating payment:', error)
@@ -366,6 +357,35 @@ export default function ProfileScreen() {
          setIsCreatingPayment(false)
       }
    }
+
+   // Handle payment WebView close
+   const handlePaymentWebViewClose = useCallback(() => {
+      console.log('🚪 Closing payment WebView')
+      setShowPaymentWebView(false)
+      setPaymentCheckoutUrl('')
+   }, [])
+
+   // Handle payment success
+   const handlePaymentSuccess = useCallback(() => {
+      console.log('🎉 Payment success callback triggered')
+      
+      // Refresh user profile để cập nhật subscription status
+      loadUserProfile()
+      
+      // Refresh posts để cập nhật UI
+      loadUserPosts()
+      
+      // Đóng WebView
+      handlePaymentWebViewClose()
+   }, [loadUserProfile, loadUserPosts, handlePaymentWebViewClose])
+
+   // Handle payment cancel
+   const handlePaymentCancel = useCallback(() => {
+      console.log('🚫 Payment cancel callback triggered')
+      
+      // Đóng WebView
+      handlePaymentWebViewClose()
+   }, [handlePaymentWebViewClose])
 
    // Render list view when a post is selected
    console.log('🔍 Current viewMode:', viewMode, 'selectedPostForList:', selectedPostForList?.id)
@@ -901,6 +921,15 @@ export default function ProfileScreen() {
                </View>
             </View>
          </Modal>
+
+         {/* Payment WebView */}
+         <PaymentWebView
+            visible={showPaymentWebView}
+            checkoutUrl={paymentCheckoutUrl}
+            onClose={handlePaymentWebViewClose}
+            onPaymentSuccess={handlePaymentSuccess}
+            onPaymentCancel={handlePaymentCancel}
+         />
       </SafeAreaView>
    )
 }

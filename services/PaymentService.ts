@@ -109,6 +109,52 @@ export class PaymentService {
   }
 
   /**
+   * Confirm payment từ gateway (PayOS)
+   */
+  async confirmPayment(paymentId: string): Promise<PaymentStatusResponse> {
+    try {
+      console.log('Confirming payment with ID:', paymentId)
+      
+      const response = await apiService.get<PaymentStatusResponse>(
+        `${API_ENDPOINTS.PAYMENT.CONFIRM}?id=${paymentId}`
+      )
+      
+      if (response.status === 200 && response.data) {
+        console.log('✅ Payment confirmed successfully:', response.data)
+        return response.data
+      }
+      
+      throw new Error(response.message || 'Không thể xác nhận thanh toán')
+    } catch (error) {
+      console.error('Error confirming payment:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Manually confirm payment với order code
+   */
+  async manualConfirmPayment(orderCode: string): Promise<PaymentStatusResponse> {
+    try {
+      console.log('🔄 Manual confirmation for order code:', orderCode)
+      
+      const response = await apiService.get<PaymentStatusResponse>(
+        `${API_ENDPOINTS.PAYMENT.CONFIRM}?id=${orderCode}`
+      )
+      
+      if (response.status === 200 && response.data) {
+        console.log('✅ Manual confirmation successful:', response.data)
+        return response.data
+      }
+      
+      throw new Error(response.message || 'Không thể xác nhận thanh toán thủ công')
+    } catch (error) {
+      console.error('❌ Manual confirmation failed:', error)
+      throw error
+    }
+  }
+
+  /**
    * Tạo payment request cho Premium subscription
    */
   createPremiumPaymentRequest(): CreatePaymentRequest {
