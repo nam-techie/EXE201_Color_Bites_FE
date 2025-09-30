@@ -1,6 +1,23 @@
 // API Configuration
-export const OPENROUTE_API_KEY = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY || ''
+// Read from multiple sources to be robust on Expo (env/app.json extra)
+import Constants from 'expo-constants'
 
+const envKey = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY
+const extraKey = (Constants?.expoConfig as any)?.extra?.OPENROUTE_API_KEY as
+  | string
+  | undefined
+
+export const OPENROUTE_API_KEY = envKey || extraKey || ''
+
+// Dev diagnostics: verify env is loaded (will NOT print actual key)
+if (__DEV__) {
+  const hasEnv = !!envKey
+  const hasExtra = !!extraKey
+  const len = (envKey || extraKey || '').length
+  // This helps diagnose "not configured" vs "expired" quickly without leaking the key
+  console.log('[ENV DEBUG] ORS key source:', hasEnv ? 'env' : hasExtra ? 'extra' : 'none', 'length:', len)
+}
+   
 // Backend API Configuration
 // For Android Emulator, use 10.0.2.2 instead of localhost
 const getApiBaseUrl = () => {
@@ -10,7 +27,7 @@ const getApiBaseUrl = () => {
   // Default URLs for development
 //   return 'http://localhost:8080'  // Backend đã hoạt động trên localhost
 //   return 'http://10.0.2.2:8080'  // Android Emulator
-  return 'http://192.168.1.106:8080'  // Physical device
+  return 'http://10.87.35.0:8080'  // Physical device
 }
 
 export const API_BASE_URL = getApiBaseUrl()
