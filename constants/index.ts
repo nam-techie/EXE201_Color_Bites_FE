@@ -1,6 +1,7 @@
 // API Configuration
 // Read from multiple sources to be robust on Expo (env/app.json extra)
 import Constants from 'expo-constants'
+import { Platform } from 'react-native'
 
 const envKey = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY
 const extraKey = (Constants?.expoConfig as any)?.extra?.OPENROUTE_API_KEY as
@@ -19,18 +20,46 @@ if (__DEV__) {
 }
    
 // Backend API Configuration
-// For Android Emulator, use 10.0.2.2 instead of localhost
+// Chọn baseURL theo môi trường chạy để tránh lỗi Network Error
 const getApiBaseUrl = () => {
+  // Ưu tiên biến môi trường nếu được cấu hình
   const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL
-  if (envUrl) return envUrl
-  
-  // Default URLs for development
-//   return 'http://localhost:8080'  // Backend đã hoạt động trên localhost
-//   return 'http://10.0.2.2:8080'  // Android Emulator
-  return 'http://10.87.35.0:8080'  // Physical device
+  if (envUrl && envUrl.trim().length > 0) return envUrl
+
+  // Cho phép cấu hình qua app.json -> expo.extra.API_BASE_URL
+  const extraUrl = (Constants?.expoConfig as any)?.extra?.API_BASE_URL as string | undefined
+  if (extraUrl && extraUrl.trim().length > 0) return extraUrl
+
+  // Mặc định theo nền tảng dev
+  // - Android Emulator dùng 10.0.2.2 để trỏ về localhost của máy host
+  // - iOS Simulator và Web có thể dùng localhost trực tiếp
+  // - Thiết bị thật: cố gắng suy ra IP LAN từ expo manifest nếu có, nếu không nhắc cấu hình .env
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:8080'
+  }
+
+  if (Platform.OS === 'ios' || Platform.OS === 'web') {
+    return 'http://localhost:8080'
+  }
+
+  // Fallback cuối cùng: cố gắng lấy IP LAN từ expo dev server
+  const manifestHost = (Constants?.expoConfig as any)?.hostUri as string | undefined
+  if (manifestHost) {
+    const host = manifestHost.split(':')[0]
+    return `http://${host}:8080`
+  }
+
+  // Nếu không thể đoán, trả về localhost và ghi log cảnh báo
+  if (__DEV__) {
+    console.warn('[ENV WARN] API base URL không được cấu hình. Dùng mặc định http://localhost:8080. Hãy đặt EXPO_PUBLIC_API_BASE_URL trong .env để tránh lỗi kết nối trên thiết bị thật.')
+  }
+  return 'http://localhost:8080'
 }
 
 export const API_BASE_URL = getApiBaseUrl()
+if (__DEV__) {
+  console.log('[ENV DEBUG] API base URL:', API_BASE_URL)
+}
 export const API_ENDPOINTS = {
    // Post endpoints
    POSTS: {
