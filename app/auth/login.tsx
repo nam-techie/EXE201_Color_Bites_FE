@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-   SafeAreaView,
-   StatusBar,
-   StyleSheet,
-   Text,
-   TextInput,
-   TouchableOpacity,
-   View,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native'
 
 export default function LoginScreen() {
@@ -150,8 +150,8 @@ const styles = StyleSheet.create({
   /* Header */
   header: {
     paddingHorizontal: 16,
-    paddingTop: 8,
-    paddingBottom: 4,
+    paddingTop: 40,
+    paddingBottom: -50,
   },
   backButton: {
     width: 40,
@@ -166,8 +166,8 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#111827',     
     paddingHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 20,
+    marginTop: 12,
+    marginBottom: 24,
   },
 
   /* Content */
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
   /* Inputs */
   inputWrap: {
     position: 'relative',
-    marginBottom: 12,
+    marginBottom: 20,
   },
   input: {
     backgroundColor: '#F5F7FF', // tím nhạt

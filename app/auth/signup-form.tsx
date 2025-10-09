@@ -321,8 +321,8 @@ const styles = StyleSheet.create({
    /* Header */
    header: {
       paddingHorizontal: 16,
-      paddingTop: 8,
-      paddingBottom: 4,
+      paddingTop: 40,
+      paddingBottom: -50,
    },
    backButton: {
       width: 40,
@@ -337,8 +337,8 @@ const styles = StyleSheet.create({
       fontWeight: '800',
       color: '#111827',
       paddingHorizontal: 20,
-      marginTop: 20,
-      marginBottom: 20,
+      marginTop: 12,
+      marginBottom: 24,
    },
 
    /* Content */
@@ -350,7 +350,7 @@ const styles = StyleSheet.create({
    /* Inputs */
    inputWrap: {
       position: 'relative',
-      marginBottom: 8,
+      marginBottom: 20,
    },
    input: {
       backgroundColor: '#F5F7FF',
@@ -384,13 +384,13 @@ const styles = StyleSheet.create({
       paddingHorizontal: 4,
    },
    requirementsTitle: {
-      fontSize: 13,
+      fontSize: 16,
       fontWeight: '600',
       color: '#6B7280',
       marginBottom: 6,
    },
    requirement: {
-      fontSize: 13,
+      fontSize: 14,
       color: '#9CA3AF',
       marginBottom: 3,
    },
@@ -415,7 +415,7 @@ const styles = StyleSheet.create({
 
    /* Register button */
    registerBtn: {
-      marginTop: 8,
+      marginTop: 20,
       borderRadius: 28,
       paddingVertical: 14,
       alignItems: 'center',

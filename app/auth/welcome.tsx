@@ -105,14 +105,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingTop: 0,
-    marginTop: 20
+    marginTop: 30
   },
 
   /* Logo */
   logoWrap: {
     width: 140,
     alignItems: 'center',
-    marginBottom: -330
+    marginBottom: -450
   },
   
   logo: {
@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
     height: 140,
     borderRadius: 32,
     backgroundColor: '#FFFFFF',
-    // bóng Android/iOS đồng đều
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.12,
@@ -133,7 +132,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MAX_WIDTH,
     alignItems: 'center',
-    marginTop: 350,
+    marginTop: 490,
     marginBottom: 15
   },
   slogan: {
@@ -141,10 +140,10 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#111',
     textAlign: 'center',
-    marginBottom: 50
+    marginBottom: 150
   },
   headline: {
-    fontSize: 30,
+    fontSize: 33,
     fontWeight: '800',
     color: '#000',
     textAlign: 'center',
@@ -210,8 +209,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 70,
-    paddingTop: 8
+    paddingBottom: 130,
+    paddingTop: 20
   },
   footerText: {
     fontSize: 20,
