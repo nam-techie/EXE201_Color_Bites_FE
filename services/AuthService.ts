@@ -55,17 +55,10 @@ export class AuthService {
       if (response.data.status === 200 && response.data.data) {
         const userData = response.data.data
         
-        // Lưu token và user info
+        // Chỉ lưu token, để AuthProvider lưu user info
         await AsyncStorage.setItem('authToken', userData.token)
-        await AsyncStorage.setItem('user', JSON.stringify({
-          id: userData.id,
-          name: userData.userName,
-          email: userData.email,
-          role: userData.role,
-          active: userData.active
-        }))
         
-        console.log('✅ Login successful - token and user saved')
+        console.log('✅ Login successful - token saved')
         console.log('🔑 Token:', userData.token.substring(0, 50) + '...')
         console.log('👤 User:', userData.userName, userData.email, userData.role)
         

@@ -1,5 +1,6 @@
 'use client'
 
+import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
@@ -19,6 +20,7 @@ export default function LoginScreen() {
   const [showPwd, setShowPwd] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
+  const { login } = useAuth()
 
   const isDisabled = !email || !password || isLoading
 
@@ -30,10 +32,8 @@ export default function LoginScreen() {
     }
     try {
       setIsLoading(true)
-      // TODO: gọi auth thực tế của bạn
-      // await login(email, password)
-      // router.replace('/(tabs)')
-      console.log('login...', email)
+      await login(email, password)
+      router.replace('/(tabs)')
     } catch (e: any) {
       setErrorMessage(e?.message ?? 'Đăng nhập thất bại. Vui lòng thử lại.')
     } finally {
