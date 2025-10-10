@@ -1,57 +1,32 @@
-import { Ionicons } from '@expo/vector-icons'
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 interface RestaurantSearchBarProps {
    searchQuery: string
    onSearchChange: (query: string) => void
    onClearSearch: () => void
-   onMyLocation?: () => void
 }
 
 export default function RestaurantSearchBar({
    searchQuery,
    onSearchChange,
    onClearSearch,
-   onMyLocation,
 }: RestaurantSearchBarProps) {
    return (
       <View style={styles.container}>
          <View style={styles.searchContainer}>
-            {/* Google Maps Icon */}
-            <View style={styles.googleIcon}>
-               <Ionicons name="map" size={24} color="#4285F4" />
-            </View>
-            
-            {/* Search Input */}
+            <Text style={styles.searchIcon}>🔍</Text>
             <TextInput
                style={styles.textInput}
-               placeholder="Tìm kiếm ở đây"
+               placeholder="Tìm kiếm nhà hàng..."
                value={searchQuery}
                onChangeText={onSearchChange}
-               placeholderTextColor="#5F6368"
+               placeholderTextColor="#9CA3AF"
             />
-            
-            {/* Right Icons */}
-            <View style={styles.rightIcons}>
-               {searchQuery.length > 0 ? (
-                  <TouchableOpacity onPress={onClearSearch} style={styles.iconButton}>
-                     <Ionicons name="close-circle" size={20} color="#5F6368" />
-                  </TouchableOpacity>
-               ) : (
-                  <>
-                     <TouchableOpacity style={styles.iconButton}>
-                        <Ionicons name="mic" size={20} color="#5F6368" />
-                     </TouchableOpacity>
-                  </>
-               )}
-               
-               {/* Profile Avatar */}
-               <TouchableOpacity style={styles.profileButton} onPress={onMyLocation}>
-                  <View style={styles.profileCircle}>
-                     <Ionicons name="person" size={16} color="#fff" />
-                  </View>
+            {searchQuery.length > 0 && (
+               <TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
+                  <Text style={styles.clearText}>✕</Text>
                </TouchableOpacity>
-            </View>
+            )}
          </View>
       </View>
    )
@@ -67,51 +42,33 @@ const styles = StyleSheet.create({
    },
    searchContainer: {
       backgroundColor: '#ffffff',
-      borderRadius: 28,
+      borderRadius: 8,
       shadowColor: '#000',
       shadowOffset: {
          width: 0,
          height: 2,
       },
-      shadowOpacity: 0.15,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOpacity: 0.25,
+      shadowRadius: 3.84,
+      elevation: 5,
       flexDirection: 'row',
       alignItems: 'center',
-      paddingLeft: 16,
-      paddingRight: 8,
-      paddingVertical: 10,
-      height: 56,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
    },
-   googleIcon: {
-      marginRight: 12,
+   searchIcon: {
+      color: '#9CA3AF',
+      marginRight: 8,
    },
    textInput: {
       flex: 1,
       fontSize: 16,
-      color: '#202124',
-      fontWeight: '400',
    },
-   rightIcons: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
+   clearButton: {
+      marginLeft: 8,
    },
-   iconButton: {
-      width: 32,
-      height: 32,
-      justifyContent: 'center',
-      alignItems: 'center',
-   },
-   profileButton: {
-      marginLeft: 4,
-   },
-   profileCircle: {
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: '#34A853',
-      justifyContent: 'center',
-      alignItems: 'center',
+   clearText: {
+      color: '#9CA3AF',
+      fontSize: 18,
    },
 })

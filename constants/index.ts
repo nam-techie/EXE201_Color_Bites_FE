@@ -19,28 +19,9 @@ if (__DEV__) {
   console.log('[ENV DEBUG] ORS key source:', hasEnv ? 'env' : hasExtra ? 'extra' : 'none', 'length:', len)
 }
 
-// Google Maps API Configuration
-const googleEnvKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-const googleExtraKey = (Constants?.expoConfig as any)?.extra?.GOOGLE_MAPS_API_KEY as
-  | string
-  | undefined
-
-export const GOOGLE_MAPS_API_KEY = googleEnvKey || googleExtraKey || ''
-
-// Dev diagnostics for Google Maps API key
+// Map Provider - OpenStreetMap only
 if (__DEV__) {
-  const hasGoogleEnv = !!googleEnvKey
-  const hasGoogleExtra = !!googleExtraKey
-  const googleLen = (googleEnvKey || googleExtraKey || '').length
-  console.log('[ENV DEBUG] Google Maps key source:', hasGoogleEnv ? 'env' : hasGoogleExtra ? 'extra' : 'none', 'length:', googleLen)
-}
-
-// Map Provider Configuration
-// Đổi giá trị này để switch giữa 'google' và 'openstreetmap'
-export const MAP_PROVIDER: 'google' | 'openstreetmap' = 'google'
-
-if (__DEV__) {
-  console.log('[ENV DEBUG] Map provider:', MAP_PROVIDER)
+  console.log('[ENV DEBUG] Map provider: OpenStreetMap')
 }
    
 // Backend API Configuration
