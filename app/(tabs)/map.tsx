@@ -5,22 +5,27 @@ import RestaurantSearchBar from '@/components/common/SearchBar'
 import CustomMarker from '@/components/map/CustomMapMarker'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
-import { getDirections } from '@/services/DirectionService'
-import { fetchRestaurantsNearby } from '@/services/MapService'
+// Map Provider - Switch between Google Maps and OpenStreetMap
+import { MapProvider } from '@/services/MapProvider'
+
+// Legacy imports (kept for reference, but using MapProvider now)
+// import { getDirections } from '@/services/DirectionService'
+// import { fetchRestaurantsNearby } from '@/services/MapService'
 import type { MapRegion, Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Alert,
-  Animated,
-  GestureResponderEvent,
-  PanResponder,
-  PanResponderGestureState,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
+    Alert,
+    Animated,
+    GestureResponderEvent,
+    PanResponder,
+    PanResponderGestureState,
+    Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
 
@@ -65,6 +70,7 @@ export default function MapScreen() {
   const [modalVisible, setModalVisible] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false)
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null)
   const [mapRegion, setMapRegion] = useState<MapRegion>({
     latitude: 0,
@@ -136,7 +142,7 @@ export default function MapScreen() {
       const destination = { lat: stops[i].restaurant.lat, lon: stops[i].restaurant.lon }
 
       try {
-        const directions = await getDirections(origin, destination, selectedProfile)
+        const directions = await MapProvider.getDirections(origin, destination, selectedProfile)
         if (!directions || !directions.geometry) continue
 
         const routeCoords = directions.geometry.map(([lon, lat]) => ({
@@ -183,6 +189,38 @@ export default function MapScreen() {
     })
   }
 
+  // Function xử lý search địa chỉ
+  const handleSearchAddress = async (query: string) => {
+    if (!query.trim()) return
+    
+    setIsSearchingLocation(true)
+    try {
+      const result = await MapProvider.geocodeAddress(query)
+      if (result) {
+        // Di chuyển map đến vị trí tìm được
+        setMapRegion({
+          latitude: result.lat,
+          longitude: result.lng,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        })
+        
+        // Tìm nhà hàng gần vị trí mới
+        const nearbyRestaurants = await MapProvider.fetchRestaurants(result.lat, result.lng)
+        setRestaurants(nearbyRestaurants)
+        
+        Alert.alert('Thành công', `Đã tìm thấy: ${result.formatted_address}`)
+      } else {
+        Alert.alert('Không tìm thấy', 'Không thể tìm thấy địa chỉ này')
+      }
+    } catch (error) {
+      console.error('Error searching address:', error)
+      Alert.alert('Lỗi', 'Không thể tìm kiếm địa chỉ')
+    } finally {
+      setIsSearchingLocation(false)
+    }
+  }
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -196,7 +234,7 @@ export default function MapScreen() {
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         })
-        const data = await fetchRestaurantsNearby(latitude, longitude)
+        const data = await MapProvider.fetchRestaurants(latitude, longitude)
         setRestaurants(data)
       } catch (error) {
         Alert.alert('Lỗi', 'Không thể tải dữ liệu hoặc vị trí')
@@ -327,6 +365,7 @@ export default function MapScreen() {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onClearSearch={() => setSearchQuery('')}
+        onMyLocation={handleMyLocation}
       />
 
       <FilterButtons selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
@@ -339,8 +378,8 @@ export default function MapScreen() {
 
       <ScaleButton
         onPress={toggleRoutePlanning}
-        iconName={routePlanningMode ? 'close' : 'map'}
-        iconColor={routePlanningMode ? '#EF4444' : 'white'}
+        iconName={routePlanningMode ? 'close' : 'navigate'}
+        iconColor={routePlanningMode ? '#EA4335' : '#5F6368'}
         style={[styles.routePlanningButton, routePlanningMode && styles.routePlanningButtonActive]}
       />
 
@@ -349,7 +388,7 @@ export default function MapScreen() {
           <ScaleButton
             onPress={() => setShowProfileSelector(!showProfileSelector)}
             iconName="options"
-            iconColor="white"
+            iconColor="#5F6368"
             style={styles.profileSelectorButton}
           />
 
@@ -387,24 +426,48 @@ export default function MapScreen() {
               }).start()
             }}
             iconName="chevron-up"
-            iconColor="white"
-            style={[styles.routePlanningButton, { bottom: 140 }]}
+            iconColor="#5F6368"
+            style={[styles.routePlanningButton, { bottom: 70 }]}
           />
         </>
       )}
 
       <ScaleButton
         onPress={handleMyLocation}
-        iconName="location-sharp"
-        iconColor="white"
+        iconName="locate"
+        iconColor="#1A73E8"
         style={styles.locationButton}
       />
 
+      {/* Layers Button - giống Google Maps */}
+      <ScaleButton
+        onPress={() => {
+          // Toggle layers view - có thể thêm chức năng sau
+          Alert.alert('Layers', 'Tính năng đang phát triển')
+        }}
+        iconName="layers"
+        iconColor="#5F6368"
+        style={styles.layersButton}
+      />
+
       {!routePlanningMode && (
-        <View style={styles.counterContainer}>
-          <Text style={styles.counterText}>
-            {filteredRestaurants.length} nhà hàng được tìm thấy
-          </Text>
+        <View style={styles.bottomNavContainer}>
+          <View style={styles.bottomNavContent}>
+            <TouchableOpacity style={styles.bottomNavButton}>
+              <Ionicons name="compass" size={20} color="#1A73E8" />
+              <Text style={styles.bottomNavTextActive}>Khám phá</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.bottomNavButton}>
+              <Ionicons name="bookmark-outline" size={20} color="#5F6368" />
+              <Text style={styles.bottomNavText}>Đã lưu</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.bottomNavButton}>
+              <Ionicons name="add-circle-outline" size={20} color="#5F6368" />
+              <Text style={styles.bottomNavText}>Đóng góp</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -426,57 +489,113 @@ const styles = StyleSheet.create({
   map: { flex: 1 },
   routePlanningButton: {
     position: 'absolute',
-    bottom: 260,
+    bottom: 190,
     right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#3B82F6',
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
-    elevation: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   routePlanningButtonActive: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: '#FEEAE6',
   },
   profileSelectorButton: {
     position: 'absolute',
-    bottom: 320,
+    bottom: 260,
     right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#10B981',
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
-    elevation: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
   locationButton: {
     position: 'absolute',
-    bottom: 200,
+    bottom: 120,
     right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#3B82F6',
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    backgroundColor: '#ffffff',
+    borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
-    elevation: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-  counterContainer: {
+  layersButton: {
     position: 'absolute',
-    bottom: 16,
+    bottom: 120,
     left: 16,
+    width: 56,
+    height: 56,
     backgroundColor: '#ffffff',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
-  counterText: {
-    color: '#374151',
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 20,
+    paddingTop: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  bottomNavContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  bottomNavButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    minWidth: 80,
+  },
+  bottomNavText: {
+    fontSize: 12,
+    color: '#5F6368',
+    marginTop: 4,
     fontWeight: '500',
+  },
+  bottomNavTextActive: {
+    fontSize: 12,
+    color: '#1A73E8',
+    marginTop: 4,
+    fontWeight: '600',
   },
 })

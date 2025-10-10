@@ -7,12 +7,11 @@ interface Props {
 }
 
 const filters = [
-  { key: 'all', label: 'Tất cả', icon: 'restaurant' },
-  { key: 'vietnamese', label: 'Việt Nam', icon: 'fast-food' },
-  { key: 'vegetarian', label: 'Chay', icon: 'leaf' },
-  { key: 'pizza', label: 'Pizza', icon: 'pizza' },
-  { key: 'chinese', label: 'Trung Hoa', icon: 'restaurant-outline' },
+  { key: 'all', label: 'Nhà riêng', icon: 'home' },
+  { key: 'restaurant', label: 'Nhà hàng', icon: 'restaurant' },
+  { key: 'hotel', label: 'Khách sạn', icon: 'bed' },
   { key: 'coffee', label: 'Cà phê', icon: 'cafe' },
+  { key: 'shopping', label: 'Mua sắm', icon: 'cart' },
 ]
 
 export default function FilterButtons({ selectedFilter, onFilterChange }: Props) {
@@ -37,8 +36,8 @@ export default function FilterButtons({ selectedFilter, onFilterChange }: Props)
             >
               <Ionicons
                 name={filter.icon as any}
-                size={18}
-                color={selected ? '#ffffff' : '#3b82f6'}
+                size={16}
+                color={selected ? '#185ABC' : '#5F6368'}
                 style={styles.filterIcon}
               />
               <Text
@@ -60,49 +59,54 @@ export default function FilterButtons({ selectedFilter, onFilterChange }: Props)
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    top: 112,
+    top: 116,
     left: 0,
     right: 0,
-    zIndex: 10,
+    zIndex: 9,
   },
   scrollView: {
     flexDirection: 'row',
   },
   scrollContent: {
     paddingHorizontal: 16,
+    paddingVertical: 4,
   },
   filterButton: {
-    marginRight: 12,
-    paddingHorizontal: 16,
+    marginRight: 8,
+    paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
+    borderWidth: 1,
   },
   selectedButton: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#D2E3FC',
+    borderColor: '#D2E3FC',
   },
   unselectedButton: {
     backgroundColor: '#ffffff',
+    borderColor: '#DADCE0',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 1,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   filterIcon: {
     marginRight: 6,
   },
   filterText: {
     fontWeight: '500',
+    fontSize: 14,
   },
   selectedText: {
-    color: '#ffffff',
+    color: '#185ABC',
   },
   unselectedText: {
-    color: '#374151',
+    color: '#3C4043',
   },
 })
