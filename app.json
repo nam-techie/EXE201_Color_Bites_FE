@@ -16,7 +16,8 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.INTERNET"
       ]
     },
     "web": {
@@ -48,10 +49,7 @@
       ]
     ],
     "extra": {
-      "eas": {
-        "projectId": "b0e31c11-8020-4fba-97bc-4e7c853787e8"
-      }
-    },
-    "owner": "namphun"
+      "EXPO_PUBLIC_API_BASE_URL": "https://api-mumii.namtechie.id.vn"
+    }
   }
 }
