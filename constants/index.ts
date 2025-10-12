@@ -18,6 +18,11 @@ if (__DEV__) {
   // This helps diagnose "not configured" vs "expired" quickly without leaking the key
   console.log('[ENV DEBUG] ORS key source:', hasEnv ? 'env' : hasExtra ? 'extra' : 'none', 'length:', len)
 }
+
+// Map Provider - OpenStreetMap only
+if (__DEV__) {
+  console.log('[ENV DEBUG] Map provider: OpenStreetMap')
+}
    
 // Backend API Configuration
 // Chọn baseURL theo môi trường chạy để tránh lỗi Network Error

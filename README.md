@@ -92,14 +92,17 @@ EXE201_MUMII_FE/
 
    Thêm các biến môi trường cần thiết:
    ```bash
-   # OpenRouteService API Key (bắt buộc cho tính năng map)
-   EXPO_PUBLIC_OPENROUTE_API_KEY=your_api_key_here
-   
-   # Backend API URL (optional)
+   # Backend API
    EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+
+   # Google Maps API Key (Bắt buộc)
+   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_api_key_here
+
+   # OpenRouteService API Key (Tùy chọn)
+   EXPO_PUBLIC_OPENROUTE_API_KEY=your_openroute_key_here
    ```
 
-   📋 **Hướng dẫn chi tiết**: Xem file [ENV_SETUP.md](./ENV_SETUP.md)
+   📋 **Hướng dẫn chi tiết**: Xem file [docs/TOM_TAT_DU_AN.md](./docs/TOM_TAT_DU_AN.md)
 
 4. **Khởi chạy development server**
    ```bash
@@ -302,14 +305,22 @@ npx expo build:ios
 4. **Environment variables không hoạt động**
    - Kiểm tra file `.env` có tồn tại không
    - Restart development server: `npx expo start --clear`
-   - Xem hướng dẫn chi tiết trong [ENV_SETUP.md](./ENV_SETUP.md)
+   - Xem hướng dẫn chi tiết trong [docs/TOM_TAT_DU_AN.md](./docs/TOM_TAT_DU_AN.md)
 
-## 📚 Tài liệu tham khảo
+## 📚 Tài liệu
 
+### 📖 Tài liệu chính
+- **[docs/TOM_TAT_DU_AN.md](./docs/TOM_TAT_DU_AN.md)** - Tài liệu tóm tắt ngắn gọn (ĐỌC ĐẦU TIÊN)
+
+### 📑 Tài liệu chi tiết (trong docs/archive/)
+- Các tài liệu kỹ thuật chi tiết về Google Maps, Map Provider, Environment Config, etc.
+
+### 🔗 Tài liệu tham khảo bên ngoài
 - [Expo Documentation](https://docs.expo.dev/)
 - [React Native Documentation](https://reactnative.dev/)
 - [Expo Router Documentation](https://docs.expo.dev/router/introduction/)
 - [React Navigation Documentation](https://reactnavigation.org/)
+- [Google Maps Platform](https://mapsplatform.google.com/)
 
 ## 🤝 Đóng góp
 

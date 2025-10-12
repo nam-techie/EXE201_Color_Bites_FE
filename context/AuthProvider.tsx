@@ -91,8 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             isPremium: userData.role === 'PREMIUM',
          }
          
+         // Save user to AsyncStorage (authService already saved token)
+         await AsyncStorage.setItem('user', JSON.stringify(user))
+         
          setUser(user)
-         console.log('✅ Login successful! Token saved for API calls.')
+         console.log('✅ Login successful! Token and user saved.')
          console.log('👤 User:', user.name, '| Role:', userData.role)
          
       } catch (error) {
