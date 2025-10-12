@@ -1,4 +1,4 @@
-# 📚 Color Bites - Codebase Documentation
+# 📚 MUMII - Codebase Documentation
 
 ## 🏗️ Architecture Overview
 

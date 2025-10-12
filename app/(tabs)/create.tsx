@@ -46,19 +46,6 @@ export default function CreatePostScreen() {
       <View style={commonStyles.header}>
         <View style={commonStyles.headerContent}>
           <Text style={commonStyles.headerTitle}>Tạo bài viết</Text>
-          {user ? (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 12, color: '#10B981', marginRight: 8 }}>
-                ✅ {user.name}
-              </Text>
-            </View>
-          ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={{ fontSize: 12, color: '#EF4444', marginRight: 8 }}>
-                ❌ Chưa đăng nhập
-              </Text>
-            </View>
-          )}
         </View>
       </View>
 
@@ -73,24 +60,24 @@ export default function CreatePostScreen() {
             backgroundColor: '#FEF2F2',
             borderColor: '#FECACA',
             borderWidth: 1,
-            borderRadius: 8,
-            padding: 16,
+            borderRadius: 12,
+            padding: 20,
             marginBottom: 16,
             alignItems: 'center',
           }}>
-            <Text style={{ color: '#DC2626', fontWeight: '600', marginBottom: 8 }}>
+            <Text style={{ color: '#DC2626', fontSize: 16, fontWeight: '700', marginBottom: 12, textAlign: 'center' }}>
               ⚠️ Bạn cần đăng nhập để tạo bài viết
             </Text>
             <TouchableOpacity
               onPress={() => router.push('/auth/login')}
               style={{
                 backgroundColor: '#DC2626',
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-                borderRadius: 8,
+                paddingHorizontal: 24,
+                paddingVertical: 12,
+                borderRadius: 24,
               }}
             >
-              <Text style={{ color: 'white', fontWeight: '600' }}>
+              <Text style={{ color: 'white', fontSize: 16, fontWeight: '700' }}>
                 Đăng nhập ngay
               </Text>
             </TouchableOpacity>

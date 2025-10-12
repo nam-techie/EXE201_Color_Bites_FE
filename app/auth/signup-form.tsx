@@ -1,12 +1,9 @@
 'use client'
 
-import Button from '@/components/common/Button'
-import Input from '@/components/common/Input'
 import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import {
    Alert,
    SafeAreaView,
@@ -14,6 +11,7 @@ import {
    StatusBar,
    StyleSheet,
    Text,
+   TextInput,
    TouchableOpacity,
    View
 } from 'react-native'
@@ -28,6 +26,8 @@ export default function SignUpFormScreen() {
    })
    const [errors, setErrors] = useState<{[key: string]: string}>({})
    const [isLoading, setIsLoading] = useState(false)
+   const [showPassword, setShowPassword] = useState(false)
+   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
    // Password validation functions
    const hasMinLength = (password: string) => password.length >= 6
@@ -79,7 +79,7 @@ export default function SignUpFormScreen() {
 
       setIsLoading(true)
       try {
-         const message = await register(
+         await register(
             formData.username, 
             formData.email, 
             formData.password, 
@@ -120,142 +120,188 @@ export default function SignUpFormScreen() {
              passwordsMatch()
    }
 
-   const disabled = !isFormValid()
+   const isDisabled = !isFormValid()
 
    return (
       <SafeAreaView style={styles.container}>
-         <StatusBar barStyle="dark-content" backgroundColor="transparent" />
+         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-         <LinearGradient
-            colors={[ '#FFF4EA', '#FFE6D3', '#FFD7BF' ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={{ flex: 1 }}
+         <ScrollView 
+            style={styles.scrollView} 
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.scrollContent}
          >
-            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
-               {/* Header */}
-               <View style={styles.header}>
-                  <TouchableOpacity 
-                     style={styles.backButton}
-                     onPress={() => router.back()}
+            {/* Header */}
+            <View style={styles.header}>
+               <TouchableOpacity 
+                  style={styles.backButton}
+                  onPress={() => router.back()}
+               >
+                  <Ionicons name="arrow-back" size={24} color="#111827" />
+               </TouchableOpacity>
+            </View>
+
+            {/* Title */}
+            <Text style={styles.title}>Tạo tài khoản</Text>
+
+            {/* Content */}
+            <View style={styles.content}>
+               {/* Full name */}
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={styles.input}
+                     placeholder="Họ và tên"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.username}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, username: text })
+                        if (errors.username) setErrors({ ...errors, username: '' })
+                     }}
+                     autoCapitalize="words"
+                     returnKeyType="next"
+                  />
+               </View>
+               {errors.username ? (
+                  <Text style={styles.errorText}>{errors.username}</Text>
+               ) : null}
+
+               {/* Email */}
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={styles.input}
+                     placeholder="Email"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.email}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, email: text })
+                        if (errors.email) setErrors({ ...errors, email: '' })
+                     }}
+                     autoCapitalize="none"
+                     keyboardType="email-address"
+                     returnKeyType="next"
+                  />
+               </View>
+               {errors.email ? (
+                  <Text style={styles.errorText}>{errors.email}</Text>
+               ) : null}
+
+               {/* Password */}
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={[styles.input, { paddingRight: 44 }]}
+                     placeholder="Mật khẩu"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.password}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, password: text })
+                        if (errors.password) setErrors({ ...errors, password: '' })
+                     }}
+                     secureTextEntry={!showPassword}
+                     autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                     style={styles.eyeBtn}
+                     onPress={() => setShowPassword(v => !v)}
+                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                     <Ionicons name="arrow-back" size={22} color="#111" />
+                     <Ionicons 
+                        name={showPassword ? 'eye' : 'eye-off'} 
+                        size={20} 
+                        color="#6B7280" 
+                     />
                   </TouchableOpacity>
                </View>
+               {errors.password ? (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+               ) : null}
 
-               {/* Centered Card */}
-               <View style={styles.centerWrapper}>
-                  <View style={styles.card}>
-                     {/* Brand */}
-                     <View style={styles.logoWrap}>
-                        <LinearGradient
-                           colors={[ '#FFAB74', '#FF8A3D', '#FFD6A5' ]}
-                           start={{ x: 0, y: 0 }}
-                           end={{ x: 1, y: 1 }}
-                           style={styles.logo}
-                        >
-                           <Ionicons name="person-add" size={20} color="#fff" />
-                        </LinearGradient>
-                     </View>
-
-                     <Text style={styles.title}>Tạo tài khoản</Text>
-                     <Text style={styles.subtitle}>Đăng ký bằng email của bạn để tiếp tục</Text>
-
-                     <View style={{ marginTop: 16 }}>
-                        <Input
-                           label="Họ và tên"
-                           placeholder="Nhập họ và tên của bạn"
-                           value={formData.username}
-                           onChangeText={(text) => {
-                              setFormData({ ...formData, username: text })
-                              if (errors.username) setErrors({ ...errors, username: '' })
-                           }}
-                           leftIcon="person"
-                           error={errors.username}
-                        />
-
-                        <Input
-                           label="Email"
-                           placeholder="Nhập email của bạn"
-                           value={formData.email}
-                           onChangeText={(text) => {
-                              setFormData({ ...formData, email: text })
-                              if (errors.email) setErrors({ ...errors, email: '' })
-                           }}
-                           keyboardType="email-address"
-                           leftIcon="mail"
-                           error={errors.email}
-                        />
-
-                        <Input
-                           label="Mật khẩu"
-                           placeholder="Tạo mật khẩu"
-                           value={formData.password}
-                           onChangeText={(text) => {
-                              setFormData({ ...formData, password: text })
-                              if (errors.password) setErrors({ ...errors, password: '' })
-                           }}
-                           secureTextEntry
-                           leftIcon="lock-closed"
-                           error={errors.password}
-                        />
-
-                        <Input
-                           label="Xác nhận mật khẩu"
-                           placeholder="Xác nhận mật khẩu"
-                           value={formData.confirmPassword}
-                           onChangeText={(text) => {
-                              setFormData({ ...formData, confirmPassword: text })
-                              if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' })
-                           }}
-                           secureTextEntry
-                           leftIcon="shield-checkmark"
-                           error={errors.confirmPassword}
-                        />
-
-                        {/* Password checklist */}
-                        {formData.password.length > 0 && (
-                           <View style={styles.requirementsContainer}>
-                              <Text style={styles.requirementsTitle}>Yêu cầu mật khẩu:</Text>
-                              <Text style={[styles.requirement, hasMinLength(formData.password) && styles.requirementMet]}>• Ít nhất 6 ký tự</Text>
-                              <Text style={[styles.requirement, hasUppercase(formData.password) && styles.requirementMet]}>• Ít nhất 1 chữ cái viết hoa (A-Z)</Text>
-                              <Text style={[styles.requirement, hasLowercase(formData.password) && styles.requirementMet]}>• Ít nhất 1 chữ cái viết thường (a-z)</Text>
-                              <Text style={[styles.requirement, hasNumber(formData.password) && styles.requirementMet]}>• Ít nhất 1 chữ số (0-9)</Text>
-                              <Text style={[styles.requirement, hasSpecialChar(formData.password) && styles.requirementMet]}>• Ít nhất 1 ký tự đặc biệt (!@#$%^&*...)</Text>
-                              <Text style={[styles.requirement, passwordsMatch() && styles.requirementMet]}>• Mật khẩu xác nhận phải khớp</Text>
-                           </View>
-                        )}
-
-                        {/* CTA gradient */}
-                        <LinearGradient
-                           colors={['#FFAB74', '#FF69B4', '#C16CE1']}
-                           locations={[0.24, 0.63, 1]}
-                           start={{ x: 0, y: 0 }}
-                           end={{ x: 1, y: 1 }}
-                           style={styles.gradientCta}
-                        >
-                           <Button
-                              title="Tạo tài khoản"
-                              onPress={() => { if (disabled) return; handleSubmit() }}
-                              variant="ghost"
-                              loading={isLoading}
-                              style={styles.ctaButton}
-                              textStyle={styles.ctaText}
-                           />
-                        </LinearGradient>
-
-                        {/* Back to login */}
-                        <View style={styles.signInRow}>
-                           <Text style={styles.signInText}>Đã có tài khoản?</Text>
-                           <TouchableOpacity onPress={() => router.push('/auth/login')}>
-                              <Text style={styles.signInLink}> Đăng nhập</Text>
-                           </TouchableOpacity>
-                        </View>
-                     </View>
-                  </View>
+               {/* Confirm Password */}
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={[styles.input, { paddingRight: 44 }]}
+                     placeholder="Xác nhận mật khẩu"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.confirmPassword}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, confirmPassword: text })
+                        if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' })
+                     }}
+                     secureTextEntry={!showConfirmPassword}
+                     autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                     style={styles.eyeBtn}
+                     onPress={() => setShowConfirmPassword(v => !v)}
+                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                     <Ionicons
+                        name={showConfirmPassword ? 'eye' : 'eye-off'}
+                        size={20}
+                        color="#6B7280"
+                     />
+                  </TouchableOpacity>
                </View>
-            </ScrollView>
-         </LinearGradient>
+               {errors.confirmPassword ? (
+                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+               ) : null}
+
+               {/* Password checklist */}
+               {formData.password.length > 0 && (
+                  <View style={styles.requirementsContainer}>
+                     <Text style={styles.requirementsTitle}>Yêu cầu mật khẩu:</Text>
+                     <Text style={[styles.requirement, hasMinLength(formData.password) && styles.requirementMet]}>
+                        • Ít nhất 6 ký tự
+                     </Text>
+                     <Text style={[styles.requirement, hasUppercase(formData.password) && styles.requirementMet]}>
+                        • Ít nhất 1 chữ cái viết hoa (A-Z)
+                     </Text>
+                     <Text style={[styles.requirement, hasLowercase(formData.password) && styles.requirementMet]}>
+                        • Ít nhất 1 chữ cái viết thường (a-z)
+                     </Text>
+                     <Text style={[styles.requirement, hasNumber(formData.password) && styles.requirementMet]}>
+                        • Ít nhất 1 chữ số (0-9)
+                     </Text>
+                     <Text style={[styles.requirement, hasSpecialChar(formData.password) && styles.requirementMet]}>
+                        • Ít nhất 1 ký tự đặc biệt (!@#$%^&*...)
+                     </Text>
+                     <Text style={[styles.requirement, passwordsMatch() && styles.requirementMet]}>
+                        • Mật khẩu xác nhận phải khớp
+                     </Text>
+                  </View>
+               )}
+
+               {/* Terms & Privacy */}
+               <Text style={styles.legal}>
+                  Bằng việc đăng ký, bạn chấp nhận{' '}
+                  <Text
+                     style={styles.link}
+                     onPress={() => router.push('/auth/terms-of-service')}
+                  >
+                     Điều khoản dịch vụ
+                  </Text>{' '}
+                  và{' '}
+                  <Text
+                     style={styles.link}
+                     onPress={() => router.push('/auth/privacy-policy')}
+                  >
+                     Chính sách quyền riêng tư
+                  </Text>{' '}
+                  của MUMII
+               </Text>
+
+               {/* Register button */}
+               <TouchableOpacity
+                  activeOpacity={0.9}
+                  style={[styles.registerBtn, isDisabled && styles.registerBtnDisabled]}
+                  disabled={isDisabled}
+                  onPress={handleSubmit}
+               >
+                  <Text style={[styles.registerText, isDisabled && styles.registerTextDisabled]}>
+                     {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
+                  </Text>
+               </TouchableOpacity>
+            </View>
+         </ScrollView>
       </SafeAreaView>
    )
 }
@@ -263,113 +309,129 @@ export default function SignUpFormScreen() {
 const styles = StyleSheet.create({
    container: {
       flex: 1,
-      backgroundColor: 'transparent',
+      backgroundColor: '#FFFFFF',
    },
    scrollView: {
       flex: 1,
    },
+   scrollContent: {
+      paddingBottom: 24,
+   },
+
+   /* Header */
    header: {
       paddingHorizontal: 16,
-      paddingTop: 12,
-      paddingBottom: 4,
+      paddingTop: 40,
+      paddingBottom: -50,
    },
    backButton: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(17,17,17,0.06)',
-      justifyContent: 'center',
-      alignItems: 'center',
-   },
-   centerWrapper: {
-      paddingHorizontal: 20,
-      paddingVertical: 8,
-      marginTop: 24,
-   },
-   card: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 4,
-   },
-   logoWrap: {
-      alignItems: 'center',
-      marginBottom: 8,
-   },
-   logo: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
    },
+
+   /* Title */
    title: {
-      fontSize: 22,
+      fontSize: 40,
       fontWeight: '800',
-      color: '#FF8A3D',
-      textAlign: 'center',
+      color: '#111827',
+      paddingHorizontal: 20,
+      marginTop: 12,
+      marginBottom: 24,
    },
-   subtitle: {
+
+   /* Content */
+   content: {
+      flex: 1,
+      paddingHorizontal: 20,
+   },
+
+   /* Inputs */
+   inputWrap: {
+      position: 'relative',
+      marginBottom: 20,
+   },
+   input: {
+      backgroundColor: '#F5F7FF',
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      fontSize: 20,
+      color: '#111827',
+   },
+   eyeBtn: {
+      position: 'absolute',
+      right: 12,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
+   },
+
+   /* Error text */
+   errorText: {
+      color: '#DC2626',
       fontSize: 13,
-      color: '#6b7280',
-      textAlign: 'center',
-      marginTop: 4,
+      fontWeight: '500',
       marginBottom: 8,
+      marginLeft: 4,
    },
+
+   /* Password requirements */
    requirementsContainer: {
       marginTop: 8,
       marginBottom: 12,
       paddingHorizontal: 4,
    },
    requirementsTitle: {
-      fontSize: 13,
+      fontSize: 16,
       fontWeight: '600',
-      color: '#6b7280',
+      color: '#6B7280',
       marginBottom: 6,
    },
    requirement: {
-      fontSize: 13,
-      color: '#9ca3af',
+      fontSize: 14,
+      color: '#9CA3AF',
       marginBottom: 3,
    },
    requirementMet: {
       color: '#10B981',
    },
-   gradientCta: {
-      marginTop: 8,
-      borderRadius: 12,
-      overflow: 'hidden',
-      shadowColor: '#f97316',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.18,
-      shadowRadius: 12,
-      elevation: 3,
+
+   /* Terms & Privacy */
+   legal: {
+      fontSize: 16,
+      lineHeight: 20,
+      color: '#6B6B6B',
+      textAlign: 'center',
+      paddingHorizontal: 8,
+      marginTop: 16,
+      marginBottom: 8,
    },
-   ctaButton: {
-      borderRadius: 12,
-      backgroundColor: 'transparent',
+   link: {
+      color: '#4A90E2',
+      textDecorationLine: 'underline',
    },
-   ctaText: {
-      fontWeight: '700',
-      color: '#fff',
-   },
-   signInRow: {
-      flexDirection: 'row',
-      justifyContent: 'center',
+
+   /* Register button */
+   registerBtn: {
+      marginTop: 20,
+      borderRadius: 28,
+      paddingVertical: 14,
       alignItems: 'center',
-      marginTop: 12,
+      justifyContent: 'center',
+      backgroundColor: '#FFB74D',
    },
-   signInText: {
-      fontSize: 13,
-      color: '#6b7280',
+   registerBtnDisabled: {
+      backgroundColor: '#DDE3ED',
    },
-   signInLink: {
-      fontSize: 13,
-      color: '#f97316',
+   registerText: {
+      fontSize: 20,
       fontWeight: '700',
+      color: '#FFFFFF',
+   },
+   registerTextDisabled: {
+      color: '#FFFFFF',
+      opacity: 0.9,
    },
 }) 
