@@ -1,39 +1,54 @@
-import { Ionicons } from '@expo/vector-icons'
+import { scaleModerate } from '@/utils/responsive'
+import { MaterialIcons } from '@expo/vector-icons'
 import { Tabs } from 'expo-router'
 
 export default function TabLayout() {
    return (
       <Tabs
          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
-               let iconName: keyof typeof Ionicons.glyphMap
+            tabBarIcon: ({ focused, color }) => {
+               let iconName: keyof typeof MaterialIcons.glyphMap
 
                if (route.name === 'index') {
-                  iconName = focused ? 'home' : 'home-outline'
+                  iconName = 'home'
                } else if (route.name === 'explore') {
-                  iconName = focused ? 'search' : 'search-outline'
+                  iconName = 'search'
                } else if (route.name === 'create') {
-                  iconName = focused ? 'add-circle' : 'add-circle-outline'
+                  iconName = 'add-circle'
                } else if (route.name === 'map') {
-                  iconName = focused ? 'map' : 'map-outline'
+                  iconName = 'place'
                } else if (route.name === 'profile') {
-                  iconName = focused ? 'person' : 'person-outline'
+                  iconName = 'person'
                } else {
-                  iconName = 'home-outline'
+                  iconName = 'home'
                }
 
-               return <Ionicons name={iconName} size={size} color={color} />
+               return (
+                  <MaterialIcons 
+                     name={iconName} 
+                     size={scaleModerate(28)} 
+                     color={color}
+                  />
+               )
             },
-            tabBarActiveTintColor: '#f97316',
-            tabBarInactiveTintColor: '#6b7280',
+            tabBarActiveTintColor: '#FFB74D',
+            tabBarInactiveTintColor: '#9CA3AF',
+            tabBarShowLabel: false,
             headerShown: false,
             tabBarStyle: {
-               backgroundColor: 'white',
-               borderTopWidth: 1,
-               borderTopColor: '#e5e7eb',
-               paddingBottom: 5,
-               paddingTop: 5,
-               height: 60,
+               backgroundColor: '#FFFFFF',
+               borderTopWidth: 0,
+               paddingBottom: scaleModerate(12),
+               paddingTop: scaleModerate(12),
+               height: scaleModerate(70),
+               shadowColor: '#000',
+               shadowOffset: {
+                  width: 0,
+                  height: -2,
+               },
+               shadowOpacity: 0.1,
+               shadowRadius: 4,
+               elevation: 8,
             },
          })}
       >
