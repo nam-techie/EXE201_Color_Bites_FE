@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "mumii",
-     "slug": "mumii",
+    "slug": "mumii",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -26,13 +26,6 @@
     "plugins": [
       "expo-router",
       [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsDownloadToken": "pk.eyJ1IjoicHduYW0iLCJhIjoiY21nN3l6dGJ5MDIwazJrb2NpZHV0MTRydyJ9.F93cqvzJul7ItypzDIvrxQ",
-          "RNMapboxMapsImpl": "mapbox"
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -49,7 +42,11 @@
       ]
     ],
     "extra": {
-      "EXPO_PUBLIC_API_BASE_URL": "https://api-mumii.namtechie.id.vn"
+      "EXPO_PUBLIC_API_BASE_URL": "https://api-mumii.namtechie.id.vn",
+      "router": {},
+      "eas": {
+        "projectId": "7d5adab0-5b44-4cc9-8944-03d1f26e383d"
+      }
     }
   }
 }
