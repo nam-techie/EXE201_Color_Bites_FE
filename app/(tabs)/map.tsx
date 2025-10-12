@@ -1,13 +1,20 @@
 'use client'
+import FilterButtons from '@/components/common/FilterButtons'
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
+import RestaurantSearchBar from '@/components/common/SearchBar'
 import CustomMarker from '@/components/map/CustomMapMarker'
+import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
+import { getDefaultAvatar } from '@/constants/defaultImages'
+import { useAuth } from '@/context/AuthProvider'
 import { MapProvider } from '@/services/MapProvider'
+import { userService } from '@/services/UserService'
 import type { MapRegion, Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
-import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Animated,
@@ -56,6 +63,8 @@ const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
 }
 
 export default function MapScreen() {
+  const { user } = useAuth()
+  const router = useRouter()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
@@ -72,6 +81,12 @@ export default function MapScreen() {
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
   const mapRef = useRef<MapView>(null)
+
+  // New states for search bar and menu
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState('all')
+  const [menuVisible, setMenuVisible] = useState(false)
+  const [userAvatar, setUserAvatar] = useState<string | null>(null)
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -178,6 +193,24 @@ export default function MapScreen() {
     })
   }
 
+  // Load user avatar from API
+  const loadUserAvatar = useCallback(async () => {
+    try {
+      const userInfo = await userService.getUserInformation()
+      if (userInfo.avatarUrl) {
+        setUserAvatar(userInfo.avatarUrl)
+      } else if (user) {
+        // Fallback to default avatar from AuthProvider
+        setUserAvatar(user.avatar || getDefaultAvatar(user.name, user.email))
+      }
+    } catch (error) {
+      console.log('Could not load user avatar, using fallback:', error)
+      if (user) {
+        setUserAvatar(user.avatar || getDefaultAvatar(user.name, user.email))
+      }
+    }
+  }, [user])
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -198,7 +231,8 @@ export default function MapScreen() {
       }
     }
     fetchInitialData()
-  }, [])
+    loadUserAvatar()
+  }, [loadUserAvatar])
 
   useEffect(() => {
     if (routeStops.length > 0) {
@@ -259,6 +293,35 @@ export default function MapScreen() {
     calculateRouteForStops(updatedStops)
   }
 
+  // Handler functions for search bar and menu
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    // TODO: Implement search functionality with backend API
+    // This will search both restaurants and places
+  }
+
+  const handleClearSearch = () => {
+    setSearchQuery('')
+  }
+
+  const handleMenuPress = () => {
+    setMenuVisible(true)
+  }
+
+  const handleAvatarPress = () => {
+    router.push('/(tabs)/profile')
+  }
+
+  const handleMicPress = () => {
+    // Microphone is UI only, no functionality
+    Alert.alert('Voice Search', 'Tính năng tìm kiếm bằng giọng nói sắp ra mắt!')
+  }
+
+  const handleFilterChange = (filter: string) => {
+    setSelectedFilter(filter)
+    // TODO: Implement filter logic for restaurants
+  }
+
   return (
     <View style={styles.container}>
       <MapView
@@ -290,6 +353,38 @@ export default function MapScreen() {
           />
         )}
       </MapView>
+
+      {/* Search Bar - Google Maps Style */}
+      <RestaurantSearchBar
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onClearSearch={handleClearSearch}
+        onMenuPress={handleMenuPress}
+        onAvatarPress={handleAvatarPress}
+        onMicPress={handleMicPress}
+        avatarUrl={userAvatar}
+      />
+
+      {/* Filter Buttons */}
+      <FilterButtons
+        selectedFilter={selectedFilter}
+        onFilterChange={handleFilterChange}
+      />
+
+      {/* Side Menu */}
+      <MapSideMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onNavigateToSavedPlaces={() => {
+          Alert.alert('Saved Places', 'Tính năng địa điểm đã lưu sắp ra mắt!')
+        }}
+        onNavigateToMyPlaces={() => {
+          Alert.alert('My Places', 'Tính năng quán đã tạo sắp ra mắt!')
+        }}
+        onNavigateToHistory={() => {
+          Alert.alert('History', 'Tính năng lịch sử sắp ra mắt!')
+        }}
+      />
 
       <RouteProfileSelector
         selectedProfile={selectedProfile}
