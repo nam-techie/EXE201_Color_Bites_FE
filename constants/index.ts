@@ -29,6 +29,7 @@ if (__DEV__) {
 const getApiBaseUrl = () => {
   // Ưu tiên biến môi trường nếu được cấu hình
   const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL
+  console.log('[ENV DEBUG] process.env.EXPO_PUBLIC_API_BASE_URL:', envUrl)
   if (envUrl && envUrl.trim().length > 0) return envUrl
 
   // Cho phép cấu hình qua app.json -> expo.extra.API_BASE_URL
@@ -40,7 +41,7 @@ const getApiBaseUrl = () => {
   // - iOS Simulator và Web có thể dùng localhost trực tiếp
   // - Thiết bị thật: cố gắng suy ra IP LAN từ expo manifest nếu có, nếu không nhắc cấu hình .env
   if (Platform.OS === 'android') {
-    return 'http://192.168.1.158:8080'
+    return 'http://10.0.2.2:8080'
   }
 
   if (Platform.OS === 'ios' || Platform.OS === 'web') {
@@ -64,6 +65,8 @@ const getApiBaseUrl = () => {
 export const API_BASE_URL = getApiBaseUrl()
 if (__DEV__) {
   console.log('[ENV DEBUG] API base URL:', API_BASE_URL)
+  console.log('[ENV DEBUG] Platform.OS:', Platform.OS)
+  console.log('[ENV DEBUG] All process.env keys:', Object.keys(process.env).filter(k => k.startsWith('EXPO_PUBLIC')))
 }
 export const API_ENDPOINTS = {
    // Post endpoints

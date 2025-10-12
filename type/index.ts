@@ -32,11 +32,9 @@ export interface Post {
 
 // API Request/Response Types (match backend exactly)
 export interface CreatePostRequest {
-   title: string        // @NotBlank, max 200 chars
    content: string      // @NotBlank, max 5000 chars  
    moodId: string       // max 50 chars
-   imageUrls?: string[] // max 10 images
-   videoUrl?: string    // optional
+   files?: File[]       // multipart files for upload
 }
 
 export interface UpdatePostRequest {

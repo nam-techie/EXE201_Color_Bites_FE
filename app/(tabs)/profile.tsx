@@ -10,18 +10,18 @@ import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import { useCallback, useEffect, useState } from 'react'
 import {
-   ActivityIndicator,
-   Alert,
-   BackHandler,
-   Dimensions,
-   FlatList,
-   RefreshControl,
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    Dimensions,
+    FlatList,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native'
 import Toast from 'react-native-toast-message'
 
@@ -119,6 +119,7 @@ export default function ProfileScreen() {
    // Filter posts based on whether they have images or not
    const postsWithImages = posts.filter(post => post.imageUrls && post.imageUrls.length > 0)
    const postsWithoutImages = posts.filter(post => !post.imageUrls || post.imageUrls.length === 0)
+
 
    // Load user posts from API
    const loadUserPosts = useCallback(async () => {

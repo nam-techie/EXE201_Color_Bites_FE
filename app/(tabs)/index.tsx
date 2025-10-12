@@ -11,20 +11,20 @@ import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
-    ActivityIndicator,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+   ActivityIndicator,
+   RefreshControl,
+   SafeAreaView,
+   ScrollView,
+   StyleSheet,
+   Text,
+   TouchableOpacity,
+   View,
 } from 'react-native'
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+   useAnimatedStyle,
+   useSharedValue,
+   withSpring,
+   withTiming,
 } from 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
 
