@@ -106,6 +106,12 @@ export const API_ENDPOINTS = {
    USER_INFO: {
       GET: '/api/user-info',
    },
+  // Payment endpoints
+  PAYMENT: {
+     CREATE: '/api/payment/subscription/create',
+     STATUS: '/api/payment/subscription/status',
+     CONFIRM: '/api/payment/subscription/confirm',
+  },
 }
 
 // Map Configuration
