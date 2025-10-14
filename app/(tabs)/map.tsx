@@ -333,6 +333,7 @@ export default function MapScreen() {
         showsMyLocationButton={false}
         showsCompass={false}
         showsScale={false}
+        provider="google"
       >
         {/* Restaurant markers */}
         {(restaurants || []).map((restaurant) => (

@@ -61,7 +61,8 @@ const getApiBaseUrl = () => {
   return 'http://localhost:8080'
 }
 
-export const API_BASE_URL = getApiBaseUrl()
+// Force production API URL for Railway backend
+export const API_BASE_URL = 'https://api-mumii.namtechie.id.vn'
 if (__DEV__) {
   console.log('[ENV DEBUG] API base URL:', API_BASE_URL)
 }
@@ -126,3 +127,19 @@ export const TRANSPORT_COSTS = {
    'cycling-regular': 0,
    'foot-walking': 0,
 } as const
+
+// Google Maps API Key Configuration
+const googleEnvKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+const googleExtraKey = (Constants?.expoConfig as any)?.extra?.GOOGLE_MAPS_API_KEY as string | undefined
+export const GOOGLE_MAPS_API_KEY = googleEnvKey || googleExtraKey || ''
+
+// Map Provider Configuration - Now using Google Maps
+export const MAP_PROVIDER: 'google' | 'openstreetmap' = 'google'
+
+// Dev diagnostics for Google Maps key
+if (__DEV__) {
+  const hasGoogleEnv = !!googleEnvKey
+  const hasGoogleExtra = !!googleExtraKey
+  const googleLen = (googleEnvKey || googleExtraKey || '').length
+  console.log('[ENV DEBUG] Google Maps key source:', hasGoogleEnv ? 'env' : hasGoogleExtra ? 'extra' : 'none', 'length:', googleLen)
+}

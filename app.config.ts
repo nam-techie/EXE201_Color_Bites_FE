@@ -1,0 +1,67 @@
+import 'dotenv/config';
+
+export default {
+  expo: {
+    owner: "pwnam",
+    name: "mumii",
+    slug: "mumii",
+    version: "1.0.0",
+    orientation: "portrait",
+    icon: "./assets/images/icon.jpg",
+    scheme: "mumii",
+    userInterfaceStyle: "automatic",
+    android: {
+      package: "com.phuongnam.mumii",
+      newArchEnabled: false,
+      adaptiveIcon: {
+        foregroundImage: "./assets/images/adaptive-icon.png",
+        backgroundColor: "#ffffff"
+      },
+      edgeToEdgeEnabled: true,
+      permissions: [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.INTERNET"
+      ],
+      config: {
+        googleMaps: {
+          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
+        }
+      }
+    },
+    web: {
+      favicon: "./assets/images/favicon.png"
+    },
+    plugins: [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          image: "./assets/images/splash-icon.png",
+          imageWidth: 200,
+          resizeMode: "contain",
+          backgroundColor: "#ffffff"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          locationWhenInUsePermission: "We need your location to show it on the map!"
+        }
+      ]
+    ],
+    updates: {
+      enabled: false
+    },
+    runtimeVersion: {
+      policy: "sdkVersion"
+    },
+    extra: {
+      EXPO_PUBLIC_API_BASE_URL: "https://api-mumii.namtechie.id.vn",
+      router: {},
+      eas: {
+        projectId: "a22fb735-2eb2-4fde-a856-f33c7ce20e4a"
+      }
+    }
+  }
+};
