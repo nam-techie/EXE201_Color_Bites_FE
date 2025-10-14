@@ -9,7 +9,10 @@
          "distribution": "internal"
       },
       "preview": {
-         "distribution": "internal"
+         "distribution": "internal",
+         "env": {
+            "EXPO_NEW_ARCH_ENABLED": "0"
+         }
       },
       "production": {
          "autoIncrement": true

@@ -1,3 +1,8 @@
+// Import gesture-handler TRƯỚC reanimated
+import 'react-native-gesture-handler'
+// Import Reanimated sớm nhất có thể
+import 'react-native-reanimated'
+
 import { AuthProvider, useAuth } from '@/context/AuthProvider'
 import { ThemeProvider } from '@/context/ThemeContext'
 import { Stack, useRouter } from 'expo-router'
@@ -21,7 +26,7 @@ function RootLayoutNav() {
          // Redirect to home if authenticated
          router.replace('/(tabs)')
       }
-   }, [user, isLoading])
+   }, [user, isLoading, router])
 
    if (isLoading) {
       return null // Or a loading screen
