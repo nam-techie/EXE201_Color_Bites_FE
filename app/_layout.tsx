@@ -1,7 +1,4 @@
-// Import gesture-handler TRƯỚC reanimated
-import 'react-native-gesture-handler'
-// Import Reanimated sớm nhất có thể
-import 'react-native-reanimated'
+// Side-effect imports are placed in index.js to avoid duplicate loads
 
 import { AuthProvider, useAuth } from '@/context/AuthProvider'
 import { ThemeProvider } from '@/context/ThemeContext'
@@ -9,6 +6,7 @@ import { Stack, useRouter } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'
 import Toast from 'react-native-toast-message'
 import '../global.css'
 
@@ -45,13 +43,17 @@ function RootLayoutNav() {
 export default function RootLayout() {
    return (
       <GestureHandlerRootView style={{ flex: 1 }}>
-         <ThemeProvider>
-            <AuthProvider>
-               <StatusBar style="auto" />
-               <RootLayoutNav />
-               <Toast />
-            </AuthProvider>
-         </ThemeProvider>
+         <SafeAreaProvider>
+            <SafeAreaView style={{ flex: 1 }} edges={['top','bottom']}>
+               <ThemeProvider>
+                  <AuthProvider>
+                     <StatusBar style="auto" />
+                     <RootLayoutNav />
+                     <Toast />
+                  </AuthProvider>
+               </ThemeProvider>
+            </SafeAreaView>
+         </SafeAreaProvider>
       </GestureHandlerRootView>
    )
 }
