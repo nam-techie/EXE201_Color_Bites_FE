@@ -7,7 +7,7 @@ export default {
     slug: "mumii",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.jpg",
+  icon: "./assets/images/icon.png",
     scheme: "mumii",
     userInterfaceStyle: "automatic",
     android: {
@@ -15,7 +15,8 @@ export default {
       newArchEnabled: false,
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#ffffff"
+        backgroundColor: "#ffffff",
+        monochromeImage: "./assets/images/adaptive-icon-mono.png"
       },
       edgeToEdgeEnabled: true,
       permissions: [
