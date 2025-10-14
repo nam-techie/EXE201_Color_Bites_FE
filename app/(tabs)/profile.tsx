@@ -1,6 +1,7 @@
 'use client'
 
 import PaymentWebView from '@/components/common/PaymentWebView'
+import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
 import { paymentService } from '@/services/PaymentService'
@@ -10,21 +11,22 @@ import type { PostResponse } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
+import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import {
-    ActivityIndicator,
-    Alert,
-    BackHandler,
-    Dimensions,
-    FlatList,
-    Modal,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+   ActivityIndicator,
+   Alert,
+   BackHandler,
+   Dimensions,
+   FlatList,
+   Modal,
+   RefreshControl,
+   SafeAreaView,
+   ScrollView,
+   StyleSheet,
+   Text,
+   TouchableOpacity,
+   View
 } from 'react-native'
 import Toast from 'react-native-toast-message'
 
@@ -99,6 +101,7 @@ function normalizePost(p: any): PostResponse {
 }
 
 export default function ProfileScreen() {
+   const router = useRouter()
    const [activeTab, setActiveTab] = useState('grid') // 'grid' for posts with images, 'text' for posts without images
    const { user, logout } = useAuth()
    const [posts, setPosts] = useState<PostResponse[]>([])
@@ -460,17 +463,7 @@ export default function ProfileScreen() {
          <View style={styles.header}>
             <View style={styles.headerContent}>
                <Text style={styles.headerTitle}>Profile</Text>
-                               <View style={styles.headerActions}>
-                  <TouchableOpacity 
-                      style={styles.logoutButton} 
-                      onPress={handleLogout}
-                      activeOpacity={0.8}
-                      hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-                   >
-                      <Ionicons name="log-out-outline" size={16} color="#DC2626" />
-                      <Text style={styles.logoutText}>Đăng xuất</Text>
-                   </TouchableOpacity>
-                </View>
+               <View style={styles.headerActions} />
             </View>
          </View>
 
@@ -526,9 +519,13 @@ export default function ProfileScreen() {
                      {userInfo?.subscriptionPlan === 'PREMIUM' || user?.isPremium ? (
                         <View style={styles.proBadge}>
                            <Ionicons name="star" size={12} color="white" />
-                           <Text style={styles.proBadgeText}>PRO</Text>
+                           <Text style={styles.proBadgeText}>PREMIUM</Text>
                         </View>
-                     ) : null}
+                     ) : (
+                        <View style={[styles.proBadge, { backgroundColor: '#F97316' }]}>
+                           <Text style={styles.proBadgeText}>FREE</Text>
+                        </View>
+                     )}
                </View>
 
                   {/* Show gender if available */}
@@ -549,22 +546,13 @@ export default function ProfileScreen() {
                {/* Action Buttons Row */}
                <View style={styles.buttonsRow}>
                   <TouchableOpacity 
-                     style={[styles.editProfileButton, { marginRight: 8 }]}
+                     style={styles.manageAccountButton}
                      onPress={() => {
-                        Alert.alert('Chỉnh sửa', 'Tính năng chỉnh sửa sắp ra mắt!')
+                        Alert.alert('Quản lý tài khoản', 'Thay đổi avatar, thông tin, mật khẩu sẽ được mở ở bản sau.')
                      }}
-                     activeOpacity={0.85}
+                     activeOpacity={0.9}
                   >
-                     <Text style={styles.editProfileButtonText}>Chỉnh sửa</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                     style={styles.shareProfileButton}
-                     onPress={() => {
-                        Alert.alert('Chia sẻ', 'Chia sẻ trang cá nhân sắp ra mắt!')
-                     }}
-                     activeOpacity={0.85}
-                  >
-                     <Text style={styles.shareProfileButtonText}>Chia sẻ trang cá nhân</Text>
+                     <Text style={styles.manageAccountButtonText}>Quản lý tài khoản</Text>
                   </TouchableOpacity>
                </View>
             </View>
@@ -576,7 +564,12 @@ export default function ProfileScreen() {
                   onPress={() => setShowPremiumModal(true)}
                   activeOpacity={0.8}
                >
-                  <View style={styles.premiumBannerContent}>
+                  <CrossPlatformGradient
+                     colors={["#F97316", "#FB923C"]}
+                     start={{ x: 0, y: 0 }}
+                     end={{ x: 1, y: 0 }}
+                     style={styles.premiumBannerContent}
+                  >
                      <View style={styles.premiumBannerLeft}>
                         <View style={styles.premiumBannerIcon}>
                            <Ionicons name="star" size={24} color="#FFFFFF" />
@@ -590,180 +583,49 @@ export default function ProfileScreen() {
                         <Text style={styles.premiumBannerButtonText}>Nâng cấp</Text>
                         <Ionicons name="chevron-forward" size={16} color="#8B5CF6" />
                      </View>
-                  </View>
+                  </CrossPlatformGradient>
                </TouchableOpacity>
             )}
 
-            {/* Premium Analytics */}
-            <View style={styles.analyticsSection}>
-               <View style={styles.analyticsHeader}>
-                  <View style={styles.analyticsTitle}>
-                     <Ionicons name="bar-chart" size={20} color="#EA580C" />
-                     <Text style={styles.analyticsTitleText}>Analytics</Text>
+            {/* Quick actions list */}
+            <View style={styles.quickList}>
+               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/profile-images')} activeOpacity={0.8}>
+                  <View style={styles.quickLeft}>
+                     <Ionicons name="images-outline" size={18} color="#111827" />
+                     <Text style={styles.quickTextDark}>Quản lý hình ảnh</Text>
                   </View>
-                  <View style={styles.analyticsBadge}>
-                     <Text style={styles.analyticsBadgeText}>PRO</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+               </TouchableOpacity>
+               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/profile-posts')} activeOpacity={0.8}>
+                  <View style={styles.quickLeft}>
+                     <Ionicons name="document-text-outline" size={18} color="#111827" />
+                     <Text style={styles.quickTextDark}>Quản lí bài đăng</Text>
                   </View>
-               </View>
-               <View style={styles.analyticsGrid}>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Top Interactor</Text>
-                     <Text style={styles.analyticsValue}>@sarah_foodie</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+               </TouchableOpacity>
+               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/auth/privacy-policy')} activeOpacity={0.8}>
+                  <View style={styles.quickLeft}>
+                     <Ionicons name="shield-checkmark-outline" size={18} color="#111827" />
+                     <Text style={styles.quickTextDark}>Chính sách bảo mật</Text>
                   </View>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Avg. Likes</Text>
-                     <Text style={styles.analyticsValue}>64 per post</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+               </TouchableOpacity>
+               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/auth/terms-of-service')} activeOpacity={0.8}>
+                  <View style={styles.quickLeft}>
+                     <Ionicons name="newspaper-outline" size={18} color="#111827" />
+                     <Text style={styles.quickTextDark}>Điều khoản dịch vụ</Text>
                   </View>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Best Time</Text>
-                     <Text style={styles.analyticsValue}>7-9 PM</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+               </TouchableOpacity>
+               <TouchableOpacity style={[styles.quickItem, { borderBottomWidth: 0 }]} onPress={handleLogout} activeOpacity={0.8}>
+                  <View style={styles.quickLeft}>
+                     <Ionicons name="log-out-outline" size={18} color="#DC2626" />
+                     <Text style={[styles.quickTextDark, { color: '#DC2626' }]}>Đăng xuất</Text>
                   </View>
-                  <View style={styles.analyticsItem}>
-                     <Text style={styles.analyticsLabel}>Top Cuisine</Text>
-                     <Text style={styles.analyticsValue}>Asian Food</Text>
-                  </View>
-               </View>
+               </TouchableOpacity>
             </View>
 
-            {/* Content Tabs */}
-            <View style={styles.tabsContainer}>
-               <View style={styles.tabsWrapper}>
-                  <TouchableOpacity
-                     onPress={() => setActiveTab('grid')}
-                     style={[styles.tab, activeTab === 'grid' && styles.activeTab]}
-                  >
-                     <Ionicons
-                        name="grid-outline"
-                        size={16}
-                        color={activeTab === 'grid' ? 'white' : '#6B7280'}
-                     />
-                     <Text style={[styles.tabText, activeTab === 'grid' && styles.activeTabText]}>
-                        Hình ảnh ({postsWithImages.length})
-                     </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                     onPress={() => setActiveTab('text')}
-                     style={[styles.tab, activeTab === 'text' && styles.activeTab]}
-                  >
-                     <Ionicons
-                        name="document-text-outline"
-                        size={16}
-                        color={activeTab === 'text' ? 'white' : '#6B7280'}
-                     />
-                     <Text style={[styles.tabText, activeTab === 'text' && styles.activeTabText]}>
-                        Văn bản ({postsWithoutImages.length})
-                     </Text>
-                  </TouchableOpacity>
-               </View>
-            </View>
-
-            {/* Content */}
-            {isLoading ? (
-               <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#F97316" />
-                  <Text style={styles.loadingText}>Đang tải bài viết...</Text>
-               </View>
-            ) : activeTab === 'grid' ? (
-               // Grid view for posts with images
-               postsWithImages.length > 0 ? (
-                  <FlatList
-                     data={postsWithImages}
-                     numColumns={3}
-                     scrollEnabled={false}
-                     contentContainerStyle={styles.gridContainer}
-                     ItemSeparatorComponent={() => <View style={{ height: 2 }} />}
-                     renderItem={({ item: post, index }) => {
-                        const columnIndex = index % 3
-                        
-                        return (
-                           <TouchableOpacity
-                              style={[
-                                 styles.gridPostItem,
-                                 {
-                                    width: (width - 32 - 4) / 3,
-                                    marginLeft: columnIndex === 0 ? 0 : 2,
-                                 }
-                              ]}
-                              onPress={() => {
-                                 console.log('🎯 Grid post pressed:', post.id)
-                                 handlePostClick(post)
-                              }}
-                     >
-                        <View style={styles.postImageContainer}>
-                           <Image
-                                    source={{ 
-                                       uri: post.imageUrls[0] || `https://picsum.photos/seed/post-${post.id}/400/400`
-                                    }} // Show first image with fallback
-                              style={styles.postImage}
-                              contentFit="cover"
-                                    onLoad={() => console.log('✅ Image loaded:', post.imageUrls[0])}
-                                    onError={(error) => console.error('❌ Image load error:', error, 'URL:', post.imageUrls[0])}
-                           />
-                                 {post.imageUrls.length > 1 && (
-                                    <View style={styles.multipleImagesIndicator}>
-                                       <Ionicons name="copy-outline" size={14} color="white" />
-                                    </View>
-                                 )}
-                           <View style={styles.likesOverlay}>
-                                    <Text style={styles.likesText}>❤️ {post.reactionCount}</Text>
-                           </View>
-                        </View>
-                           </TouchableOpacity>
-                        )
-                     }}
-                     keyExtractor={(item) => item.id}
-                  />
-               ) : (
-                  <View style={styles.emptyState}>
-                     <Ionicons name="images-outline" size={48} color="#9CA3AF" />
-                     <Text style={styles.emptyStateText}>Chưa có bài viết nào với hình ảnh</Text>
-                     </View>
-               )
-            ) : (
-               // List view for posts without images (like home screen)
-               postsWithoutImages.length > 0 ? (
-                  <View style={styles.textPostsList}>
-                     {postsWithoutImages.map((post) => (
-                        <View key={post.id} style={styles.textPostItem}>
-                           <View style={styles.textPostHeader}>
-                           <Image
-                                 source={{ uri: post.authorAvatar || getDefaultAvatar(post.authorName) }}
-                                 style={styles.textPostAvatar}
-                              contentFit="cover"
-                           />
-                              <View style={styles.textPostInfo}>
-                                 <Text style={styles.textPostAuthor}>{post.authorName}</Text>
-                                 <Text style={styles.textPostTime}>
-                                    {new Date(post.createdAt).toLocaleDateString('vi-VN')}
-                                 </Text>
-                           </View>
-                              <View style={styles.textPostMood}>
-                                 <Text style={styles.textPostMoodEmoji}>{post.moodEmoji}</Text>
-                           </View>
-                        </View>
-                           
-                           <Text style={styles.textPostContent}>{post.content}</Text>
-                           
-                           <View style={styles.textPostActions}>
-                              <TouchableOpacity style={styles.textPostAction}>
-                                 <Ionicons name="heart-outline" size={20} color="#6B7280" />
-                                 <Text style={styles.textPostActionText}>{post.reactionCount}</Text>
-                     </TouchableOpacity>
-                              <TouchableOpacity style={styles.textPostAction}>
-                                 <Ionicons name="chatbubble-outline" size={20} color="#6B7280" />
-                                 <Text style={styles.textPostActionText}>{post.commentCount}</Text>
-                              </TouchableOpacity>
-                           </View>
-                        </View>
-                  ))}
-               </View>
-               ) : (
-                  <View style={styles.emptyState}>
-                     <Ionicons name="document-text-outline" size={48} color="#9CA3AF" />
-                     <Text style={styles.emptyStateText}>Chưa có bài viết nào chỉ có văn bản</Text>
-                  </View>
-               )
-            )}
+            {/* Tabs & content hidden. Điều hướng các mục sang trang riêng ở bước sau */}
          </ScrollView>
 
          {/* Premium Modal */}
@@ -1253,6 +1115,48 @@ const styles = StyleSheet.create({
       fontWeight: '600',
       color: '#FFFFFF',
    },
+   manageAccountButton: {
+      flex: 1,
+      borderRadius: 10,
+      backgroundColor: '#FFFFFF',
+      borderWidth: 1,
+      borderColor: '#D1D5DB',
+      paddingVertical: 10,
+   },
+   manageAccountButtonText: {
+      textAlign: 'center',
+      fontWeight: '600',
+      color: '#111827',
+   },
+   quickList: {
+      marginHorizontal: 16,
+      backgroundColor: '#FFFFFF',
+      borderRadius: 12,
+      overflow: 'hidden',
+      marginBottom: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+   },
+   quickItem: {
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: '#FFFFFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+   },
+   quickLeft: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+   },
+   quickTextDark: {
+      color: '#111827',
+      fontSize: 14,
+      fontWeight: '500',
+   },
    analyticsSection: {
       marginBottom: 16,
       marginHorizontal: 16,
@@ -1698,12 +1602,12 @@ const styles = StyleSheet.create({
        elevation: 12,
     },
     premiumBannerContent: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       justifyContent: 'space-between',
-       padding: 18,
-       backgroundColor: '#8B5CF6', // Fallback for React Native
-       position: 'relative',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 18,
+      position: 'relative',
+      borderRadius: 16,
     },
     premiumBannerLeft: {
        flexDirection: 'row',
