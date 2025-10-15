@@ -276,6 +276,17 @@ export default function HomeScreen() {
       setSelectedPostId('')
    }
 
+   // Handle comment count changes from CommentModal
+   const handleCommentCountChange = useCallback((postId: string, delta: number) => {
+      setPosts(prevPosts => 
+         prevPosts.map(post => 
+            post.id === postId 
+               ? { ...post, commentCount: Math.max(0, post.commentCount + delta) }
+               : post
+         )
+      )
+   }, [])
+
    return (
       <SafeAreaView style={styles.container}>
          {/* Enhanced Header */}
@@ -420,6 +431,7 @@ export default function HomeScreen() {
             visible={commentModalVisible}
             postId={selectedPostId}
             onClose={closeCommentModal}
+            onCommentCountChange={handleCommentCountChange}
          />
       </SafeAreaView>
    )

@@ -47,6 +47,28 @@ export class CommentService {
          throw error
       }
    }
+
+   /**
+    * Xóa comment theo ID
+    */
+   async deleteComment(commentId: string): Promise<void> {
+      try {
+         console.log('Deleting comment:', commentId)
+         const response = await apiService.delete<string>(
+            `/api/comments/delete/${commentId}`
+         )
+         
+         if (response.status === 200) {
+            console.log('Comment deleted successfully:', commentId)
+            return
+         }
+         
+         throw new Error(response.message || 'Không thể xóa comment')
+      } catch (error) {
+         console.error('Error deleting comment:', error)
+         throw error
+      }
+   }
 }
 
 // Export singleton instance
