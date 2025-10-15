@@ -4,19 +4,15 @@ import { useState } from 'react'
 import Toast from 'react-native-toast-message'
 
 export interface CreatePostForm {
-  title: string           // required, max 200
   content: string         // required, max 5000
   selectedMoodId: string  // required
-  selectedImage: string | null  // optional -> imageUrls
-  videoUrl: string        // optional
+  selectedImage: string | null  // optional -> files
 }
 
 const initialForm: CreatePostForm = {
-  title: '',
   content: '',
   selectedMoodId: '',
   selectedImage: null,
-  videoUrl: '',
 }
 
 export function useCreatePost() {
@@ -60,21 +56,18 @@ export function useCreatePost() {
 
     setIsLoading(true)
 
-      try {
-         // Tự động tạo title từ content (50 ký tự đầu)
-         const autoTitle = form.content.trim().substring(0, 50) + (form.content.trim().length > 50 ? '...' : '')
-         
-         const postData: CreatePostRequest = {
-            title: autoTitle || 'Bài viết mới',
-            content: form.content.trim(),
-            moodId: form.selectedMoodId,
-            imageUrls: form.selectedImage ? [form.selectedImage] : undefined,
-            // Bỏ videoUrl
-         }
+    try {
+      // Tạo request data đơn giản
+      const postData: CreatePostRequest = {
+        content: form.content.trim(),
+        moodId: form.selectedMoodId,
+      }
 
       console.log('Submitting post data:', postData)
+      console.log('Selected image:', form.selectedImage)
 
-      const createdPost = await postService.createPost(postData)
+      // Gọi API với image URI riêng biệt
+      const createdPost = await postService.createPost(postData, form.selectedImage || undefined)
       
       console.log('Post created successfully:', createdPost)
 

@@ -29,7 +29,7 @@ if (__DEV__) {
 const getApiBaseUrl = () => {
   // Ưu tiên biến môi trường nếu được cấu hình
   const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL
-  // console.log('[ENV DEBUG] process.env.EXPO_PUBLIC_API_BASE_URL:', envUrl)
+  console.log('[ENV DEBUG] process.env.EXPO_PUBLIC_API_BASE_URL:', envUrl)
   if (envUrl && envUrl.trim().length > 0) return envUrl
 
   // Cho phép cấu hình qua app.json -> expo.extra.API_BASE_URL
@@ -66,8 +66,8 @@ export const API_BASE_URL = getApiBaseUrl()
 // export const API_BASE_URL = 'https://api-mumii.namtechie.id.vn'
 if (__DEV__) {
   console.log('[ENV DEBUG] API base URL:', API_BASE_URL)
-  // console.log('[ENV DEBUG] Platform.OS:', Platform.OS)
-  // console.log('[ENV DEBUG] All process.env keys:', Object.keys(process.env).filter(k => k.startsWith('EXPO_PUBLIC')))
+  console.log('[ENV DEBUG] Platform.OS:', Platform.OS)
+  console.log('[ENV DEBUG] All process.env keys:', Object.keys(process.env).filter(k => k.startsWith('EXPO_PUBLIC')))
 }
 export const API_ENDPOINTS = {
    // Post endpoints

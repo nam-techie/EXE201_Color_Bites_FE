@@ -44,6 +44,7 @@ export class AuthService {
   async login(email: string, password: string): Promise<LoginResponse> {
     try {
       console.log('🔐 Attempting login with:', { username: email })
+      console.log('🌐 Using base URL:', this.axiosInstance.defaults.baseURL)
       
       const response = await this.axiosInstance.post<ApiResponse<LoginResponse>>(
         API_ENDPOINTS.AUTH.LOGIN,
