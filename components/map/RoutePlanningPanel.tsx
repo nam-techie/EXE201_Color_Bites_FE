@@ -49,7 +49,7 @@ export default function RoutePlanningPanel({
          )}
 
          <ScrollView style={styles.stopsContainer} showsVerticalScrollIndicator={false}>
-            {routeStops.map((stop, index) => (
+            {(routeStops || []).map((stop, index) => (
                <View key={`${stop.restaurant.id}-${index}`} style={styles.stopItem}>
                   <View style={styles.stopNumber}>
                      <Text style={styles.stopNumberText}>{index + 1}</Text>

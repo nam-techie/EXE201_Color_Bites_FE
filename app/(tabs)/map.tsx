@@ -3,14 +3,18 @@ import FilterButtons from '@/components/common/FilterButtons'
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
 import CustomMarker from '@/components/map/CustomMapMarker'
+import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
-import { getDirections } from '@/services/DirectionService'
-import { fetchRestaurantsNearby } from '@/services/MapService'
+import { getDefaultAvatar } from '@/constants/defaultImages'
+import { useAuth } from '@/context/AuthProvider'
+import { MapProvider } from '@/services/MapProvider'
+import { userService } from '@/services/UserService'
 import type { MapRegion, Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useRouter } from 'expo-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Alert,
   Animated,
@@ -19,8 +23,8 @@ import {
   PanResponderGestureState,
   Pressable,
   StyleSheet,
-  Text,
-  View,
+  TouchableOpacity,
+  View
 } from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
 
@@ -59,12 +63,11 @@ const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
 }
 
 export default function MapScreen() {
+  const { user } = useAuth()
+  const router = useRouter()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
-  const [loading, setLoading] = useState(true)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState('all')
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null)
   const [mapRegion, setMapRegion] = useState<MapRegion>({
     latitude: 0,
@@ -77,6 +80,13 @@ export default function MapScreen() {
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
+  const mapRef = useRef<MapView>(null)
+
+  // New states for search bar and menu
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedFilter, setSelectedFilter] = useState('all')
+  const [menuVisible, setMenuVisible] = useState(false)
+  const [userAvatar, setUserAvatar] = useState<string | null>(null)
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -136,7 +146,7 @@ export default function MapScreen() {
       const destination = { lat: stops[i].restaurant.lat, lon: stops[i].restaurant.lon }
 
       try {
-        const directions = await getDirections(origin, destination, selectedProfile)
+        const directions = await MapProvider.getDirections(origin, destination, selectedProfile)
         if (!directions || !directions.geometry) continue
 
         const routeCoords = directions.geometry.map(([lon, lat]) => ({
@@ -163,6 +173,44 @@ export default function MapScreen() {
     setRouteCoordinates(allCoordinates)
   }
 
+  // Function xử lý navigation từ RestaurantDetailModal
+  const handleNavigateToRestaurant = (restaurant: Restaurant) => {
+    // Bật route planning mode
+    setRoutePlanningMode(true)
+    setShowProfileSelector(true)
+    
+    // Thêm nhà hàng vào route
+    const newStops = [{ restaurant }]
+    setRouteStops(newStops)
+    calculateRouteForStops(newStops)
+    
+    // Di chuyển map đến vị trí nhà hàng
+    setMapRegion({
+      latitude: restaurant.lat,
+      longitude: restaurant.lon,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    })
+  }
+
+  // Load user avatar from API
+  const loadUserAvatar = useCallback(async () => {
+    try {
+      const userInfo = await userService.getUserInformation()
+      if (userInfo.avatarUrl) {
+        setUserAvatar(userInfo.avatarUrl)
+      } else if (user) {
+        // Fallback to default avatar from AuthProvider
+        setUserAvatar(user.avatar || getDefaultAvatar(user.name, user.email))
+      }
+    } catch (error) {
+      console.log('Could not load user avatar, using fallback:', error)
+      if (user) {
+        setUserAvatar(user.avatar || getDefaultAvatar(user.name, user.email))
+      }
+    }
+  }, [user])
+
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
@@ -176,21 +224,21 @@ export default function MapScreen() {
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         })
-        const data = await fetchRestaurantsNearby(latitude, longitude)
+        const data = await MapProvider.fetchRestaurants(latitude, longitude)
         setRestaurants(data)
-      } catch (error) {
+      } catch {
         Alert.alert('Lỗi', 'Không thể tải dữ liệu hoặc vị trí')
-      } finally {
-        setLoading(false)
       }
     }
     fetchInitialData()
-  }, [])
+    loadUserAvatar()
+  }, [loadUserAvatar])
 
   useEffect(() => {
     if (routeStops.length > 0) {
       calculateRouteForStops(routeStops)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProfile])
 
   const getResponsiveStrokeWidth = () => {
@@ -200,35 +248,6 @@ export default function MapScreen() {
     if (zoom < 0.08) return 4
     return 2
   }
-
-  const filteredRestaurants = useMemo(() => {
-    let filtered = restaurants
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(
-        (restaurant) =>
-          restaurant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (restaurant.tags.cuisine &&
-            restaurant.tags.cuisine.toLowerCase().includes(searchQuery.toLowerCase())),
-      )
-    }
-    if (selectedFilter !== 'all') {
-      if (selectedFilter === 'vegetarian') {
-        filtered = filtered.filter(
-          (restaurant) =>
-            restaurant.tags['diet:vegetarian'] === 'yes' ||
-            restaurant.tags['diet:vegetarian'] === 'only' ||
-            restaurant.tags['diet:vegan'] === 'yes' ||
-            restaurant.tags['diet:vegan'] === 'only',
-        )
-      } else {
-        filtered = filtered.filter(
-          (restaurant) =>
-            restaurant.tags.cuisine && restaurant.tags.cuisine.includes(selectedFilter),
-        )
-      }
-    }
-    return filtered
-  }, [restaurants, searchQuery, selectedFilter])
 
   const handleMarkerPress = (restaurant: Restaurant) => {
     if (routePlanningMode) {
@@ -274,18 +293,49 @@ export default function MapScreen() {
     calculateRouteForStops(updatedStops)
   }
 
+  // Handler functions for search bar and menu
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    // TODO: Implement search functionality with backend API
+    // This will search both restaurants and places
+  }
+
+  const handleClearSearch = () => {
+    setSearchQuery('')
+  }
+
+  const handleMenuPress = () => {
+    setMenuVisible(true)
+  }
+
+  const handleAvatarPress = () => {
+    router.push('/(tabs)/profile')
+  }
+
+  const handleMicPress = () => {
+    // Microphone is UI only, no functionality
+    Alert.alert('Voice Search', 'Tính năng tìm kiếm bằng giọng nói sắp ra mắt!')
+  }
+
+  const handleFilterChange = (filter: string) => {
+    setSelectedFilter(filter)
+    // TODO: Implement filter logic for restaurants
+  }
+
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}
         style={styles.map}
         region={mapRegion}
         onRegionChangeComplete={setMapRegion}
         showsUserLocation={true}
         showsMyLocationButton={false}
-        showsCompass={true}
-        showsScale={true}
+        showsCompass={false}
+        showsScale={false}
       >
-        {filteredRestaurants.map((restaurant) => (
+        {/* Restaurant markers */}
+        {(restaurants || []).map((restaurant) => (
           <CustomMarker
             key={restaurant.id}
             restaurant={restaurant}
@@ -294,22 +344,47 @@ export default function MapScreen() {
           />
         ))}
 
+        {/* Route polyline */}
         {routeCoordinates.length > 0 && (
           <Polyline
             coordinates={routeCoordinates}
-            strokeColor="#3B82F6"
+            strokeColor="#4285F4"
             strokeWidth={getResponsiveStrokeWidth()}
           />
         )}
       </MapView>
 
+      {/* Search Bar - Google Maps Style */}
       <RestaurantSearchBar
         searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-        onClearSearch={() => setSearchQuery('')}
+        onSearchChange={handleSearchChange}
+        onClearSearch={handleClearSearch}
+        onMenuPress={handleMenuPress}
+        onAvatarPress={handleAvatarPress}
+        onMicPress={handleMicPress}
+        avatarUrl={userAvatar}
       />
 
-      <FilterButtons selectedFilter={selectedFilter} onFilterChange={setSelectedFilter} />
+      {/* Filter Buttons */}
+      <FilterButtons
+        selectedFilter={selectedFilter}
+        onFilterChange={handleFilterChange}
+      />
+
+      {/* Side Menu */}
+      <MapSideMenu
+        visible={menuVisible}
+        onClose={() => setMenuVisible(false)}
+        onNavigateToSavedPlaces={() => {
+          Alert.alert('Saved Places', 'Tính năng địa điểm đã lưu sắp ra mắt!')
+        }}
+        onNavigateToMyPlaces={() => {
+          Alert.alert('My Places', 'Tính năng quán đã tạo sắp ra mắt!')
+        }}
+        onNavigateToHistory={() => {
+          Alert.alert('History', 'Tính năng lịch sử sắp ra mắt!')
+        }}
+      />
 
       <RouteProfileSelector
         selectedProfile={selectedProfile}
@@ -373,20 +448,24 @@ export default function MapScreen() {
         </>
       )}
 
-      <ScaleButton
+      {/* My Location Button - Google Maps style */}
+      <TouchableOpacity
         onPress={handleMyLocation}
-        iconName="location-sharp"
-        iconColor="white"
-        style={styles.locationButton}
-      />
+        style={styles.myLocationButton}
+      >
+        <Ionicons name="locate" size={24} color="#5F6368" />
+      </TouchableOpacity>
 
-      {!routePlanningMode && (
-        <View style={styles.counterContainer}>
-          <Text style={styles.counterText}>
-            {filteredRestaurants.length} nhà hàng được tìm thấy
-          </Text>
-        </View>
-      )}
+      {/* Layers Button - bottom right */}
+      <TouchableOpacity
+        style={styles.layersButton}
+        onPress={() => {
+          // TODO: Implement map layers (satellite, terrain, traffic)
+          Alert.alert('Layers', 'Chọn loại bản đồ')
+        }}
+      >
+        <Ionicons name="layers" size={24} color="#5F6368" />
+      </TouchableOpacity>
 
       <RestaurantDetailModal
         restaurant={selectedRestaurant}
@@ -395,6 +474,7 @@ export default function MapScreen() {
           setModalVisible(false)
           setSelectedRestaurant(null)
         }}
+        onNavigateToRestaurant={handleNavigateToRestaurant}
       />
     </View>
   )
@@ -403,6 +483,50 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
+  
+  // Google Maps style buttons
+  myLocationButton: {
+    position: 'absolute',
+    bottom: 200,
+    right: 16,
+    width: 48,
+    height: 48,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+    zIndex: 10,
+  },
+  layersButton: {
+    position: 'absolute',
+    bottom: 140,
+    right: 16,
+    width: 48,
+    height: 48,
+    backgroundColor: '#ffffff',
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+    zIndex: 10,
+  },
+  
+  // Route planning buttons (keep existing)
   routePlanningButton: {
     position: 'absolute',
     bottom: 260,
@@ -431,31 +555,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
     elevation: 10,
-  },
-  locationButton: {
-    position: 'absolute',
-    bottom: 200,
-    right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#3B82F6',
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-    elevation: 10,
-  },
-  counterContainer: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    backgroundColor: '#ffffff',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  counterText: {
-    color: '#374151',
-    fontWeight: '500',
   },
 })

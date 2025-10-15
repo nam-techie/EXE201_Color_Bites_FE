@@ -11,7 +11,7 @@ const filters = [
   { key: 'vietnamese', label: 'Việt Nam', icon: 'fast-food' },
   { key: 'vegetarian', label: 'Chay', icon: 'leaf' },
   { key: 'pizza', label: 'Pizza', icon: 'pizza' },
-  { key: 'chinese', label: 'Trung Hoa', icon: 'bowl' }, // gần đúng, có thể thay bằng 'restaurant-outline'
+  { key: 'chinese', label: 'Trung Hoa', icon: 'restaurant-outline' },
   { key: 'coffee', label: 'Cà phê', icon: 'cafe' },
 ]
 

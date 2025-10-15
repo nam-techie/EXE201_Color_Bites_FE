@@ -30,6 +30,88 @@ export interface Post {
    updatedAt: string
 }
 
+// API Request/Response Types (match backend exactly)
+export interface CreatePostRequest {
+   content: string      // @NotBlank, max 5000 chars  
+   moodId: string       // max 50 chars
+   files?: File[]       // multipart files for upload
+}
+
+export interface UpdatePostRequest {
+   caption?: string
+   location?: string
+   mood?: string
+   hashtags?: string[]
+   isPrivate?: boolean
+}
+
+export interface TagResponse {
+   id: string
+   name: string
+}
+
+export interface PostResponse {
+   id: string
+   accountId: string
+   authorName: string        // Tên tác giả từ UserInformation
+   authorAvatar: string      // Avatar tác giả từ UserInformation
+   content: string
+   moodId: string
+   moodName: string          // Tên mood
+   moodEmoji: string         // Emoji mood
+   imageUrls: string[]       // Danh sách URL hình ảnh
+   videoUrl?: string         // URL video
+   reactionCount: number
+   commentCount: number
+   tags: TagResponse[]       // Danh sách tags
+   isOwner: boolean          // Người xem có phải chủ bài viết không
+   hasReacted: boolean       // Người xem đã react chưa
+   userReactionType?: string // Loại reaction của người xem
+   createdAt: string
+   updatedAt: string
+}
+
+export interface ApiResponse<T> {
+   status: number
+   message: string
+   data: T
+}
+
+export interface PaginatedResponse<T> {
+   content: T[]
+   totalElements: number
+   totalPages: number
+   size: number
+   number: number
+   first: boolean
+   last: boolean
+}
+
+// Comment API Types (match backend exactly)
+export interface CreateCommentRequest {
+   content: string
+   parentCommentId?: string
+}
+
+export interface CommentResponse {
+   id: string
+   postId: string
+   accountId: string
+   authorName: string
+   authorAvatar: string
+   content: string
+   parentCommentId?: string
+   depth: number
+   createdAt: string
+   updatedAt: string
+   // Backend có thể trả về nested author object
+   author?: {
+      accountId: string
+      authorName: string
+      authorAvatar: string
+   }
+}
+
 export interface Comment {
    id: string
    user: User
@@ -63,6 +145,54 @@ export interface Challenge {
    participants: number
    isPremium: boolean
    reward?: string
+}
+
+export interface Mood {
+   id: string
+   name: string
+   emoji: string
+   description?: string
+   createdAt?: string
+   postCount?: number
+}
+
+// Backend mood response từ API
+export interface MoodResponse {
+   id: string
+   name: string
+   emoji: string
+   createdAt: string
+   postCount: number
+}
+
+// Paginated mood list response
+export interface MoodListResponse {
+   content: MoodResponse[]
+   totalElements: number
+   totalPages: number
+   size: number
+   number: number
+   first: boolean
+   last: boolean
+   pageable: {
+      pageNumber: number
+      pageSize: number
+      sort: {
+         empty: boolean
+         sorted: boolean
+         unsorted: boolean
+      }
+      offset: number
+      paged: boolean
+      unpaged: boolean
+   }
+   sort: {
+      empty: boolean
+      sorted: boolean
+      unsorted: boolean
+   }
+   numberOfElements: number
+   empty: boolean
 }
 export interface RouteProfile {
    id: string

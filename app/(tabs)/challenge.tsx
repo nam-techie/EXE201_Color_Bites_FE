@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { useState } from 'react'
 import {
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TextInput,
-   TouchableOpacity,
-   View,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 
 const trendingHashtags = [
@@ -67,14 +67,14 @@ const nearbyPlaces = [
    },
 ]
 
-export default function ExploreScreen() {
+export default function ChallengeScreen() {
    const [searchQuery, setSearchQuery] = useState('')
 
    return (
       <SafeAreaView style={styles.container}>
          {/* Header */}
          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Explore</Text>
+            <Text style={styles.headerTitle}>Challenge</Text>
             <View style={styles.searchContainer}>
                <Ionicons
                   name="search-outline"
@@ -100,7 +100,7 @@ export default function ExploreScreen() {
                   <Text style={styles.sectionTitle}>Trending This Week</Text>
                </View>
                <View style={styles.sectionContent}>
-                  {trendingHashtags.map((item, index) => (
+                  {(trendingHashtags || []).map((item, index) => (
                      <TouchableOpacity key={index} style={styles.hashtagCard}>
                         <View style={styles.hashtagContent}>
                            <View>
@@ -132,7 +132,7 @@ export default function ExploreScreen() {
                   <Text style={styles.sectionTitle}>Featured Foodies</Text>
                </View>
                <View style={styles.sectionContent}>
-                  {featuredUsers.map((user) => (
+                  {(featuredUsers || []).map((user) => (
                      <TouchableOpacity key={user.id} style={styles.userCard}>
                         <View style={styles.userContent}>
                            <View style={styles.userInfo}>
@@ -165,7 +165,7 @@ export default function ExploreScreen() {
                   <Text style={styles.sectionTitle}>Nearby Places</Text>
                </View>
                <View style={styles.sectionContent}>
-                  {nearbyPlaces.map((place) => (
+                  {(nearbyPlaces || []).map((place) => (
                      <TouchableOpacity key={place.id} style={styles.placeCard}>
                         <View style={styles.placeContent}>
                            <Image

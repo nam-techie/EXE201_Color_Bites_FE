@@ -1,5 +1,7 @@
 'use client'
 
+import { getDefaultAvatar } from '@/constants/defaultImages'
+import { authService } from '@/services/AuthService'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import type React from 'react'
 import { createContext, useContext, useEffect, useState } from 'react'
@@ -16,8 +18,9 @@ interface AuthContextType {
    user: User | null
    isLoading: boolean
    login: (email: string, password: string) => Promise<void>
-   register: (name: string, email: string, password: string) => Promise<void>
+   register: (username: string, email: string, password: string, confirmPassword: string) => Promise<string>
    logout: () => Promise<void>
+   updateUserAvatar: (avatarUrl: string) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -32,62 +35,143 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
    const checkAuthState = async () => {
       try {
+         console.log('🔍 Checking auth state...')
+         
+         const token = await AsyncStorage.getItem('authToken')
          const userData = await AsyncStorage.getItem('user')
-         if (userData) {
-            setUser(JSON.parse(userData))
+         
+         // Chỉ set user nếu có BOTH token và userData
+         if (token && userData) {
+            try {
+               const parsedUser = JSON.parse(userData)
+               console.log('✅ Found valid auth state for user:', parsedUser.name)
+               setUser(parsedUser)
+            } catch (error) {
+               console.error('❌ Error parsing user data, clearing auth state:', error)
+               await AsyncStorage.removeItem('authToken')
+               await AsyncStorage.removeItem('user')
+               setUser(null)
+            }
+         } else {
+            console.log('ℹ️ No valid auth state found - user needs to login')
+            setUser(null)
+            
+            // Clear any orphaned data
+            if (token || userData) {
+               await AsyncStorage.removeItem('authToken')
+               await AsyncStorage.removeItem('user')
+            }
          }
       } catch (error) {
-         console.error('Error checking auth state:', error)
+         console.error('❌ Error checking auth state:', error)
+         // Clear everything on error
+         await AsyncStorage.removeItem('authToken')
+         await AsyncStorage.removeItem('user')
+         setUser(null)
       } finally {
          setIsLoading(false)
       }
    }
 
    const login = async (email: string, password: string) => {
-      // Mock login - replace with real API call
-      if (email === 'test123' && password === 'test123') {
-         const mockUser: User = {
-            id: '1',
-            name: 'Test User',
-            email: 'test123@example.com',
-            avatar: 'https://i.pravatar.cc/96?img=12',
-            isPremium: false,
+      try {
+         console.log('🔐 Starting login process for:', email)
+         
+         // Clear any existing auth data first
+         await AsyncStorage.removeItem('authToken')
+         await AsyncStorage.removeItem('user')
+         
+         const userData = await authService.login(email, password)
+         
+         const user: User = {
+            id: userData.id,
+            name: userData.userName,
+            email: userData.email,
+            avatar: getDefaultAvatar(userData.userName, userData.email),
+            isPremium: userData.role === 'PREMIUM',
          }
-
-         await AsyncStorage.setItem('user', JSON.stringify(mockUser))
-         setUser(mockUser)
-      } else {
-         throw new Error('Invalid credentials')
+         
+         // Save user to AsyncStorage (authService already saved token)
+         await AsyncStorage.setItem('user', JSON.stringify(user))
+         
+         setUser(user)
+         console.log('✅ Login successful! Token and user saved.')
+         console.log('👤 User:', user.name, '| Role:', userData.role)
+         
+      } catch (error) {
+         console.error('❌ Login failed:', error)
+         // Ensure clean state on failure
+         await AsyncStorage.removeItem('authToken')
+         await AsyncStorage.removeItem('user')
+         setUser(null)
+         throw error
       }
    }
 
-   const register = async (name: string, email: string, password: string) => {
-      // Mock register - replace with real API call
-      const mockUser: User = {
-         id: '1',
-         name,
-         email,
-         avatar: '/placeholder.svg?height=100&width=100',
-         isPremium: false,
+   const register = async (username: string, email: string, password: string, confirmPassword: string) => {
+      try {
+         console.log('📝 Starting register process for:', email)
+         
+         // Clear any existing auth data first
+         await AsyncStorage.removeItem('authToken')
+         await AsyncStorage.removeItem('user')
+         
+         const message = await authService.register(username, email, password, confirmPassword)
+         
+         console.log('✅ Register successful! No auto-login:', message)
+         
+         // Không set user - yêu cầu login riêng
+         return message
+         
+      } catch (error) {
+         console.error('❌ Register failed:', error)
+         // Ensure clean state on failure
+         await AsyncStorage.removeItem('authToken')
+         await AsyncStorage.removeItem('user')
+         setUser(null)
+         throw error
       }
-
-      await AsyncStorage.setItem('user', JSON.stringify(mockUser))
-      setUser(mockUser)
    }
 
    const logout = async () => {
       try {
+         console.log('🚪 Logging out user...')
+         
+         // Clear from AsyncStorage
+         await AsyncStorage.removeItem('authToken')
          await AsyncStorage.removeItem('user')
+         
+         // Clear from state
          setUser(null)
-         console.log('User logged out successfully')
+         
+         console.log('✅ Logout successful - all auth data cleared')
+         
       } catch (error) {
-         console.error('Error during logout:', error)
+         console.error('❌ Error during logout:', error)
+         // Force clear even on error
+         setUser(null)
+         throw error
+      }
+   }
+
+   const updateUserAvatar = async (avatarUrl: string) => {
+      try {
+         if (user) {
+            const updatedUser = { ...user, avatar: avatarUrl }
+            setUser(updatedUser)
+            
+            // Update in AsyncStorage
+            await AsyncStorage.setItem('user', JSON.stringify(updatedUser))
+            console.log('✅ User avatar updated in context:', avatarUrl)
+         }
+      } catch (error) {
+         console.error('❌ Error updating user avatar:', error)
          throw error
       }
    }
 
    return (
-      <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+      <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUserAvatar }}>
          {children}
       </AuthContext.Provider>
    )

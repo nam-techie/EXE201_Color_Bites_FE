@@ -1,335 +1,275 @@
 'use client'
 
-import Button from '@/components/common/Button'
-import Input from '@/components/common/Input'
+import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
-import { useState } from 'react'
-import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import React, { useState } from 'react'
+import {
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 
 export default function LoginScreen() {
-   const [email, setEmail] = useState('')
-   const [password, setPassword] = useState('')
-   const [isLoading, setIsLoading] = useState(false)
-   const [showPassword, setShowPassword] = useState(false)
-   const [rememberMe, setRememberMe] = useState(false)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPwd, setShowPwd] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+  const { login } = useAuth()
 
-   const handleLogin = async () => {
-      if (!email || !password) {
-         Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin')
-         return
-      }
+  const isDisabled = !email || !password || isLoading
 
+  const handleLogin = async () => {
+    setErrorMessage('')
+    if (!email || !password) {
+      setErrorMessage('Vui lòng nhập đầy đủ thông tin')
+      return
+    }
+    try {
       setIsLoading(true)
-      try {
-         // Simulate API call
-         await new Promise(resolve => setTimeout(resolve, 1200))
-         Alert.alert('Thành công', `Đăng nhập thành công!${rememberMe ? '\nĐã bật ghi nhớ.' : ''}`)
-         router.replace('/(tabs)')
-      } catch (error) {
-         Alert.alert('Lỗi', 'Đăng nhập thất bại. Vui lòng thử lại.')
-      } finally {
-         setIsLoading(false)
-      }
-   }
+      await login(email, password)
+      router.replace('/(tabs)')
+    } catch (e: any) {
+      setErrorMessage(e?.message ?? 'Đăng nhập thất bại. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
-   const isDisabled = !email || !password || isLoading
-   const ctaTextStyle = [styles.ctaText, isDisabled && styles.ctaTextDisabled]
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-   return (
-      <SafeAreaView style={styles.container}>
-         <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color="#111827" />
+        </TouchableOpacity>
+      </View>
 
-         <LinearGradient
-            colors={[
-               '#FFF4EA', // light peach
-               '#FFE6D3', // soft orange 1
-               '#FFD7BF', // soft orange 2
-            ]}
-            style={styles.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-         >
-            {/* Header */}
-            <View style={styles.header}>
-               <TouchableOpacity
-                  style={styles.backButton}
-                  onPress={() => router.back()}
-               >
-                  <Ionicons name="arrow-back" size={22} color="#111" />
-               </TouchableOpacity>
-            </View>
+      {/* Title */}
+      <Text style={styles.title}>Đăng nhập</Text>
 
-            {/* Centered Card */}
-            <View style={styles.centerWrapper}>
-               <View style={styles.card}>
-                  {/* Logo / Brand */}
-                  <View style={styles.logoWrap}>
-                     <LinearGradient
-                        colors={[ '#FFAB74', '#FF8A3D', '#FFD6A5' ]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.logo}
-                     >
-                        <Ionicons name="restaurant" size={20} color="#fff" />
-                     </LinearGradient>
-                  </View>
+      {/* Content */}
+      <View style={styles.content}>
+        {/* Email */}
+        <View style={styles.inputWrap}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email hoặc tên người dùng"
+            placeholderTextColor="#9AA4B2"
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+        </View>
 
-                  <Text style={styles.title}>Color Bites</Text>
-                  <Text style={styles.subtitle}>Vui lòng nhập thông tin để tiếp tục</Text>
+        {/* Password with eye */}
+        <View style={styles.inputWrap}>
+          <TextInput
+            style={[styles.input, { paddingRight: 44 }]}
+            placeholder="Mật khẩu"
+            placeholderTextColor="#9AA4B2"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPwd}
+          />
+          <TouchableOpacity
+            style={styles.eyeBtn}
+            onPress={() => setShowPwd((v) => !v)}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Ionicons
+              name={showPwd ? 'eye' : 'eye-off'}
+              size={20}
+              color="#6B7280"
+            />
+          </TouchableOpacity>
+        </View>
 
-                  {/* Form */}
-                  <View style={{ marginTop: 16 }}>
-                     <Input
-                        label="Địa chỉ Email"
-                        placeholder="Nhập email của bạn"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        leftIcon="mail"
-                     />
+        {/* Error */}
+        {!!errorMessage && (
+          <View style={styles.errorBox}>
+            <Ionicons name="alert-circle" size={16} color="#DC2626" />
+            <Text style={styles.errorText}>{errorMessage}</Text>
+          </View>
+        )}
 
-                     <View>
-                        <Input
-                           label="Mật khẩu"
-                           placeholder="Nhập mật khẩu của bạn"
-                           value={password}
-                           onChangeText={setPassword}
-                           secureTextEntry
-                           leftIcon="lock-closed"
-                        />
-                     </View>
+        {/* Login button */}
+        <TouchableOpacity
+          activeOpacity={0.9}
+          style={[styles.loginBtn, isDisabled && styles.loginBtnDisabled]}
+          disabled={isDisabled}
+          onPress={handleLogin}
+        >
+          <Text
+            style={[styles.loginText, isDisabled && styles.loginTextDisabled]}
+          >
+            {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+          </Text>
+        </TouchableOpacity>
 
-                     {/* Remember / Forgot */}
-                     <View style={styles.rowBetween}>
-                        <TouchableOpacity style={styles.rememberWrap} onPress={() => setRememberMe(!rememberMe)}>
-                           <View style={[styles.checkbox, rememberMe && styles.checkboxChecked]}>
-                              {rememberMe && <Ionicons name="checkmark" size={14} color="#fff" />}
-                           </View>
-                           <Text style={styles.rememberText}>Ghi nhớ đăng nhập</Text>
-                        </TouchableOpacity>
+        {/* Forgot password */}
+        <TouchableOpacity
+          style={styles.forgotWrap}
+          onPress={() => router.push('/auth/forgot-password')}
+        >
+          <Text style={styles.forgotText}>Quên mật khẩu</Text>
+        </TouchableOpacity>
+      </View>
 
-                        <TouchableOpacity onPress={() => router.push('/auth/forgot-password')}>
-                           <Text style={styles.forgotPasswordText}>Quên mật khẩu?</Text>
-                        </TouchableOpacity>
-                     </View>
-
-                     {/* CTA with high-contrast gradient (colorful even when disabled) */}
-                     <LinearGradient
-                        colors={['#FFAB74', '#FF69B4', '#C16CE1']}
-                        locations={[0.24, 0.63, 1]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.gradientCta}
-                     >
-                        <Button
-                           title={isLoading ? 'Đang xử lý...' : 'Đăng nhập ngay'}
-                           onPress={() => { if (isDisabled) return; handleLogin() }}
-                           loading={isLoading}
-                           disabled={false}
-                           variant="ghost"
-                           style={styles.ctaButton}
-                           textStyle={styles.ctaText}
-                        />
-                     </LinearGradient>
-
-                     {/* Divider */}
-                     <View style={styles.dividerRow}>
-                        <View style={styles.divider} />
-                        <Text style={styles.dividerText}>Hoặc</Text>
-                        <View style={styles.divider} />
-                     </View>
-
-                     {/* Social Buttons */}
-                     <View style={styles.socialRow}>
-                        <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8}>
-                           <Ionicons name="logo-google" size={18} color="#DB4437" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.socialBtn} activeOpacity={0.8}>
-                           <Ionicons name="logo-facebook" size={18} color="#1877F2" />
-                        </TouchableOpacity>
-                     </View>
-
-                     {/* Signup */}
-                     <View style={styles.signUpContainer}>
-                        <Text style={styles.signUpText}>Chưa có tài khoản?</Text>
-                        <TouchableOpacity onPress={() => router.push('/auth/signup-options')}>
-                           <Text style={styles.signUpLink}> Đăng ký</Text>
-                        </TouchableOpacity>
-                     </View>
-                  </View>
-               </View>
-            </View>
-         </LinearGradient>
-      </SafeAreaView>
-   )
+      {/* Bottom Google button (pinned at bottom) */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={styles.googleBtn}
+          activeOpacity={0.9}
+          onPress={() => console.log('Google OAuth')}
+        >
+          <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+          <Text style={styles.googleText}>Tiếp tục với Google</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
+  )
 }
 
+/* ===== Styles ===== */
+
 const styles = StyleSheet.create({
-   container: {
-      flex: 1,
-   },
-   gradient: {
-      flex: 1,
-   },
-   header: {
-      paddingHorizontal: 16,
-      paddingTop: 16,
-   },
-   backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(17,17,17,0.06)',
-      justifyContent: 'center',
-      alignItems: 'center',
-   },
-   centerWrapper: {
-      flex: 1,
-      paddingHorizontal: 20,
-      paddingVertical: 12,
-      justifyContent: 'center',
-   },
-   card: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: 20,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 8 },
-      shadowOpacity: 0.08,
-      shadowRadius: 16,
-      elevation: 4,
-   },
-   logoWrap: {
-      alignItems: 'center',
-      marginBottom: 8,
-   },
-   logo: {
-      width: 44,
-      height: 44,
-      borderRadius: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
-   },
-   title: {
-      fontSize: 22,
-      fontWeight: '800',
-      color: '#FF8A3D',
-      textAlign: 'center',
-   },
-   subtitle: {
-      fontSize: 13,
-      color: '#6b7280',
-      textAlign: 'center',
-      marginTop: 4,
-      marginBottom: 8,
-   },
-   rowBetween: {
-      marginTop: 6,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-   },
-   rememberWrap: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   checkbox: {
-      width: 18,
-      height: 18,
-      borderRadius: 4,
-      borderWidth: 1,
-      borderColor: '#e5e7eb',
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: 8,
-   },
-   checkboxChecked: {
-      backgroundColor: '#f97316',
-      borderColor: '#f97316',
-   },
-   rememberText: {
-      color: '#6b7280',
-      fontSize: 13,
-   },
-   forgotPasswordText: {
-      color: '#f97316',
-      fontSize: 13,
-      fontWeight: '600',
-   },
-   gradientCta: {
-      marginTop: 12,
-      borderRadius: 12,
-      overflow: 'hidden',
-      shadowColor: '#f97316',
-      shadowOffset: { width: 0, height: 6 },
-      shadowOpacity: 0.2,
-      shadowRadius: 12,
-      elevation: 4,
-   },
-   ctaButton: {
-      borderRadius: 12,
-      backgroundColor: 'transparent',
-   },
-   ctaText: {
-      fontWeight: '700',
-      color: '#ffffff',
-   },
-   ctaTextDisabled: {
-      color: '#374151',
-      fontWeight: '700',
-   },
-   dividerRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 8,
-      marginTop: 14,
-   },
-   divider: {
-      flex: 1,
-      height: 1,
-      backgroundColor: '#e5e7eb',
-   },
-   dividerText: {
-      color: '#9ca3af',
-      fontSize: 12,
-      marginHorizontal: 8,
-   },
-   socialRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 12,
-      marginTop: 10,
-   },
-   socialBtn: {
-      width: 40,
-      height: 40,
-      borderRadius: 8,
-      backgroundColor: '#fff',
-      alignItems: 'center',
-      justifyContent: 'center',
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.08,
-      shadowRadius: 10,
-      elevation: 2,
-   },
-   signUpContainer: {
-      flexDirection: 'row',
-      justifyContent: 'center',
-      alignItems: 'center',
-      marginTop: 12,
-   },
-   signUpText: {
-      fontSize: 13,
-      color: '#6b7280',
-   },
-   signUpLink: {
-      fontSize: 13,
-      color: '#f97316',
-      fontWeight: '700',
-   },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+
+  /* Header */
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 40,
+    paddingBottom: -50,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  /* Title */
+  title: {
+    fontSize: 40,           
+    fontWeight: '800',
+    color: '#111827',     
+    paddingHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 24,
+  },
+
+  /* Content */
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+
+  /* Inputs */
+  inputWrap: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  input: {
+    backgroundColor: '#F5F7FF', // tím nhạt
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    fontSize: 20,
+    color: '#111827',
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+
+  /* Error */
+  errorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    marginTop: 4,
+    marginBottom: 4,
+    gap: 8,
+  },
+  errorText: {
+    color: '#DC2626',
+    fontSize: 13,
+    fontWeight: '500',
+    flex: 1,
+  },
+
+  /* Login */
+  loginBtn: {
+    marginTop: 8,
+    borderRadius: 28,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFB74D', // sẽ bị override trạng thái disabled
+  },
+  loginBtnDisabled: {
+    backgroundColor: '#DDE3ED', // xám nhạt như mock
+  },
+  loginText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  loginTextDisabled: {
+    color: '#FFFFFF',
+    opacity: 0.9,
+  },
+
+  /* Forgot */
+  forgotWrap: {
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  forgotText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FB8C00', // black
+  },
+
+  /* Bottom Google button */
+  bottomBar: {
+    paddingHorizontal: 20,
+    paddingBottom: 90,
+    paddingTop: 6,
+  },
+  googleBtn: {
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FB8C00',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+
+  },
+  googleText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 })

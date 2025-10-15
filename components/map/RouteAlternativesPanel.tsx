@@ -22,16 +22,16 @@ export default function RouteAlternativesPanel({
    visible,
    profile,
 }: RouteAlternativesPanelProps) {
-   if (!visible || alternatives.length === 0) return null
+   if (!visible || (alternatives || []).length === 0) return null
 
    return (
       <View style={styles.container}>
          <View style={styles.header}>
-            <Text style={styles.title}>Lựa chọn đường đi ({alternatives.length} tuyến)</Text>
+            <Text style={styles.title}>Lựa chọn đường đi ({(alternatives || []).length} tuyến)</Text>
          </View>
 
          <ScrollView style={styles.alternativesContainer} showsVerticalScrollIndicator={false}>
-            {alternatives.map((alternative, index) => {
+            {(alternatives || []).map((alternative, index) => {
                const isSelected = index === selectedIndex
                const estimatedCost = calculateEstimatedCost(alternative.distance, profile)
 
