@@ -21,7 +21,6 @@ import {
   Alert,
   Animated,
   GestureResponderEvent,
-  Modal,
   PanResponder,
   PanResponderGestureState,
   Pressable,
@@ -574,13 +573,8 @@ export default function MapScreen() {
         onNavigateToRestaurant={handleNavigateToRestaurant}
       />
 
-      {/* Map Style Selection Modal */}
-      <Modal
-        visible={mapStyleModalVisible}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setMapStyleModalVisible(false)}
-      >
+      {/* Map Style Selection Overlay (replacing Modal to avoid type issues) */}
+      {mapStyleModalVisible && (
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
@@ -619,7 +613,7 @@ export default function MapScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      )}
     </View>
   )
 }

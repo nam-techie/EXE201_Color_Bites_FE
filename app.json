@@ -41,7 +41,8 @@
         {
           "locationWhenInUsePermission": "We need your location to show it on the map!"
         }
-      ]
+      ],
+      "@maplibre/maplibre-react-native"
     ],
     "updates": {
       "enabled": false
