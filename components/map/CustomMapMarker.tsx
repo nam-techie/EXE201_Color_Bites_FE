@@ -3,9 +3,9 @@
 import { getCuisineIcon } from '@/services/MapService'
 import type { Restaurant } from '@/type/location'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+import MapLibreGL from '@maplibre/maplibre-react-native'
 import { useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
-import { Marker } from 'react-native-maps'
 
 interface Props {
    restaurant: Restaurant
@@ -49,11 +49,10 @@ export default function CustomMarker({
    }
 
    return (
-      <Marker
-         coordinate={{ latitude: restaurant.lat, longitude: restaurant.lon }}
-         onPress={handlePress}
-         anchor={{ x: 0.5, y: 1 }}
-         centerOffset={{ x: 0, y: -markerSize / 2 }}
+      <MapLibreGL.PointAnnotation
+         id={String(restaurant.id)}
+         coordinate={[restaurant.lon, restaurant.lat]}
+         onSelected={handlePress}
       >
          <View style={styles.container}>
             {showDistance && distance && (
@@ -76,7 +75,7 @@ export default function CustomMarker({
                ]}
             >
                <MaterialCommunityIcons
-                  name={iconName}
+                  name={iconName as keyof typeof MaterialCommunityIcons.glyphMap}
                   size={isSelected ? 24 : 20}
                   color={isSelected ? '#2563EB' : iconColor}
                />
@@ -98,7 +97,7 @@ export default function CustomMarker({
                </View>
             )}
          </View>
-      </Marker>
+      </MapLibreGL.PointAnnotation>
    )
 }
 

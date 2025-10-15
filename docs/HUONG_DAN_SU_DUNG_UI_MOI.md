@@ -100,15 +100,7 @@ Các nút tròn nhanh:
 
 ## ⚙️ Cấu Hình
 
-API key đã được setup trong `.env`:
-```
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_api_key_here
-```
-
-Map provider trong `constants/index.ts`:
-```typescript
-export const MAP_PROVIDER: 'google' | 'openstreetmap' = 'google'
-```
+Không còn sử dụng Google Maps API key. Map hiện dùng OpenStreetMap/MapLibre.
 
 ## 🧪 Testing
 

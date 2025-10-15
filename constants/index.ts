@@ -128,18 +128,5 @@ export const TRANSPORT_COSTS = {
    'foot-walking': 0,
 } as const
 
-// Google Maps API Key Configuration
-const googleEnvKey = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-const googleExtraKey = (Constants?.expoConfig as any)?.extra?.GOOGLE_MAPS_API_KEY as string | undefined
-export const GOOGLE_MAPS_API_KEY = googleEnvKey || googleExtraKey || ''
-
-// Map Provider Configuration - Now using Google Maps
-export const MAP_PROVIDER: 'google' | 'openstreetmap' = 'google'
-
-// Dev diagnostics for Google Maps key
-if (__DEV__) {
-  const hasGoogleEnv = !!googleEnvKey
-  const hasGoogleExtra = !!googleExtraKey
-  const googleLen = (googleEnvKey || googleExtraKey || '').length
-  console.log('[ENV DEBUG] Google Maps key source:', hasGoogleEnv ? 'env' : hasGoogleExtra ? 'extra' : 'none', 'length:', googleLen)
-}
+// Map Provider Configuration - Use OpenStreetMap/MapLibre
+export const MAP_PROVIDER: 'google' | 'openstreetmap' = 'openstreetmap'

@@ -17,10 +17,7 @@ npm install
 # Backend API
 EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
 
-# Google Maps API Key (Bắt buộc)
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_api_key_here
-
-# OpenRouteService API Key (Tùy chọn - dùng khi muốn dùng OpenStreetMap)
+# OpenRouteService API Key (tuỳ chọn)
 EXPO_PUBLIC_OPENROUTE_API_KEY=your_openroute_key_here
 ```
 

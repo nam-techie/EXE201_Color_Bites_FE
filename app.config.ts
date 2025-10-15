@@ -12,23 +12,18 @@ export default {
     userInterfaceStyle: "automatic",
     android: {
       package: "com.phuongnam.mumii",
-      newArchEnabled: false,
+      newArchEnabled: true,
       adaptiveIcon: {
         foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
-        monochromeImage: "./assets/images/adaptive-icon-mono.png"
+        
       },
       edgeToEdgeEnabled: true,
       permissions: [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.INTERNET"
-      ],
-      config: {
-        googleMaps: {
-          apiKey: process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY
-        }
-      }
+      ]
     },
     web: {
       favicon: "./assets/images/favicon.png"
@@ -48,6 +43,17 @@ export default {
         "expo-location",
         {
           locationWhenInUsePermission: "We need your location to show it on the map!"
+        }
+      ],
+      [
+        "@maplibre/maplibre-react-native",
+        {
+          "android": {
+            "enableMapLibre": true
+          },
+          "ios": {
+            "enableMapLibre": true
+          }
         }
       ]
     ],

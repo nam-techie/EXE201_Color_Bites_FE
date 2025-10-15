@@ -15,7 +15,7 @@ Bạn có thể dễ dàng **chuyển đổi** giữa **Google Maps** và **Open
 Tạo file `.env` trong thư mục root:
 
 ```env
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=YOUR_API_KEY_HERE
+; (deprecated) EXPO_PUBLIC_GOOGLE_MAPS_API_KEY removed
 ```
 
 **👉 Xem chi tiết**: `HOW_TO_ADD_YOUR_API_KEY.md`
@@ -180,7 +180,7 @@ console.log(provider) // 'google' hoặc 'openstreetmap'
 **Giải pháp**: Tạo file `.env` và thêm API key
 
 ```env
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_key_here
+; (deprecated) EXPO_PUBLIC_GOOGLE_MAPS_API_KEY removed
 ```
 
 ### Lỗi: "REQUEST_DENIED"
@@ -206,7 +206,7 @@ export const MAP_PROVIDER = 'openstreetmap'
 ### Setup
 - [ ] Đọc `HOW_TO_ADD_YOUR_API_KEY.md`
 - [ ] Tạo file `.env`
-- [ ] Thêm `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`
+- [ ] (removed) `EXPO_PUBLIC_GOOGLE_MAPS_API_KEY`
 - [ ] Restart server
 
 ### Testing

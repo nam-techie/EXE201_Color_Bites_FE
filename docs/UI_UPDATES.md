@@ -124,13 +124,9 @@ Sử dụng qua MapProvider.getDirections()
 - Tự động chọn giữa Google Directions hoặc OpenRouteService
 - Dựa vào `MAP_PROVIDER` constant
 
-## 🔑 Cấu hình API Key
+## 🔑 Cấu hình Map
 
-API key đã được cấu hình trong `constants/index.ts`:
-```typescript
-export const GOOGLE_MAPS_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY || ''
-export const MAP_PROVIDER: 'google' | 'openstreetmap' = 'google'
-```
+Không yêu cầu Google Maps API key. Provider mặc định: OpenStreetMap/MapLibre.
 
 ### APIs cần enable trong Google Cloud Console:
 1. ✅ Maps SDK for Android

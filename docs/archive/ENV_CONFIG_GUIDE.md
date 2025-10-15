@@ -3,7 +3,6 @@
 ## 📋 Tổng quan
 
 File này hướng dẫn cách cấu hình các API keys cho Color Bites app, bao gồm:
-- Google Maps API Key
 - OpenRouteService API Key
 - Backend API URL
 
@@ -22,73 +21,28 @@ Hoặc tạo file `.env` mới trong thư mục root với nội dung:
 # Backend API
 EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
 
-# Google Maps API Key
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
-
 # OpenRouteService API Key (Fallback)
 EXPO_PUBLIC_OPENROUTE_API_KEY=your_openroute_api_key_here
 ```
 
 ---
 
-## 🗺️ Bước 2: Lấy Google Maps API Key
+## 🛣️ Bước 2: Lấy OpenRouteService API Key (Optional)
 
-### 2.1. Truy cập Google Cloud Console
-
-1. Vào: https://console.cloud.google.com/
-2. Đăng nhập với tài khoản Google
-3. Tạo project mới hoặc chọn project có sẵn
-
-### 2.2. Enable APIs
-
-Vào **APIs & Services** > **Library**, tìm và enable các APIs sau:
-
-- ✅ **Maps SDK for Android**
-- ✅ **Maps SDK for iOS**
-- ✅ **Places API** (Nearby Search)
-- ✅ **Directions API**
-
-### 2.3. Tạo API Key
-
-1. Vào **APIs & Services** > **Credentials**
-2. Click **Create Credentials** > **API Key**
-3. Copy API key được tạo
-
-### 2.4. Bảo mật API Key (Khuyến nghị)
-
-1. Click **Restrict Key** bên cạnh API key vừa tạo
-2. **Application restrictions**:
-   - Chọn **Android apps** hoặc **iOS apps**
-   - Thêm package name: `com.yourcompany.colorbites`
-3. **API restrictions**:
-   - Chọn **Restrict key**
-   - Chọn 4 APIs đã enable ở trên
-4. Click **Save**
-
-### 2.5. Paste vào .env
-
-```env
-EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
-
----
-
-## 🛣️ Bước 3: Lấy OpenRouteService API Key (Optional)
-
-### 3.1. Đăng ký tài khoản
+### 2.1. Đăng ký tài khoản
 
 1. Vào: https://openrouteservice.org/dev/#/signup
 2. Đăng ký tài khoản miễn phí
 3. Xác nhận email
 
-### 3.2. Tạo API Token
+### 2.2. Tạo API Token
 
 1. Đăng nhập vào Dashboard
 2. Click **Request a token**
 3. Đặt tên cho token (ví dụ: "Color Bites App")
 4. Copy token
 
-### 3.3. Paste vào .env
+### 2.3. Paste vào .env
 
 ```env
 EXPO_PUBLIC_OPENROUTE_API_KEY=5b3ce3597851110001cf6248XXXXXXXXXXXXXXXXXXXXXXXX
@@ -98,7 +52,7 @@ EXPO_PUBLIC_OPENROUTE_API_KEY=5b3ce3597851110001cf6248XXXXXXXXXXXXXXXXXXXXXXXX
 
 ---
 
-## 🔄 Bước 4: Restart Expo Dev Server
+## 🔄 Bước 3: Restart Expo Dev Server
 
 Sau khi cấu hình xong, restart server:
 
@@ -110,47 +64,27 @@ npm start
 
 ---
 
-## ✅ Bước 5: Kiểm tra cấu hình
+## ✅ Bước 4: Kiểm tra cấu hình
 
 Khi app khởi động, kiểm tra console log:
 
 ```
-[ENV DEBUG] Google Maps key source: env length: 39
-[ENV DEBUG] Map provider: google
-[MapProvider] Initialized with Google Maps API
-========================================
-[MapProvider] Current Provider: Google Maps
-[MapProvider] Status: ✅ Configured
-========================================
+[ENV DEBUG] Map provider: openstreetmap
 ```
 
-Nếu thấy `❌ Not Configured`, kiểm tra lại các bước trên.
+Nếu thấy log cảnh báo env, kiểm tra lại các bước trên.
 
 ---
 
 ## 🔀 Chuyển đổi giữa Google Maps và OpenStreetMap
 
-### Cách 1: Thay đổi trong code (Khuyến nghị)
-
-Mở file `constants/index.ts`, tìm dòng 40:
+Mở file `constants/index.ts`:
 
 ```typescript
-// Đổi từ 'google' sang 'openstreetmap'
 export const MAP_PROVIDER: 'google' | 'openstreetmap' = 'openstreetmap'
 ```
 
 Restart app.
-
-### Cách 2: Thay đổi runtime (Advanced)
-
-Trong code, có thể gọi:
-
-```typescript
-import { MapProvider } from '@/services/MapProvider'
-
-// Check provider hiện tại
-console.log(MapProvider.getProvider()) // 'google' hoặc 'openstreetmap'
-```
 
 ---
 
