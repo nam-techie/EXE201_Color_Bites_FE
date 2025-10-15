@@ -111,6 +111,7 @@ export const API_ENDPOINTS = {
      CREATE: '/api/payment/subscription/create',
      STATUS: '/api/payment/subscription/status',
      CONFIRM: '/api/payment/subscription/confirm',
+     HISTORY: '/api/payment/history',
   },
 }
 

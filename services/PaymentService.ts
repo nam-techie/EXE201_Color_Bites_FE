@@ -40,6 +40,28 @@ export interface PaymentStatusResponse {
   updatedAt: string
 }
 
+// Payment History Types
+export interface PaymentHistoryItem {
+  id: string
+  orderCode: number
+  amount: number
+  description: string
+  status: 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED'
+  gatewayName: string
+  createdAt: string
+  updatedAt: string
+  subscriptionPlan?: string
+  subscriptionDuration?: number // days
+}
+
+export interface PaymentHistoryResponse {
+  content: PaymentHistoryItem[]
+  totalElements: number
+  totalPages: number
+  currentPage: number
+  size: number
+}
+
 export class PaymentService {
   /**
    * Tạo thanh toán subscription
@@ -150,6 +172,51 @@ export class PaymentService {
       throw new Error(response.message || 'Không thể xác nhận thanh toán thủ công')
     } catch (error) {
       console.error('❌ Manual confirmation failed:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Lấy lịch sử giao dịch của user hiện tại
+   * Endpoint: GET /api/payment/history
+   */
+  async getUserTransactionHistory(): Promise<PaymentStatusResponse[]> {
+    try {
+      console.log('🔗 Calling API:', API_ENDPOINTS.PAYMENT.HISTORY)
+      
+      const response = await apiService.get<any>(
+        API_ENDPOINTS.PAYMENT.HISTORY
+      )
+      
+      console.log('📋 Raw API Response:', JSON.stringify(response, null, 2))
+      
+      // Try different response formats
+      if (response.status === 200) {
+        let data: PaymentStatusResponse[] = []
+        
+        // Format 1: response.data is array directly
+        if (Array.isArray(response.data)) {
+          data = response.data
+        }
+        // Format 2: response.data.data is array
+        else if (response.data && Array.isArray(response.data.data)) {
+          data = response.data.data
+        }
+        // Format 3: response is array directly
+        else if (Array.isArray(response)) {
+          data = response
+        }
+        
+        if (data.length > 0) {
+          console.log('✅ Success - Data count:', data.length)
+          return data
+        }
+      }
+      
+      console.error('❌ API Error - Status:', response.status, 'Message:', response.message)
+      throw new Error(response.message || 'Không thể lấy lịch sử giao dịch')
+    } catch (error) {
+      console.error('❌ Error fetching user transaction history:', error)
       throw error
     }
   }

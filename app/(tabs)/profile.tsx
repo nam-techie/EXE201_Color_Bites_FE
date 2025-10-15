@@ -4,7 +4,7 @@ import PaymentWebView from '@/components/common/PaymentWebView'
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
-import { paymentService } from '@/services/PaymentService'
+import { paymentService, type PaymentHistoryItem } from '@/services/PaymentService'
 import { postService } from '@/services/PostService'
 import { userService, type UserInformationResponse } from '@/services/UserService'
 import type { PostResponse } from '@/type'
@@ -102,10 +102,8 @@ function normalizePost(p: any): PostResponse {
 
 export default function ProfileScreen() {
    const router = useRouter()
-   const [activeTab, setActiveTab] = useState('grid') // 'grid' for posts with images, 'text' for posts without images
    const { user, logout } = useAuth()
    const [posts, setPosts] = useState<PostResponse[]>([])
-   const [isLoading, setIsLoading] = useState(true)
    const [isRefreshing, setIsRefreshing] = useState(false)
    const [userInfo, setUserInfo] = useState<UserInformationResponse | null>(null)
    const [userStats, setUserStats] = useState({
@@ -121,26 +119,21 @@ export default function ProfileScreen() {
    const [isCreatingPayment, setIsCreatingPayment] = useState(false)
    const [showPaymentWebView, setShowPaymentWebView] = useState(false)
    const [paymentCheckoutUrl, setPaymentCheckoutUrl] = useState('')
+   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([])
+   const [isLoadingPaymentHistory, setIsLoadingPaymentHistory] = useState(false)
+   const [showPaymentHistory, setShowPaymentHistory] = useState(false)
 
    // Filter posts based on whether they have images or not
    const postsWithImages = posts.filter(post => post.imageUrls && post.imageUrls.length > 0)
-   const postsWithoutImages = posts.filter(post => !post.imageUrls || post.imageUrls.length === 0)
 
    // Load user posts from API
    const loadUserPosts = useCallback(async () => {
       try {
-         setIsLoading(true)
-         console.log('🔍 Loading user posts...')
          const response = await postService.getUserPosts(1, 50) // Get more posts for profile
          
          if (response.content && response.content.length > 0) {
-            console.log('📝 Raw API response:', JSON.stringify(response.content, null, 2))
-            
             // Normalize data trước khi set vào state
             const normalizedPosts = response.content.map(normalizePost)
-            console.log('✅ Normalized posts:', normalizedPosts.length, 'posts')
-            console.log('🖼️ Posts with images:', normalizedPosts.filter(p => p.imageUrls && p.imageUrls.length > 0).length)
-            console.log('📄 Posts without images:', normalizedPosts.filter(p => !p.imageUrls || p.imageUrls.length === 0).length)
             
             setPosts(normalizedPosts)
             setUserStats(prev => ({
@@ -149,7 +142,6 @@ export default function ProfileScreen() {
             }))
          } else {
             // Fallback với mock data để test layout
-            console.log('⚠️ No posts from API, using mock data for testing')
             const mockPosts: PostResponse[] = [
                {
                   id: '1',
@@ -217,14 +209,13 @@ export default function ProfileScreen() {
             }))
          }
       } catch (error) {
-         console.error('❌ Error loading user posts:', error)
+         console.error('Error loading user posts:', error)
          Toast.show({
             type: 'error',
             text1: 'Lỗi',
             text2: 'Không thể tải bài viết của bạn',
          })
       } finally {
-         setIsLoading(false)
          setIsRefreshing(false)
       }
    }, [user?.avatar, user?.id, user?.name])
@@ -232,25 +223,87 @@ export default function ProfileScreen() {
    // Load user profile data from API
    const loadUserProfile = useCallback(async () => {
       try {
-         console.log('👤 Loading user profile data...')
          const profileData = await userService.getUserInformation()
          setUserInfo(profileData)
-         console.log('✅ User profile loaded:', {
-            username: profileData.username,
-            gender: profileData.gender,
-            avatarUrl: profileData.avatarUrl,
-            bio: profileData.bio,
-            subscriptionPlan: profileData.subscriptionPlan
-         })
       } catch (error) {
-         console.error('❌ Error loading user profile:', error)
+         console.error('Error loading user profile:', error)
          // Keep userInfo as null to use fallback data
+      }
+   }, [])
+
+   // Load payment history from API
+   const loadPaymentHistory = useCallback(async () => {
+      try {
+         setIsLoadingPaymentHistory(true)
+         
+         const transactionHistory = await paymentService.getUserTransactionHistory()
+         
+         // Convert PaymentStatusResponse[] to PaymentHistoryItem[]
+         const convertedHistory: PaymentHistoryItem[] = transactionHistory.map((transaction, index) => ({
+            id: transaction.transactionId || `txn_${index}`,
+            orderCode: transaction.orderCode,
+            amount: transaction.amount,
+            description: transaction.description,
+            status: transaction.status as 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED',
+            gatewayName: transaction.gatewayName,
+            createdAt: transaction.createdAt,
+            updatedAt: transaction.updatedAt,
+            subscriptionPlan: 'PREMIUM', // Default value
+            subscriptionDuration: 30 // Default value
+         }))
+         
+         setPaymentHistory(convertedHistory)
+         
+      } catch (error) {
+         console.error('Error loading payment history:', error)
+         
+         // Mock data for testing UI when API is not ready
+         const mockPaymentHistory: PaymentHistoryItem[] = [
+            {
+               id: '1',
+               orderCode: 123456789,
+               amount: 36000,
+               description: 'Premium Color Bites',
+               status: 'SUCCESS',
+               gatewayName: 'PayOS',
+               createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+               updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+               subscriptionPlan: 'PREMIUM',
+               subscriptionDuration: 30
+            },
+            {
+               id: '2',
+               orderCode: 123456788,
+               amount: 36000,
+               description: 'Premium Color Bites',
+               status: 'PENDING',
+               gatewayName: 'PayOS',
+               createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+               updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+               subscriptionPlan: 'PREMIUM',
+               subscriptionDuration: 30
+            },
+            {
+               id: '3',
+               orderCode: 123456787,
+               amount: 36000,
+               description: 'Premium Color Bites',
+               status: 'FAILED',
+               gatewayName: 'PayOS',
+               createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+               updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+               subscriptionPlan: 'PREMIUM',
+               subscriptionDuration: 30
+            }
+         ]
+         setPaymentHistory(mockPaymentHistory)
+      } finally {
+         setIsLoadingPaymentHistory(false)
       }
    }, [])
 
    // Handle back to profile view
    const handleBackToProfile = useCallback(() => {
-      console.log('⬅️ Back to profile view')
       setViewMode('profile')
       setSelectedPostForList(null)
    }, [])
@@ -259,15 +312,15 @@ export default function ProfileScreen() {
    useEffect(() => {
       loadUserPosts()
       loadUserProfile()
-   }, [loadUserPosts, loadUserProfile])
+      loadPaymentHistory()
+   }, [loadUserPosts, loadUserProfile, loadPaymentHistory])
 
    // Handle tab focus - reset to profile view when tab is pressed
    useFocusEffect(
       useCallback(() => {
          // Only reset if we're coming from another tab, not from internal navigation
-         console.log('📱 Profile tab focused, current viewMode:', viewMode)
          // Don't auto-reset to profile view here, let user control it
-      }, [viewMode])
+      }, [])
    )
 
    // Handle Android back button when in list view
@@ -275,7 +328,6 @@ export default function ProfileScreen() {
       useCallback(() => {
          const onBackPress = () => {
             if (viewMode === 'list') {
-               console.log('⬅️ Android back button pressed - returning to profile view')
                handleBackToProfile()
                return true // Prevent default back action
             }
@@ -292,15 +344,9 @@ export default function ProfileScreen() {
       setIsRefreshing(true)
       loadUserPosts()
       loadUserProfile()
-   }, [loadUserPosts, loadUserProfile])
+      loadPaymentHistory()
+   }, [loadUserPosts, loadUserProfile, loadPaymentHistory])
 
-   // Handle post click to switch to list view
-   const handlePostClick = useCallback((post: PostResponse) => {
-      console.log('🖼️ Post clicked, switching to list view:', post.id, 'Current viewMode:', viewMode)
-      setSelectedPostForList(post)
-      setViewMode('list')
-      console.log('✅ ViewMode set to list, selectedPost:', post.id)
-   }, [viewMode])
 
    const handleLogout = async () => {
       Alert.alert(
@@ -328,15 +374,12 @@ export default function ProfileScreen() {
    const handleCreatePayment = async () => {
       try {
          setIsCreatingPayment(true)
-         console.log('🚀 Bắt đầu tạo thanh toán Premium...')
          
          // Tạo payment request
          const paymentRequest = paymentService.createPremiumPaymentRequest()
-         console.log('📝 Payment request:', paymentRequest)
          
          // Gọi API tạo thanh toán
          const paymentResponse = await paymentService.createSubscriptionPayment(paymentRequest)
-         console.log('✅ Payment created successfully:', paymentResponse)
          
          // Đóng modal premium
          setShowPremiumModal(false)
@@ -345,10 +388,8 @@ export default function ProfileScreen() {
          setPaymentCheckoutUrl(paymentResponse.checkoutUrl)
          setShowPaymentWebView(true)
          
-         console.log('🔗 Opening payment WebView with URL:', paymentResponse.checkoutUrl)
-         
       } catch (error) {
-         console.error('❌ Error creating payment:', error)
+         console.error('Error creating payment:', error)
          setIsCreatingPayment(false)
          
          Alert.alert(
@@ -363,15 +404,12 @@ export default function ProfileScreen() {
 
    // Handle payment WebView close
    const handlePaymentWebViewClose = useCallback(() => {
-      console.log('🚪 Closing payment WebView')
       setShowPaymentWebView(false)
       setPaymentCheckoutUrl('')
    }, [])
 
    // Handle payment success
    const handlePaymentSuccess = useCallback(() => {
-      console.log('🎉 Payment success callback triggered')
-      
       // Refresh user profile để cập nhật subscription status
       loadUserProfile()
       
@@ -384,15 +422,11 @@ export default function ProfileScreen() {
 
    // Handle payment cancel
    const handlePaymentCancel = useCallback(() => {
-      console.log('🚫 Payment cancel callback triggered')
-      
       // Đóng WebView
       handlePaymentWebViewClose()
    }, [handlePaymentWebViewClose])
 
    // Render list view when a post is selected
-   console.log('🔍 Current viewMode:', viewMode, 'selectedPostForList:', selectedPostForList?.id)
-   
    if (viewMode === 'list') {
       return (
          <SafeAreaView style={styles.container}>
@@ -617,6 +651,13 @@ export default function ProfileScreen() {
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#6B7280" />
                </TouchableOpacity>
+               <TouchableOpacity style={styles.quickItem} onPress={() => setShowPaymentHistory(true)} activeOpacity={0.8}>
+                  <View style={styles.quickLeft}>
+                     <Ionicons name="card-outline" size={18} color="#111827" />
+                     <Text style={styles.quickTextDark}>Lịch sử thanh toán</Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={16} color="#6B7280" />
+               </TouchableOpacity>
                <TouchableOpacity style={[styles.quickItem, { borderBottomWidth: 0 }]} onPress={handleLogout} activeOpacity={0.8}>
                   <View style={styles.quickLeft}>
                      <Ionicons name="log-out-outline" size={18} color="#DC2626" />
@@ -784,6 +825,133 @@ export default function ProfileScreen() {
             </View>
          </Modal>
 
+         {/* Payment History Modal - Full Screen */}
+         <Modal
+            visible={showPaymentHistory}
+            transparent={false}
+            animationType="slide"
+            onRequestClose={() => setShowPaymentHistory(false)}
+         >
+            <SafeAreaView style={styles.fullScreenModalContainer}>
+               {/* Modal Header */}
+               <View style={styles.fullScreenModalHeader}>
+                  <TouchableOpacity
+                     onPress={() => setShowPaymentHistory(false)}
+                     style={styles.fullScreenModalBackButton}
+                  >
+                     <Ionicons name="arrow-back" size={24} color="#111827" />
+                  </TouchableOpacity>
+                  <Text style={styles.fullScreenModalTitle}>Lịch sử thanh toán</Text>
+                  <View style={styles.fullScreenModalHeaderSpacer} />
+               </View>
+
+               {/* Payment History Content */}
+               <ScrollView 
+                  style={styles.fullScreenModalContent}
+                  contentContainerStyle={styles.fullScreenModalContentContainer}
+                  showsVerticalScrollIndicator={false}
+               >
+                  {isLoadingPaymentHistory ? (
+                     <View style={styles.fullScreenLoadingContainer}>
+                        <ActivityIndicator size="large" color="#F97316" />
+                        <Text style={styles.fullScreenLoadingText}>Đang tải lịch sử...</Text>
+                     </View>
+                  ) : paymentHistory.length === 0 ? (
+                     <View style={styles.fullScreenEmptyState}>
+                        <View style={styles.fullScreenEmptyStateIcon}>
+                           <Ionicons name="card-outline" size={64} color="#9CA3AF" />
+                        </View>
+                        <Text style={styles.fullScreenEmptyStateTitle}>Chưa có lịch sử thanh toán</Text>
+                        <Text style={styles.fullScreenEmptyStateSubtitle}>
+                           Các giao dịch của bạn sẽ hiển thị ở đây
+                        </Text>
+                     </View>
+                  ) : (
+                     <View style={styles.fullScreenPaymentList}>
+                        {paymentHistory.map((payment, index) => (
+                           <View key={payment.id} style={styles.fullScreenPaymentItem}>
+                              {/* Payment Header */}
+                              <View style={styles.fullScreenPaymentHeader}>
+                                 <View style={styles.fullScreenPaymentLeft}>
+                                    <View style={styles.fullScreenPaymentIconContainer}>
+                                       <Ionicons 
+                                          name="card" 
+                                          size={20} 
+                                          color={payment.status === 'SUCCESS' ? '#10B981' : 
+                                                payment.status === 'PENDING' ? '#F59E0B' : 
+                                                payment.status === 'FAILED' ? '#EF4444' : '#6B7280'} 
+                                       />
+                                    </View>
+                                    <View style={styles.fullScreenPaymentInfo}>
+                                       <Text style={styles.fullScreenPaymentTitle}>
+                                          {payment.description}
+                                       </Text>
+                                       <Text style={styles.fullScreenPaymentOrderCode}>
+                                          Mã đơn: {payment.orderCode}
+                                       </Text>
+                                    </View>
+                                 </View>
+                                 <View style={styles.fullScreenPaymentRight}>
+                                    <Text style={styles.fullScreenPaymentAmount}>
+                                       {payment.amount.toLocaleString('vi-VN')}đ
+                                    </Text>
+                                    <View style={[
+                                       styles.fullScreenPaymentStatusBadge,
+                                       payment.status === 'SUCCESS' && styles.fullScreenPaymentStatusSuccess,
+                                       payment.status === 'PENDING' && styles.fullScreenPaymentStatusPending,
+                                       payment.status === 'FAILED' && styles.fullScreenPaymentStatusFailed,
+                                       payment.status === 'CANCELLED' && styles.fullScreenPaymentStatusCancelled,
+                                    ]}>
+                                       <Text style={[
+                                          styles.fullScreenPaymentStatusText,
+                                          payment.status === 'SUCCESS' && styles.fullScreenPaymentStatusTextSuccess,
+                                          payment.status === 'PENDING' && styles.fullScreenPaymentStatusTextPending,
+                                          payment.status === 'FAILED' && styles.fullScreenPaymentStatusTextFailed,
+                                          payment.status === 'CANCELLED' && styles.fullScreenPaymentStatusTextCancelled,
+                                       ]}>
+                                          {payment.status === 'SUCCESS' ? 'Thành công' :
+                                           payment.status === 'PENDING' ? 'Đang xử lý' :
+                                           payment.status === 'FAILED' ? 'Thất bại' :
+                                           payment.status === 'CANCELLED' ? 'Đã hủy' : payment.status}
+                                       </Text>
+                                    </View>
+                                 </View>
+                              </View>
+                              
+                              {/* Payment Footer */}
+                              <View style={styles.fullScreenPaymentFooter}>
+                                 <View style={styles.fullScreenPaymentDateContainer}>
+                                    <Ionicons name="time-outline" size={14} color="#6B7280" />
+                                    <Text style={styles.fullScreenPaymentDate}>
+                                       {new Date(payment.createdAt).toLocaleDateString('vi-VN', {
+                                          year: 'numeric',
+                                          month: 'long',
+                                          day: 'numeric',
+                                          hour: '2-digit',
+                                          minute: '2-digit'
+                                       })}
+                                    </Text>
+                                 </View>
+                                 <View style={styles.fullScreenPaymentGatewayContainer}>
+                                    <Ionicons name="card-outline" size={14} color="#6B7280" />
+                                    <Text style={styles.fullScreenPaymentGateway}>
+                                       {payment.gatewayName}
+                                    </Text>
+                                 </View>
+                              </View>
+                              
+                              {/* Divider */}
+                              {index < paymentHistory.length - 1 && (
+                                 <View style={styles.fullScreenPaymentDivider} />
+                              )}
+                           </View>
+                        ))}
+                     </View>
+                  )}
+               </ScrollView>
+            </SafeAreaView>
+         </Modal>
+
          {/* Payment WebView */}
          <PaymentWebView
             visible={showPaymentWebView}
@@ -810,12 +978,11 @@ function PostCard({
       try {
          setIsLiked(!isLiked)
          // You can call postService.toggleReaction(post.id) here
-         console.log('Toggle like for post:', post.id)
       } catch (error) {
          console.error('Error toggling like:', error)
          setIsLiked(isLiked) // Revert on error
       }
-   }, [isLiked, post.id])
+   }, [isLiked])
 
    return (
       <View style={styles.postCard}>
@@ -1685,10 +1852,14 @@ const styles = StyleSheet.create({
     },
     modalHeader: {
        flexDirection: 'row',
-       justifyContent: 'flex-end',
+       alignItems: 'center',
+       justifyContent: 'space-between',
        paddingHorizontal: 16,
        paddingTop: 16,
        paddingBottom: 8,
+    },
+    modalHeaderSpacer: {
+       width: 32,
     },
     modalCloseButton: {
        width: 32,
@@ -1851,5 +2022,329 @@ const styles = StyleSheet.create({
        flex: 1,
        lineHeight: 20,
        textDecorationLine: 'line-through',
+    },
+    // Payment History Modal styles
+    modalTitle: {
+       fontSize: 18,
+       fontWeight: '600',
+       color: '#111827',
+       flex: 1,
+       textAlign: 'center',
+    },
+    paymentHistoryContent: {
+       flex: 1,
+       paddingHorizontal: 16,
+    },
+    paymentHistoryItem: {
+       backgroundColor: '#FFFFFF',
+       borderRadius: 12,
+       padding: 16,
+       marginBottom: 12,
+       borderWidth: 1,
+       borderColor: '#E5E7EB',
+       shadowColor: '#000',
+       shadowOffset: {
+          width: 0,
+          height: 1,
+       },
+       shadowOpacity: 0.05,
+       shadowRadius: 2,
+       elevation: 1,
+    },
+    paymentHistoryHeader: {
+       flexDirection: 'row',
+       justifyContent: 'space-between',
+       alignItems: 'flex-start',
+       marginBottom: 12,
+    },
+    paymentHistoryLeft: {
+       flex: 1,
+       marginRight: 12,
+    },
+    paymentHistoryTitle: {
+       fontSize: 16,
+       fontWeight: '600',
+       color: '#111827',
+       marginBottom: 4,
+    },
+    paymentHistoryOrderCode: {
+       fontSize: 12,
+       color: '#6B7280',
+    },
+    paymentHistoryRight: {
+       alignItems: 'flex-end',
+    },
+    paymentHistoryAmount: {
+       fontSize: 16,
+       fontWeight: '700',
+       color: '#111827',
+       marginBottom: 8,
+    },
+    paymentStatusBadge: {
+       paddingHorizontal: 8,
+       paddingVertical: 4,
+       borderRadius: 6,
+    },
+    paymentStatusSuccess: {
+       backgroundColor: '#D1FAE5',
+    },
+    paymentStatusPending: {
+       backgroundColor: '#FEF3C7',
+    },
+    paymentStatusFailed: {
+       backgroundColor: '#FEE2E2',
+    },
+    paymentStatusCancelled: {
+       backgroundColor: '#F3F4F6',
+    },
+    paymentStatusText: {
+       fontSize: 12,
+       fontWeight: '500',
+    },
+    paymentStatusTextSuccess: {
+       color: '#065F46',
+    },
+    paymentStatusTextPending: {
+       color: '#92400E',
+    },
+    paymentStatusTextFailed: {
+       color: '#DC2626',
+    },
+    paymentStatusTextCancelled: {
+       color: '#6B7280',
+    },
+    paymentHistoryFooter: {
+       flexDirection: 'row',
+       justifyContent: 'space-between',
+       alignItems: 'center',
+       paddingTop: 12,
+       borderTopWidth: 1,
+       borderTopColor: '#F3F4F6',
+    },
+    paymentHistoryDate: {
+       fontSize: 12,
+       color: '#6B7280',
+    },
+    paymentHistoryGateway: {
+       fontSize: 12,
+       color: '#6B7280',
+       fontWeight: '500',
+    },
+    // Full Screen Modal Styles
+    fullScreenModalContainer: {
+       flex: 1,
+       backgroundColor: '#F9FAFB',
+    },
+    fullScreenModalHeader: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       justifyContent: 'space-between',
+       paddingHorizontal: 16,
+       paddingVertical: 12,
+       backgroundColor: '#FFFFFF',
+       borderBottomWidth: 1,
+       borderBottomColor: '#E5E7EB',
+       shadowColor: '#000',
+       shadowOffset: {
+          width: 0,
+          height: 1,
+       },
+       shadowOpacity: 0.05,
+       shadowRadius: 2,
+       elevation: 2,
+    },
+    fullScreenModalBackButton: {
+       width: 40,
+       height: 40,
+       borderRadius: 20,
+       backgroundColor: '#F3F4F6',
+       alignItems: 'center',
+       justifyContent: 'center',
+    },
+    fullScreenModalTitle: {
+       fontSize: 18,
+       fontWeight: '600',
+       color: '#111827',
+       flex: 1,
+       textAlign: 'center',
+    },
+    fullScreenModalHeaderSpacer: {
+       width: 40,
+    },
+    fullScreenModalContent: {
+       flex: 1,
+    },
+    fullScreenModalContentContainer: {
+       paddingBottom: 20,
+    },
+    fullScreenLoadingContainer: {
+       flex: 1,
+       justifyContent: 'center',
+       alignItems: 'center',
+       paddingVertical: 60,
+    },
+    fullScreenLoadingText: {
+       marginTop: 16,
+       fontSize: 16,
+       color: '#6B7280',
+       fontWeight: '500',
+    },
+    fullScreenEmptyState: {
+       flex: 1,
+       justifyContent: 'center',
+       alignItems: 'center',
+       paddingVertical: 60,
+       paddingHorizontal: 32,
+    },
+    fullScreenEmptyStateIcon: {
+       width: 120,
+       height: 120,
+       borderRadius: 60,
+       backgroundColor: '#F3F4F6',
+       alignItems: 'center',
+       justifyContent: 'center',
+       marginBottom: 24,
+    },
+    fullScreenEmptyStateTitle: {
+       fontSize: 20,
+       fontWeight: '600',
+       color: '#111827',
+       marginBottom: 8,
+       textAlign: 'center',
+    },
+    fullScreenEmptyStateSubtitle: {
+       fontSize: 16,
+       color: '#6B7280',
+       textAlign: 'center',
+       lineHeight: 24,
+    },
+    fullScreenPaymentList: {
+       paddingHorizontal: 16,
+       paddingTop: 16,
+    },
+    fullScreenPaymentItem: {
+       backgroundColor: '#FFFFFF',
+       borderRadius: 12,
+       marginBottom: 12,
+       shadowColor: '#000',
+       shadowOffset: {
+          width: 0,
+          height: 1,
+       },
+       shadowOpacity: 0.05,
+       shadowRadius: 3,
+       elevation: 2,
+    },
+    fullScreenPaymentHeader: {
+       flexDirection: 'row',
+       alignItems: 'flex-start',
+       justifyContent: 'space-between',
+       padding: 16,
+       paddingBottom: 12,
+    },
+    fullScreenPaymentLeft: {
+       flexDirection: 'row',
+       alignItems: 'flex-start',
+       flex: 1,
+       marginRight: 12,
+    },
+    fullScreenPaymentIconContainer: {
+       width: 40,
+       height: 40,
+       borderRadius: 20,
+       backgroundColor: '#F3F4F6',
+       alignItems: 'center',
+       justifyContent: 'center',
+       marginRight: 12,
+    },
+    fullScreenPaymentInfo: {
+       flex: 1,
+    },
+    fullScreenPaymentTitle: {
+       fontSize: 16,
+       fontWeight: '600',
+       color: '#111827',
+       marginBottom: 4,
+       lineHeight: 22,
+    },
+    fullScreenPaymentOrderCode: {
+       fontSize: 12,
+       color: '#6B7280',
+       lineHeight: 16,
+    },
+    fullScreenPaymentRight: {
+       alignItems: 'flex-end',
+    },
+    fullScreenPaymentAmount: {
+       fontSize: 18,
+       fontWeight: '700',
+       color: '#111827',
+       marginBottom: 8,
+    },
+    fullScreenPaymentStatusBadge: {
+       paddingHorizontal: 8,
+       paddingVertical: 4,
+       borderRadius: 6,
+    },
+    fullScreenPaymentStatusSuccess: {
+       backgroundColor: '#D1FAE5',
+    },
+    fullScreenPaymentStatusPending: {
+       backgroundColor: '#FEF3C7',
+    },
+    fullScreenPaymentStatusFailed: {
+       backgroundColor: '#FEE2E2',
+    },
+    fullScreenPaymentStatusCancelled: {
+       backgroundColor: '#F3F4F6',
+    },
+    fullScreenPaymentStatusText: {
+       fontSize: 12,
+       fontWeight: '500',
+    },
+    fullScreenPaymentStatusTextSuccess: {
+       color: '#065F46',
+    },
+    fullScreenPaymentStatusTextPending: {
+       color: '#92400E',
+    },
+    fullScreenPaymentStatusTextFailed: {
+       color: '#DC2626',
+    },
+    fullScreenPaymentStatusTextCancelled: {
+       color: '#6B7280',
+    },
+    fullScreenPaymentFooter: {
+       flexDirection: 'row',
+       justifyContent: 'space-between',
+       alignItems: 'center',
+       paddingHorizontal: 16,
+       paddingBottom: 16,
+       paddingTop: 8,
+    },
+    fullScreenPaymentDateContainer: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       flex: 1,
+    },
+    fullScreenPaymentDate: {
+       fontSize: 12,
+       color: '#6B7280',
+       marginLeft: 4,
+    },
+    fullScreenPaymentGatewayContainer: {
+       flexDirection: 'row',
+       alignItems: 'center',
+    },
+    fullScreenPaymentGateway: {
+       fontSize: 12,
+       color: '#6B7280',
+       fontWeight: '500',
+       marginLeft: 4,
+    },
+    fullScreenPaymentDivider: {
+       height: 1,
+       backgroundColor: '#E5E7EB',
+       marginHorizontal: 16,
     },
  })
