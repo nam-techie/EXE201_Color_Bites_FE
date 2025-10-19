@@ -5,15 +5,15 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-   Alert,
-   SafeAreaView,
-   ScrollView,
-   StatusBar,
-   StyleSheet,
-   Text,
-   TextInput,
-   TouchableOpacity,
-   View
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native'
 
 export default function SignUpFormScreen() {
@@ -42,6 +42,8 @@ export default function SignUpFormScreen() {
 
       if (!formData.username.trim()) {
          newErrors.username = 'Vui lòng nhập họ và tên'
+      } else if (formData.username.trim().length < 6) {
+         newErrors.username = 'Họ và tên phải có ít nhất 6 ký tự'
       }
 
       if (!formData.email.trim()) {
@@ -109,6 +111,7 @@ export default function SignUpFormScreen() {
 
    const isFormValid = () => {
       return formData.username.trim() && 
+             formData.username.trim().length >= 6 &&
              formData.email.trim() && 
              formData.password && 
              formData.confirmPassword &&
@@ -155,7 +158,17 @@ export default function SignUpFormScreen() {
                      value={formData.username}
                      onChangeText={(text) => {
                         setFormData({ ...formData, username: text })
-                        if (errors.username) setErrors({ ...errors, username: '' })
+                        
+                        // Real-time validation
+                        const newErrors = { ...errors }
+                        if (!text.trim()) {
+                           newErrors.username = 'Vui lòng nhập họ và tên'
+                        } else if (text.trim().length < 6) {
+                           newErrors.username = 'Họ và tên phải có ít nhất 6 ký tự'
+                        } else {
+                           delete newErrors.username
+                        }
+                        setErrors(newErrors)
                      }}
                      autoCapitalize="words"
                      returnKeyType="next"

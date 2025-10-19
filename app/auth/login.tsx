@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
   StatusBar,
   StyleSheet,
@@ -44,97 +46,103 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color="#111827" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Title */}
-      <Text style={styles.title}>Đăng nhập</Text>
-
-      {/* Content */}
-      <View style={styles.content}>
-        {/* Email */}
-        <View style={styles.inputWrap}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email hoặc tên người dùng"
-            placeholderTextColor="#9AA4B2"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-          />
-        </View>
-
-        {/* Password with eye */}
-        <View style={styles.inputWrap}>
-          <TextInput
-            style={[styles.input, { paddingRight: 44 }]}
-            placeholder="Mật khẩu"
-            placeholderTextColor="#9AA4B2"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPwd}
-          />
-          <TouchableOpacity
-            style={styles.eyeBtn}
-            onPress={() => setShowPwd((v) => !v)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Ionicons
-              name={showPwd ? 'eye' : 'eye-off'}
-              size={20}
-              color="#6B7280"
-            />
+      
+      <KeyboardAvoidingView 
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="arrow-back" size={24} color="#111827" />
           </TouchableOpacity>
         </View>
 
-        {/* Error */}
-        {!!errorMessage && (
-          <View style={styles.errorBox}>
-            <Ionicons name="alert-circle" size={16} color="#DC2626" />
-            <Text style={styles.errorText}>{errorMessage}</Text>
+        {/* Title */}
+        <Text style={styles.title}>Đăng nhập</Text>
+
+        {/* Content */}
+        <View style={styles.content}>
+          {/* Email */}
+          <View style={styles.inputWrap}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email hoặc tên người dùng"
+              placeholderTextColor="#9AA4B2"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
           </View>
-        )}
 
-        {/* Login button */}
-        <TouchableOpacity
-          activeOpacity={0.9}
-          style={[styles.loginBtn, isDisabled && styles.loginBtnDisabled]}
-          disabled={isDisabled}
-          onPress={handleLogin}
-        >
-          <Text
-            style={[styles.loginText, isDisabled && styles.loginTextDisabled]}
+          {/* Password with eye */}
+          <View style={styles.inputWrap}>
+            <TextInput
+              style={[styles.input, { paddingRight: 44 }]}
+              placeholder="Mật khẩu"
+              placeholderTextColor="#9AA4B2"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPwd}
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setShowPwd((v) => !v)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons
+                name={showPwd ? 'eye' : 'eye-off'}
+                size={20}
+                color="#6B7280"
+              />
+            </TouchableOpacity>
+          </View>
+
+          {/* Error */}
+          {!!errorMessage && (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={16} color="#DC2626" />
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          )}
+
+          {/* Login button */}
+          <TouchableOpacity
+            activeOpacity={0.9}
+            style={[styles.loginBtn, isDisabled && styles.loginBtnDisabled]}
+            disabled={isDisabled}
+            onPress={handleLogin}
           >
-            {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
-          </Text>
-        </TouchableOpacity>
+            <Text
+              style={[styles.loginText, isDisabled && styles.loginTextDisabled]}
+            >
+              {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+            </Text>
+          </TouchableOpacity>
 
-        {/* Forgot password */}
-        <TouchableOpacity
-          style={styles.forgotWrap}
-          onPress={() => router.push('/auth/forgot-password')}
-        >
-          <Text style={styles.forgotText}>Quên mật khẩu</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Forgot password */}
+          <TouchableOpacity
+            style={styles.forgotWrap}
+            onPress={() => router.push('/auth/forgot-password')}
+          >
+            <Text style={styles.forgotText}>Quên mật khẩu</Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Bottom Google button (pinned at bottom) */}
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.googleBtn}
-          activeOpacity={0.9}
-          onPress={() => console.log('Google OAuth')}
-        >
-          <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-          <Text style={styles.googleText}>Tiếp tục với Google</Text>
-        </TouchableOpacity>
-      </View>
+        {/* Bottom Google button (pinned at bottom) */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={styles.googleBtn}
+            activeOpacity={0.9}
+            onPress={() => console.log('Google OAuth')}
+          >
+            <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+            <Text style={styles.googleText}>Tiếp tục với Google</Text>
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   )
 }
@@ -145,6 +153,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
+  },
+  keyboardView: {
+    flex: 1,
   },
 
   /* Header */
@@ -254,7 +265,7 @@ const styles = StyleSheet.create({
   /* Bottom Google button */
   bottomBar: {
     paddingHorizontal: 20,
-    paddingBottom: 90,
+    paddingBottom: 30,
     paddingTop: 6,
   },
   googleBtn: {
