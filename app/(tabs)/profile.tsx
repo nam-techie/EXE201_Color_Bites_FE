@@ -1,6 +1,5 @@
 'use client'
 
-import PaymentWebView from '@/components/common/PaymentWebView'
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
@@ -12,23 +11,23 @@ import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
-   ActivityIndicator,
-   Alert,
-   BackHandler,
-   Dimensions,
-   FlatList,
-   Modal,
-   RefreshControl,
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    Dimensions,
+    FlatList,
+    Modal,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native'
-import Toast from 'react-native-toast-message'
 
 const { width } = Dimensions.get('window')
 
@@ -123,8 +122,81 @@ export default function ProfileScreen() {
    const [isLoadingPaymentHistory, setIsLoadingPaymentHistory] = useState(false)
    const [showPaymentHistory, setShowPaymentHistory] = useState(false)
 
-   // Filter posts based on whether they have images or not
-   const postsWithImages = posts.filter(post => post.imageUrls && post.imageUrls.length > 0)
+   // Filter states
+   const [showFilters, setShowFilters] = useState(false)
+   const [selectedImageFilter, setSelectedImageFilter] = useState<'all' | 'with-images' | 'text-only'>('all')
+   const [selectedTimeFilter, setSelectedTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
+   const [searchQuery, setSearchQuery] = useState('')
+   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest')
+   
+   // Applied filters (what's actually being used)
+   const [appliedImageFilter, setAppliedImageFilter] = useState<'all' | 'with-images' | 'text-only'>('all')
+   const [appliedTimeFilter, setAppliedTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
+   const [appliedSearchQuery, setAppliedSearchQuery] = useState('')
+   const [appliedSortBy, setAppliedSortBy] = useState<'newest' | 'oldest'>('newest')
+
+   // Filter and sort posts
+   const filteredAndSortedPosts = useMemo(() => {
+      let filteredPosts = [...posts]
+
+      // Filter by image type
+      if (appliedImageFilter === 'with-images') {
+         filteredPosts = filteredPosts.filter(post => post.imageUrls && post.imageUrls.length > 0)
+      } else if (appliedImageFilter === 'text-only') {
+         filteredPosts = filteredPosts.filter(post => !post.imageUrls || post.imageUrls.length === 0)
+      }
+
+      // Filter by time
+      if (appliedTimeFilter !== 'all') {
+         const now = new Date()
+         const filterDate = new Date()
+         
+         switch (appliedTimeFilter) {
+            case 'today':
+               filterDate.setHours(0, 0, 0, 0)
+               break
+            case 'week':
+               filterDate.setDate(now.getDate() - 7)
+               filterDate.setHours(0, 0, 0, 0)
+               break
+            case 'month':
+               filterDate.setMonth(now.getMonth() - 1)
+               filterDate.setHours(0, 0, 0, 0)
+               break
+         }
+         
+         filteredPosts = filteredPosts.filter(post => {
+            const postDate = new Date(post.createdAt)
+            return postDate >= filterDate
+         })
+      }
+
+      // Filter by search query
+      if (appliedSearchQuery.trim()) {
+         const query = appliedSearchQuery.toLowerCase()
+         filteredPosts = filteredPosts.filter(post => 
+            post.content.toLowerCase().includes(query) ||
+            post.tags.some(tag => tag.name.toLowerCase().includes(query))
+         )
+      }
+
+      // Sort posts
+      filteredPosts.sort((a, b) => {
+         switch (appliedSortBy) {
+            case 'newest':
+               return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            case 'oldest':
+               return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            default:
+               return 0
+         }
+      })
+
+      return filteredPosts
+   }, [posts, appliedImageFilter, appliedTimeFilter, appliedSearchQuery, appliedSortBy])
+
+   // All user posts (both with and without images)
+   const allUserPosts = filteredAndSortedPosts
 
    // Load user posts from API
    const loadUserPosts = useCallback(async () => {
@@ -441,29 +513,268 @@ export default function ProfileScreen() {
                   >
                      <Ionicons name="arrow-back" size={24} color="#111827" />
                   </TouchableOpacity>
-                  <Text style={styles.headerTitle}>Bài viết ({postsWithImages.length})</Text>
+                  <Text style={styles.headerTitle}>Bài viết ({allUserPosts.length})</Text>
                   <View style={styles.headerSpacer} />
                </View>
             </View>
 
-            {/* Back to Profile Button */}
-            <TouchableOpacity 
-               style={styles.backToProfileButton}
-               onPress={handleBackToProfile}
-               activeOpacity={0.8}
-            >
-               <Ionicons name="grid-outline" size={16} color="#F97316" />
-               <Text style={styles.backToProfileText}>Quay về Profile</Text>
-            </TouchableOpacity>
 
-            {/* List of posts starting from selected post */}
+            {/* Enhanced Filter and Search Bar */}
+            <View style={styles.filterContainer}>
+               {/* Search Bar */}
+               <View style={styles.searchContainer}>
+                  <Ionicons name="search-outline" size={18} color="#6B7280" />
+                  <TextInput
+                     style={styles.searchInput}
+                     placeholder="Tìm kiếm bài viết..."
+                     value={searchQuery}
+                     onChangeText={setSearchQuery}
+                     placeholderTextColor="#9CA3AF"
+                  />
+                  {searchQuery.length > 0 && (
+                     <TouchableOpacity onPress={() => setSearchQuery('')}>
+                        <Ionicons name="close-circle" size={18} color="#6B7280" />
+                     </TouchableOpacity>
+                  )}
+               </View>
+
+               {/* Filter Toggle Button */}
+            <TouchableOpacity 
+                  style={[styles.filterToggleButton, showFilters && styles.filterToggleButtonActive]}
+                  onPress={() => setShowFilters(!showFilters)}
+                  activeOpacity={0.7}
+               >
+                  <Ionicons name="options-outline" size={18} color={showFilters ? "#FFFFFF" : "#F97316"} />
+                  <Text style={[styles.filterToggleText, showFilters && styles.filterToggleTextActive]}>
+                     Bộ lọc
+                  </Text>
+                  <Ionicons 
+                     name={showFilters ? "chevron-up" : "chevron-down"} 
+                     size={14} 
+                     color={showFilters ? "#FFFFFF" : "#F97316"} 
+                  />
+            </TouchableOpacity>
+            </View>
+
+            {/* Active Filters Summary */}
+            {(appliedImageFilter !== 'all' || appliedTimeFilter !== 'all' || appliedSearchQuery.length > 0 || appliedSortBy !== 'newest') && (
+               <View style={styles.activeFiltersContainer}>
+                  <Text style={styles.activeFiltersTitle}>Bộ lọc đang áp dụng:</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activeFiltersScroll}>
+                     {appliedImageFilter !== 'all' && (
+                        <View style={styles.activeFilterTag}>
+                           <Text style={styles.activeFilterText}>
+                              {appliedImageFilter === 'with-images' ? 'Có ảnh' : 'Chỉ text'}
+                           </Text>
+                           <TouchableOpacity onPress={() => {
+                              setAppliedImageFilter('all')
+                              setSelectedImageFilter('all')
+                           }}>
+                              <Ionicons name="close" size={14} color="#6B7280" />
+                           </TouchableOpacity>
+                        </View>
+                     )}
+                     {appliedTimeFilter !== 'all' && (
+                        <View style={styles.activeFilterTag}>
+                           <Text style={styles.activeFilterText}>
+                              {appliedTimeFilter === 'today' ? 'Hôm nay' : 
+                                  appliedTimeFilter === 'week' ? 'Tuần này' : 
+                                  appliedTimeFilter === 'month' ? 'Tháng này' : appliedTimeFilter}
+                           </Text>
+                           <TouchableOpacity onPress={() => {
+                              setAppliedTimeFilter('all')
+                              setSelectedTimeFilter('all')
+                           }}>
+                              <Ionicons name="close" size={14} color="#6B7280" />
+                           </TouchableOpacity>
+                        </View>
+                     )}
+                     {appliedSearchQuery.length > 0 && (
+                        <View style={styles.activeFilterTag}>
+                           <Text style={styles.activeFilterText}>
+                              "{appliedSearchQuery}"
+                           </Text>
+                           <TouchableOpacity onPress={() => {
+                              setAppliedSearchQuery('')
+                              setSearchQuery('')
+                           }}>
+                              <Ionicons name="close" size={14} color="#6B7280" />
+                           </TouchableOpacity>
+                        </View>
+                     )}
+                     {appliedSortBy !== 'newest' && (
+                        <View style={styles.activeFilterTag}>
+                           <Text style={styles.activeFilterText}>
+                              {appliedSortBy === 'oldest' ? 'Cũ nhất' : appliedSortBy}
+                           </Text>
+                           <TouchableOpacity onPress={() => {
+                              setAppliedSortBy('newest')
+                              setSortBy('newest')
+                           }}>
+                              <Ionicons name="close" size={14} color="#6B7280" />
+                           </TouchableOpacity>
+                        </View>
+                     )}
+                  </ScrollView>
+               </View>
+            )}
+
+            {/* Enhanced Filter Panel */}
+            {showFilters && (
+               <View style={styles.filterPanel}>
+                  {/* Image Type Filter */}
+                  <View style={styles.filterSection}>
+                     <View style={styles.filterSectionHeader}>
+                        <Ionicons name="images-outline" size={16} color="#6B7280" />
+                        <Text style={styles.filterSectionTitle}>Loại bài viết</Text>
+                     </View>
+                     <View style={styles.filterButtons}>
+                        {[
+                           { key: 'all', label: 'Tất cả', icon: 'grid-outline' },
+                           { key: 'with-images', label: 'Có ảnh', icon: 'image-outline' },
+                           { key: 'text-only', label: 'Chỉ text', icon: 'document-text-outline' }
+                        ].map((filter) => (
+                           <TouchableOpacity
+                              key={filter.key}
+                              style={[
+                                 styles.filterButton,
+                                 selectedImageFilter === filter.key && styles.filterButtonActive
+                              ]}
+                              onPress={() => setSelectedImageFilter(filter.key as any)}
+                              activeOpacity={0.7}
+                           >
+                              <Ionicons 
+                                 name={filter.icon as any} 
+                                 size={14} 
+                                 color={selectedImageFilter === filter.key ? "#FFFFFF" : "#6B7280"} 
+                              />
+                              <Text style={[
+                                 styles.filterButtonText,
+                                 selectedImageFilter === filter.key && styles.filterButtonTextActive
+                              ]}>
+                                 {filter.label}
+                              </Text>
+                           </TouchableOpacity>
+                        ))}
+                     </View>
+                  </View>
+
+
+                  {/* Time Filter */}
+                  <View style={styles.filterSection}>
+                     <View style={styles.filterSectionHeader}>
+                        <Ionicons name="time-outline" size={16} color="#6B7280" />
+                        <Text style={styles.filterSectionTitle}>Thời gian</Text>
+                     </View>
+                     <View style={styles.filterButtons}>
+                        {[
+                           { key: 'all', label: 'Tất cả', icon: 'calendar-outline' },
+                           { key: 'today', label: 'Hôm nay', icon: 'today-outline' },
+                           { key: 'week', label: 'Tuần này', icon: 'calendar-outline' },
+                           { key: 'month', label: 'Tháng này', icon: 'calendar-outline' }
+                        ].map((filter) => (
+                           <TouchableOpacity
+                              key={filter.key}
+                              style={[
+                                 styles.filterButton,
+                                 selectedTimeFilter === filter.key && styles.filterButtonActive
+                              ]}
+                              onPress={() => setSelectedTimeFilter(filter.key as any)}
+                              activeOpacity={0.7}
+                           >
+                              <Ionicons 
+                                 name={filter.icon as any} 
+                                 size={14} 
+                                 color={selectedTimeFilter === filter.key ? "#FFFFFF" : "#6B7280"} 
+                              />
+                              <Text style={[
+                                 styles.filterButtonText,
+                                 selectedTimeFilter === filter.key && styles.filterButtonTextActive
+                              ]}>
+                                 {filter.label}
+                              </Text>
+                           </TouchableOpacity>
+                        ))}
+                     </View>
+                     
+                  </View>
+
+                  {/* Sort Options */}
+                  <View style={styles.filterSection}>
+                     <View style={styles.filterSectionHeader}>
+                        <Ionicons name="swap-vertical-outline" size={16} color="#6B7280" />
+                        <Text style={styles.filterSectionTitle}>Sắp xếp</Text>
+                     </View>
+                     <View style={styles.filterButtons}>
+                        {[
+                           { key: 'newest', label: 'Mới nhất' },
+                           { key: 'oldest', label: 'Cũ nhất' }
+                        ].map((filter) => (
+                           <TouchableOpacity
+                              key={filter.key}
+                              style={[
+                                 styles.filterButton,
+                                 sortBy === filter.key && styles.filterButtonActive
+                              ]}
+                              onPress={() => setSortBy(filter.key as any)}
+                              activeOpacity={0.7}
+                           >
+                              <Text style={[
+                                 styles.filterButtonText,
+                                 sortBy === filter.key && styles.filterButtonTextActive
+                              ]}>
+                                 {filter.label}
+                              </Text>
+                           </TouchableOpacity>
+                        ))}
+                     </View>
+                  </View>
+
+                  {/* Apply and Clear Filters Buttons */}
+                  <View style={styles.filterActionsContainer}>
+                     <TouchableOpacity 
+                        style={styles.applyFiltersButton}
+                        onPress={() => {
+                           setAppliedImageFilter(selectedImageFilter)
+                           setAppliedTimeFilter(selectedTimeFilter)
+                           setAppliedSearchQuery(searchQuery)
+                           setAppliedSortBy(sortBy)
+                           setShowFilters(false)
+                        }}
+                        activeOpacity={0.7}
+                     >
+                        <Ionicons name="checkmark-outline" size={16} color="#FFFFFF" />
+                        <Text style={styles.applyFiltersText}>Áp dụng</Text>
+                     </TouchableOpacity>
+                     
+                     <TouchableOpacity 
+                        style={styles.clearFiltersButton}
+                        onPress={() => {
+                           setSelectedImageFilter('all')
+                           setSelectedTimeFilter('all')
+                           setSearchQuery('')
+                           setSortBy('newest')
+                           setAppliedImageFilter('all')
+                           setAppliedTimeFilter('all')
+                           setAppliedSearchQuery('')
+                           setAppliedSortBy('newest')
+                        }}
+                        activeOpacity={0.7}
+                     >
+                        <Text style={styles.clearFiltersText}>Xóa tất cả bộ lọc</Text>
+                     </TouchableOpacity>
+                  </View>
+               </View>
+            )}
+
+            {/* List of all user posts */}
             <FlatList
-               data={postsWithImages}
+               data={allUserPosts}
                keyExtractor={(item) => item.id}
                showsVerticalScrollIndicator={false}
                initialScrollIndex={
                   selectedPostForList 
-                     ? Math.max(0, postsWithImages.findIndex(p => p.id === selectedPostForList.id))
+                     ? Math.max(0, allUserPosts.findIndex(p => p.id === selectedPostForList.id))
                      : 0
                }
                getItemLayout={(data, index) => ({
@@ -514,34 +825,16 @@ export default function ProfileScreen() {
          >
             {/* Profile Info - Instagram Style */}
             <View style={styles.profileSection}>
-               {/* Top Row: Avatar + Stats */}
-               <View style={styles.profileTopRow}>
-               <Image
-                     source={{ 
-                        uri: userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(userInfo?.username || user?.name, user?.email) 
-                     }}
-                  style={styles.profileImage}
-                  contentFit="cover"
-               />
-
-               {/* Stats */}
-               <View style={styles.statsContainer}>
-                     <TouchableOpacity style={styles.statItem}>
-                        <Text style={styles.statNumber}>{userStats.posts}</Text>
-                        <Text style={styles.statLabel} numberOfLines={1}>Bài viết</Text>
-                     </TouchableOpacity>
-                     <View style={styles.statDivider} />
-                     <TouchableOpacity style={styles.statItem}>
-                        <Text style={styles.statNumber}>{userStats.followers}</Text>
-                        <Text style={styles.statLabel} numberOfLines={1}>Người theo dõi</Text>
-                     </TouchableOpacity>
-                     <View style={styles.statDivider} />
-                     <TouchableOpacity style={styles.statItem}>
-                        <Text style={styles.statNumber}>{userStats.following}</Text>
-                        <Text style={styles.statLabel} numberOfLines={1}>Đang theo dõi</Text>
-                     </TouchableOpacity>
-                  </View>
-                  </View>
+               {/* Avatar */}
+               <View style={styles.avatarContainer}>
+                  <Image
+                        source={{ 
+                           uri: userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(userInfo?.username || user?.name, user?.email) 
+                        }}
+                     style={styles.profileImage}
+                     contentFit="cover"
+                  />
+               </View>
 
                {/* Profile Info */}
                <View style={styles.profileInfo}>
@@ -623,17 +916,10 @@ export default function ProfileScreen() {
 
             {/* Quick actions list */}
             <View style={styles.quickList}>
-               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/profile-images')} activeOpacity={0.8}>
-                  <View style={styles.quickLeft}>
-                     <Ionicons name="images-outline" size={18} color="#111827" />
-                     <Text style={styles.quickTextDark}>Quản lý hình ảnh</Text>
-                  </View>
-                  <Ionicons name="chevron-forward" size={16} color="#6B7280" />
-               </TouchableOpacity>
-               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/profile-posts')} activeOpacity={0.8}>
+               <TouchableOpacity style={styles.quickItem} onPress={() => setViewMode('list')} activeOpacity={0.8}>
                   <View style={styles.quickLeft}>
                      <Ionicons name="document-text-outline" size={18} color="#111827" />
-                     <Text style={styles.quickTextDark}>Quản lí bài đăng</Text>
+                     <Text style={styles.quickTextDark}>Quản lý bài đăng</Text>
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#6B7280" />
                </TouchableOpacity>
@@ -952,19 +1238,11 @@ export default function ProfileScreen() {
             </SafeAreaView>
          </Modal>
 
-         {/* Payment WebView */}
-         <PaymentWebView
-            visible={showPaymentWebView}
-            checkoutUrl={paymentCheckoutUrl}
-            onClose={handlePaymentWebViewClose}
-            onPaymentSuccess={handlePaymentSuccess}
-            onPaymentCancel={handlePaymentCancel}
-         />
       </SafeAreaView>
    )
 }
 
-// Simple PostCard component for list view
+// Enhanced PostCard component for list view - similar to community screen
 function PostCard({ 
    post, 
    onCommentPress 
@@ -972,7 +1250,7 @@ function PostCard({
    post: PostResponse
    onCommentPress: () => void
 }) {
-   const [isLiked, setIsLiked] = useState(false)
+   const [isLiked, setIsLiked] = useState(post.hasReacted || false)
 
    const handleToggleLike = useCallback(async () => {
       try {
@@ -982,7 +1260,29 @@ function PostCard({
          console.error('Error toggling like:', error)
          setIsLiked(isLiked) // Revert on error
       }
-   }, [isLiked])
+   }, [isLiked, post.id])
+
+   // Format time ago helper function
+   const formatTimeAgo = (dateString: string): string => {
+      const now = new Date()
+      const postDate = new Date(dateString)
+      
+      if (isNaN(postDate.getTime())) {
+         return 'Không xác định'
+      }
+      
+      const diffMs = now.getTime() - postDate.getTime()
+      const diffMins = Math.floor(diffMs / (1000 * 60))
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+
+      if (diffMins < 1) return 'Vừa xong'
+      if (diffMins < 60) return `${diffMins} phút trước`
+      if (diffHours < 24) return `${diffHours} giờ trước`
+      if (diffDays < 7) return `${diffDays} ngày trước`
+      
+      return postDate.toLocaleDateString('vi-VN')
+   }
 
    return (
       <View style={styles.postCard}>
@@ -999,7 +1299,7 @@ function PostCard({
                      <Text style={styles.postCardUserName}>{post.authorName || 'Unknown User'}</Text>
                      <View style={styles.postCardLocationContainer}>
                         <Text style={styles.postCardTimeText}>
-                           {new Date(post.createdAt).toLocaleDateString('vi-VN')}
+                           {formatTimeAgo(post.createdAt)}
                         </Text>
                         {post.moodName && (
                            <>
@@ -1016,13 +1316,14 @@ function PostCard({
             </View>
          </View>
 
-         {/* Post Images */}
+         {/* Post Images - Only show if there are images */}
          {post.imageUrls && post.imageUrls.length > 0 && (
+            <View style={styles.postCardImageContainer}>
             <ScrollView 
                horizontal 
                pagingEnabled 
                showsHorizontalScrollIndicator={false}
-               style={styles.postCardImageContainer}
+                  style={styles.postCardImageScrollView}
             >
                {post.imageUrls.map((imageUrl, index) => (
                   <Image
@@ -1033,6 +1334,15 @@ function PostCard({
                   />
                ))}
             </ScrollView>
+               {/* Multiple images indicator */}
+               {post.imageUrls.length > 1 && (
+                  <View style={styles.multipleImagesIndicator}>
+                     <Text style={styles.multipleImagesText}>
+                        {post.imageUrls.length}
+                     </Text>
+                  </View>
+               )}
+            </View>
          )}
 
          {/* Post Content */}
@@ -1059,28 +1369,30 @@ function PostCard({
                   >
                      <Ionicons 
                         name={isLiked ? 'heart' : 'heart-outline'} 
-                        size={24} 
+                        size={22} 
                         color={isLiked ? '#EF4444' : '#6B7280'} 
                      />
-                     <Text style={styles.postCardActionText}>{post.reactionCount}</Text>
+                     <Text style={[styles.postCardActionText, isLiked && styles.likedText]}>
+                        {post.reactionCount}
+                     </Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity 
                      style={styles.postCardActionButton}
                      onPress={onCommentPress}
                   >
-                     <Ionicons name="chatbubble-outline" size={24} color="#6B7280" />
+                     <Ionicons name="chatbubble-outline" size={22} color="#6B7280" />
                      <Text style={styles.postCardActionText}>{post.commentCount}</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity style={styles.postCardActionButton}>
-                     <Ionicons name="share-outline" size={24} color="#6B7280" />
+                     <Ionicons name="share-outline" size={22} color="#6B7280" />
                      <Text style={styles.postCardActionText}>Chia sẻ</Text>
                   </TouchableOpacity>
                </View>
 
                <TouchableOpacity style={styles.postCardSaveButton}>
-                  <Ionicons name="bookmark-outline" size={24} color="#6B7280" />
+                  <Ionicons name="bookmark-outline" size={22} color="#6B7280" />
                </TouchableOpacity>
             </View>
          </View>
@@ -1139,25 +1451,6 @@ const styles = StyleSheet.create({
    headerSpacer: {
       width: 40,
    },
-   backToProfileButton: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: '#FFF7ED',
-      borderWidth: 1,
-      borderColor: '#FED7AA',
-      borderRadius: 8,
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      marginHorizontal: 16,
-      marginBottom: 12,
-   },
-   backToProfileText: {
-      marginLeft: 6,
-      fontSize: 14,
-      fontWeight: '500',
-      color: '#F97316',
-   },
    scrollView: {
       flex: 1,
    },
@@ -1180,28 +1473,26 @@ const styles = StyleSheet.create({
       shadowRadius: 2,
       elevation: 1,
    },
-   profileTopRow: {
-      flexDirection: 'row',
+   avatarContainer: {
       alignItems: 'center',
-      justifyContent: 'space-between',
-      marginBottom: 12,
+      marginBottom: 16,
    },
    profileImage: {
       height: 88,
       width: 88,
       borderRadius: 44,
-      marginRight: 16,
       borderWidth: 2,
       borderColor: '#F3F4F6',
    },
    profileInfo: {
-      alignItems: 'flex-start',
+      alignItems: 'center',
       marginBottom: 12,
    },
    nameContainer: {
       marginBottom: 8,
       flexDirection: 'row',
       alignItems: 'center',
+      justifyContent: 'center',
    },
    userName: {
       fontSize: 22,
@@ -1234,41 +1525,6 @@ const styles = StyleSheet.create({
       color: '#4B5563',
       fontSize: 14,
       lineHeight: 20,
-   },
-   statsContainer: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: '#F9FAFB',
-      borderRadius: 12,
-      paddingHorizontal: 8,
-      paddingVertical: 6,
-      marginLeft: 12,
-   },
-   statItem: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      flex: 1,
-   },
-   statDivider: {
-      height: '70%',
-      width: 1,
-      backgroundColor: '#E5E7EB',
-      marginHorizontal: 4,
-   },
-   statNumber: {
-      fontSize: 22,
-      fontWeight: '800',
-      color: '#111827',
-      textAlign: 'center',
-   },
-   statLabel: {
-      fontSize: 10,
-      color: '#6B7280',
-      marginTop: 2,
-      textAlign: 'center',
-      lineHeight: 12,
    },
    editProfileButton: {
       flex: 1,
@@ -1544,6 +1800,11 @@ const styles = StyleSheet.create({
        borderRadius: 12,
        padding: 4,
     },
+    multipleImagesText: {
+       fontSize: 12,
+       fontWeight: '600',
+       color: '#FFFFFF',
+    },
     // Text posts styles
     textPostsList: {
        gap: 16,
@@ -1694,6 +1955,9 @@ const styles = StyleSheet.create({
        padding: 8,
     },
     postCardImageContainer: {
+       position: 'relative',
+    },
+    postCardImageScrollView: {
        height: 300,
     },
     postCardImage: {
@@ -1749,6 +2013,9 @@ const styles = StyleSheet.create({
        marginLeft: 6,
        fontSize: 14,
        color: '#6B7280',
+    },
+    likedText: {
+       color: '#EF4444',
     },
     postCardSaveButton: {
        padding: 4,
@@ -2346,5 +2613,229 @@ const styles = StyleSheet.create({
        height: 1,
        backgroundColor: '#E5E7EB',
        marginHorizontal: 16,
+    },
+    // Enhanced Filter styles
+    filterContainer: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       paddingHorizontal: 16,
+       paddingVertical: 14,
+       backgroundColor: '#FFFFFF',
+       borderBottomWidth: 1,
+       borderBottomColor: '#E5E7EB',
+       gap: 12,
+    },
+    searchContainer: {
+       flex: 1,
+       flexDirection: 'row',
+       alignItems: 'center',
+       backgroundColor: '#F8FAFC',
+       borderRadius: 12,
+       paddingHorizontal: 14,
+       paddingVertical: 10,
+       gap: 10,
+       borderWidth: 1,
+       borderColor: '#E2E8F0',
+    },
+    searchInput: {
+       flex: 1,
+       fontSize: 15,
+       color: '#1E293B',
+       fontWeight: '400',
+    },
+    filterToggleButton: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       backgroundColor: '#FFF7ED',
+       borderWidth: 1,
+       borderColor: '#FED7AA',
+       borderRadius: 12,
+       paddingHorizontal: 14,
+       paddingVertical: 10,
+       gap: 8,
+       shadowColor: '#F97316',
+       shadowOffset: { width: 0, height: 2 },
+       shadowOpacity: 0.1,
+       shadowRadius: 4,
+       elevation: 2,
+    },
+    filterToggleButtonActive: {
+       backgroundColor: '#F97316',
+       borderColor: '#F97316',
+    },
+    filterToggleText: {
+       fontSize: 14,
+       fontWeight: '600',
+       color: '#F97316',
+    },
+    filterToggleTextActive: {
+       color: '#FFFFFF',
+    },
+    // Active Filters Summary
+    activeFiltersContainer: {
+       backgroundColor: '#F8FAFC',
+       borderBottomWidth: 1,
+       borderBottomColor: '#E2E8F0',
+       paddingHorizontal: 16,
+       paddingVertical: 12,
+    },
+    activeFiltersTitle: {
+       fontSize: 13,
+       fontWeight: '600',
+       color: '#475569',
+       marginBottom: 8,
+    },
+    activeFiltersScroll: {
+       flexDirection: 'row',
+    },
+    activeFilterTag: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       backgroundColor: '#FFFFFF',
+       borderWidth: 1,
+       borderColor: '#E2E8F0',
+       borderRadius: 20,
+       paddingHorizontal: 12,
+       paddingVertical: 6,
+       marginRight: 8,
+       shadowColor: '#000',
+       shadowOffset: { width: 0, height: 1 },
+       shadowOpacity: 0.05,
+       shadowRadius: 2,
+       elevation: 1,
+    },
+    activeFilterText: {
+       fontSize: 12,
+       fontWeight: '500',
+       color: '#475569',
+       marginRight: 6,
+    },
+    // Enhanced Filter Panel
+    filterPanel: {
+       backgroundColor: '#FFFFFF',
+       borderBottomWidth: 1,
+       borderBottomColor: '#E2E8F0',
+       paddingHorizontal: 16,
+       paddingVertical: 20,
+    },
+    filterSection: {
+       marginBottom: 20,
+    },
+    filterSectionHeader: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       marginBottom: 12,
+       gap: 8,
+    },
+    filterSectionTitle: {
+       fontSize: 15,
+       fontWeight: '700',
+       color: '#1E293B',
+       letterSpacing: -0.2,
+    },
+    filterButtons: {
+       flexDirection: 'row',
+       flexWrap: 'wrap',
+       gap: 10,
+    },
+    filterButton: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       backgroundColor: '#F8FAFC',
+       borderWidth: 1,
+       borderColor: '#E2E8F0',
+       borderRadius: 10,
+       paddingHorizontal: 14,
+       paddingVertical: 8,
+       gap: 6,
+       shadowColor: '#000',
+       shadowOffset: { width: 0, height: 1 },
+       shadowOpacity: 0.03,
+       shadowRadius: 2,
+       elevation: 1,
+    },
+    filterButtonActive: {
+       backgroundColor: '#F97316',
+       borderColor: '#F97316',
+       shadowColor: '#F97316',
+       shadowOpacity: 0.2,
+       shadowRadius: 4,
+       elevation: 3,
+    },
+    filterButtonText: {
+       fontSize: 13,
+       fontWeight: '600',
+       color: '#475569',
+    },
+    filterButtonTextActive: {
+       color: '#FFFFFF',
+    },
+    clearFiltersButton: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       justifyContent: 'center',
+       backgroundColor: '#F1F5F9',
+       borderWidth: 1,
+       borderColor: '#CBD5E1',
+       borderRadius: 12,
+       paddingVertical: 12,
+       paddingHorizontal: 20,
+       gap: 8,
+       marginTop: 12,
+       shadowColor: '#000',
+       shadowOffset: { width: 0, height: 1 },
+       shadowOpacity: 0.05,
+       shadowRadius: 2,
+       elevation: 1,
+    },
+    clearFiltersText: {
+       fontSize: 14,
+       fontWeight: '600',
+       color: '#FFFFFF',
+    },
+    // Filter Actions Container
+    filterActionsContainer: {
+       flexDirection: 'row',
+       gap: 12,
+       marginTop: 20,
+    },
+    applyFiltersButton: {
+       flex: 1,
+       flexDirection: 'row',
+       alignItems: 'center',
+       justifyContent: 'center',
+       backgroundColor: '#F97316',
+       borderRadius: 12,
+       paddingVertical: 12,
+       paddingHorizontal: 20,
+       gap: 8,
+       shadowColor: '#F97316',
+       shadowOffset: { width: 0, height: 2 },
+       shadowOpacity: 0.2,
+       shadowRadius: 4,
+       elevation: 3,
+    },
+    applyFiltersText: {
+       fontSize: 14,
+       fontWeight: '600',
+       color: '#FFFFFF',
+    },
+    clearFiltersButton: {
+       flex: 1,
+       flexDirection: 'row',
+       alignItems: 'center',
+       justifyContent: 'center',
+       backgroundColor: '#EF4444',
+       borderWidth: 1,
+       borderColor: '#DC2626',
+       borderRadius: 12,
+       paddingVertical: 12,
+       paddingHorizontal: 20,
+       gap: 8,
+       shadowColor: '#EF4444',
+       shadowOffset: { width: 0, height: 2 },
+       shadowOpacity: 0.2,
+       shadowRadius: 4,
+       elevation: 3,
     },
  })
