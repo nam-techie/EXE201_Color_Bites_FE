@@ -100,11 +100,14 @@ export const API_ENDPOINTS = {
       LOGOUT: '/api/auth/logout',
       REFRESH: '/api/auth/refresh',
       VERIFY_TOKEN: '/api/auth/verify',
+      CHANGE_PASSWORD: '/api/auth/change-password',
       ME: '/api/auth/me',
    },
    // User Information endpoints
    USER_INFO: {
       GET: '/api/user-info',
+      UPDATE: '/api/user-info',
+      UPLOAD_AVATAR: '/api/user-info/uploadAvatar', // usage: `${UPLOAD_AVATAR}/${accountId}`
    },
   // Payment endpoints
   PAYMENT: {

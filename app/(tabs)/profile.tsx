@@ -4,293 +4,37 @@ import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
 import { paymentService, type PaymentHistoryItem } from '@/services/PaymentService'
-import { postService } from '@/services/PostService'
 import { userService, type UserInformationResponse } from '@/services/UserService'
-import type { PostResponse } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
-import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
-    ActivityIndicator,
-    Alert,
-    BackHandler,
-    Dimensions,
-    FlatList,
-    Modal,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+   ActivityIndicator,
+   Alert,
+   Modal,
+   RefreshControl,
+   SafeAreaView,
+   ScrollView,
+   StyleSheet,
+   Text,
+   TouchableOpacity,
+   View
 } from 'react-native'
 
-const { width } = Dimensions.get('window')
-
-// Perfect 3-column Instagram-like grid using FlatList
-
-// Normalize post data từ API response (similar to home screen)
-function normalizePost(p: any): PostResponse {
-   // Gộp đủ fallback để hiển thị mượt - Fix author structure mapping
-   const authorName = p.author?.authorName ?? p.authorName ?? 'Unknown User'
-   const authorAvatar = p.author?.authorAvatar ?? p.authorAvatar ?? null
-
-   // Ép số an toàn, nếu null/undef ⇒ 0
-   const reactionCount = Number(p.reactionCount ?? 0) || 0
-   const commentCount = Number(p.commentCount ?? 0) || 0
-
-   // Chuẩn hóa createdAt về ISO string để formatTimeAgo không lỗi
-   let createdAt: string = p.createdAt
-   if (Array.isArray(p.createdAt)) {
-      // Trường hợp LocalDateTime về dạng [yyyy, mm, dd, HH, MM, SS, nano]
-      const [y, m, d, hh = 0, mm = 0, ss = 0] = p.createdAt
-      createdAt = new Date(y, (m ?? 1) - 1, d, hh, mm, ss).toISOString()
-   } else if (p.createdAt && typeof p.createdAt === 'object' && p.createdAt.year) {
-      // Trường hợp object {year, month, day, hour...}
-      const { year, month, day, hour = 0, minute = 0, second = 0 } = p.createdAt
-      createdAt = new Date(year, month - 1, day, hour, minute, second).toISOString()
-   } else if (!p.createdAt) {
-      createdAt = new Date().toISOString()
-   }
-
-   let parsedImageUrls: string[] = []
-   if (Array.isArray(p.imageUrls)) {
-      parsedImageUrls = p.imageUrls
-         .map((item: any) => {
-            try {
-               // Nếu là JSON string, parse nó
-               if (typeof item === 'string' && item.includes('{"url":')) {
-                  const parsed = JSON.parse(item)
-                  return parsed.url
-               }
-               // Nếu đã là URL string thuần
-               return typeof item === 'string' ? item : null
-            } catch {
-               console.warn('Failed to parse image URL:', item)
-               return null
-            }
-         })
-         .filter((url: string | null) => url && url.trim())
-   }
-
-   return {
-      id: String(p.id),
-      accountId: p.author?.accountId ?? p.accountId ?? '',
-      authorName,
-      authorAvatar,
-      content: p.content ?? '',
-      moodId: p.moodId ?? '',
-      moodName: p.moodName ?? '',
-      moodEmoji: p.moodEmoji ?? '',
-      imageUrls: parsedImageUrls,
-      videoUrl: p.videoUrl ?? null,
-      reactionCount,
-      commentCount,
-      tags: Array.isArray(p.tags) ? p.tags : [],
-      isOwner: Boolean(p.isOwner),
-      hasReacted: Boolean(p.hasReacted),
-      userReactionType: p.userReactionType ?? null,
-      createdAt,
-      updatedAt: p.updatedAt ?? ''
-   } as PostResponse
-}
 
 export default function ProfileScreen() {
    const router = useRouter()
    const { user, logout } = useAuth()
-   const [posts, setPosts] = useState<PostResponse[]>([])
    const [isRefreshing, setIsRefreshing] = useState(false)
    const [userInfo, setUserInfo] = useState<UserInformationResponse | null>(null)
-   const [userStats, setUserStats] = useState({
-      posts: 0,
-      followers: 1234, // Mock data - could be fetched from API
-      following: 456,  // Mock data - could be fetched from API
-      places: 89,      // Mock data - could be fetched from API
-   })
-   const [viewMode, setViewMode] = useState<'profile' | 'list'>('profile') // Switch between profile view and list view
-   const [selectedPostForList, setSelectedPostForList] = useState<PostResponse | null>(null)
    const [showPremiumModal, setShowPremiumModal] = useState(false)
    const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('premium')
    const [isCreatingPayment, setIsCreatingPayment] = useState(false)
-   const [showPaymentWebView, setShowPaymentWebView] = useState(false)
-   const [paymentCheckoutUrl, setPaymentCheckoutUrl] = useState('')
    const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([])
    const [isLoadingPaymentHistory, setIsLoadingPaymentHistory] = useState(false)
    const [showPaymentHistory, setShowPaymentHistory] = useState(false)
 
-   // Filter states
-   const [showFilters, setShowFilters] = useState(false)
-   const [selectedImageFilter, setSelectedImageFilter] = useState<'all' | 'with-images' | 'text-only'>('all')
-   const [selectedTimeFilter, setSelectedTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
-   const [searchQuery, setSearchQuery] = useState('')
-   const [sortBy, setSortBy] = useState<'newest' | 'oldest'>('newest')
-   
-   // Applied filters (what's actually being used)
-   const [appliedImageFilter, setAppliedImageFilter] = useState<'all' | 'with-images' | 'text-only'>('all')
-   const [appliedTimeFilter, setAppliedTimeFilter] = useState<'all' | 'today' | 'week' | 'month'>('all')
-   const [appliedSearchQuery, setAppliedSearchQuery] = useState('')
-   const [appliedSortBy, setAppliedSortBy] = useState<'newest' | 'oldest'>('newest')
-
-   // Filter and sort posts
-   const filteredAndSortedPosts = useMemo(() => {
-      let filteredPosts = [...posts]
-
-      // Filter by image type
-      if (appliedImageFilter === 'with-images') {
-         filteredPosts = filteredPosts.filter(post => post.imageUrls && post.imageUrls.length > 0)
-      } else if (appliedImageFilter === 'text-only') {
-         filteredPosts = filteredPosts.filter(post => !post.imageUrls || post.imageUrls.length === 0)
-      }
-
-      // Filter by time
-      if (appliedTimeFilter !== 'all') {
-         const now = new Date()
-         const filterDate = new Date()
-         
-         switch (appliedTimeFilter) {
-            case 'today':
-               filterDate.setHours(0, 0, 0, 0)
-               break
-            case 'week':
-               filterDate.setDate(now.getDate() - 7)
-               filterDate.setHours(0, 0, 0, 0)
-               break
-            case 'month':
-               filterDate.setMonth(now.getMonth() - 1)
-               filterDate.setHours(0, 0, 0, 0)
-               break
-         }
-         
-         filteredPosts = filteredPosts.filter(post => {
-            const postDate = new Date(post.createdAt)
-            return postDate >= filterDate
-         })
-      }
-
-      // Filter by search query
-      if (appliedSearchQuery.trim()) {
-         const query = appliedSearchQuery.toLowerCase()
-         filteredPosts = filteredPosts.filter(post => 
-            post.content.toLowerCase().includes(query) ||
-            post.tags.some(tag => tag.name.toLowerCase().includes(query))
-         )
-      }
-
-      // Sort posts
-      filteredPosts.sort((a, b) => {
-         switch (appliedSortBy) {
-            case 'newest':
-               return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-            case 'oldest':
-               return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-            default:
-               return 0
-         }
-      })
-
-      return filteredPosts
-   }, [posts, appliedImageFilter, appliedTimeFilter, appliedSearchQuery, appliedSortBy])
-
-   // All user posts (both with and without images)
-   const allUserPosts = filteredAndSortedPosts
-
-   // Load user posts from API
-   const loadUserPosts = useCallback(async () => {
-      try {
-         const response = await postService.getUserPosts(1, 50) // Get more posts for profile
-         
-         if (response.content && response.content.length > 0) {
-            // Normalize data trước khi set vào state
-            const normalizedPosts = response.content.map(normalizePost)
-            
-            setPosts(normalizedPosts)
-            setUserStats(prev => ({
-               ...prev,
-               posts: response.totalElements || normalizedPosts.length
-            }))
-         } else {
-            // Fallback với mock data để test layout
-            const mockPosts: PostResponse[] = [
-               {
-                  id: '1',
-                  accountId: user?.id || 'mock',
-                  authorName: user?.name || 'Test User',
-                  authorAvatar: user?.avatar || '',
-                  content: 'Test post với ảnh đẹp!',
-                  moodId: '1',
-                  moodName: 'Happy',
-                  moodEmoji: '😊',
-                  imageUrls: ['https://picsum.photos/seed/test1/400/400'],
-                  reactionCount: 15,
-                  commentCount: 3,
-                  tags: [],
-                  isOwner: true,
-                  hasReacted: false,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-               },
-               {
-                  id: '2',
-                  accountId: user?.id || 'mock',
-                  authorName: user?.name || 'Test User',
-                  authorAvatar: user?.avatar || '',
-                  content: 'Post chỉ có text, không có ảnh. Đây là một bài viết dài để test layout.',
-                  moodId: '2',
-                  moodName: 'Thinking',
-                  moodEmoji: '🤔',
-                  imageUrls: [],
-                  reactionCount: 8,
-                  commentCount: 1,
-                  tags: [],
-                  isOwner: true,
-                  hasReacted: false,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-               },
-               {
-                  id: '3',
-                  accountId: user?.id || 'mock',
-                  authorName: user?.name || 'Test User',
-                  authorAvatar: user?.avatar || '',
-                  content: 'Post có nhiều ảnh!',
-                  moodId: '3',
-                  moodName: 'Excited',
-                  moodEmoji: '🎉',
-                  imageUrls: [
-                     'https://picsum.photos/seed/test3a/400/400',
-                     'https://picsum.photos/seed/test3b/400/400',
-                     'https://picsum.photos/seed/test3c/400/400'
-                  ],
-                  reactionCount: 25,
-                  commentCount: 5,
-                  tags: [],
-                  isOwner: true,
-                  hasReacted: true,
-                  createdAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString()
-               }
-            ]
-            setPosts(mockPosts)
-            setUserStats(prev => ({
-               ...prev,
-               posts: mockPosts.length
-            }))
-         }
-      } catch (error) {
-         console.error('Error loading user posts:', error)
-         Toast.show({
-            type: 'error',
-            text1: 'Lỗi',
-            text2: 'Không thể tải bài viết của bạn',
-         })
-      } finally {
-         setIsRefreshing(false)
-      }
-   }, [user?.avatar, user?.id, user?.name])
 
    // Load user profile data from API
    const loadUserProfile = useCallback(async () => {
@@ -374,50 +118,19 @@ export default function ProfileScreen() {
       }
    }, [])
 
-   // Handle back to profile view
-   const handleBackToProfile = useCallback(() => {
-      setViewMode('profile')
-      setSelectedPostForList(null)
-   }, [])
-
-   // Load posts on component mount
+   // Load data on component mount
    useEffect(() => {
-      loadUserPosts()
       loadUserProfile()
       loadPaymentHistory()
-   }, [loadUserPosts, loadUserProfile, loadPaymentHistory])
+   }, [loadUserProfile, loadPaymentHistory])
 
-   // Handle tab focus - reset to profile view when tab is pressed
-   useFocusEffect(
-      useCallback(() => {
-         // Only reset if we're coming from another tab, not from internal navigation
-         // Don't auto-reset to profile view here, let user control it
-      }, [])
-   )
-
-   // Handle Android back button when in list view
-   useFocusEffect(
-      useCallback(() => {
-         const onBackPress = () => {
-            if (viewMode === 'list') {
-               handleBackToProfile()
-               return true // Prevent default back action
-            }
-            return false // Allow default back action
-         }
-
-         const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress)
-         return () => subscription.remove()
-      }, [viewMode, handleBackToProfile])
-   )
 
    // Handle refresh
    const handleRefresh = useCallback(() => {
       setIsRefreshing(true)
-      loadUserPosts()
       loadUserProfile()
       loadPaymentHistory()
-   }, [loadUserPosts, loadUserProfile, loadPaymentHistory])
+   }, [loadUserProfile, loadPaymentHistory])
 
 
    const handleLogout = async () => {
@@ -451,14 +164,17 @@ export default function ProfileScreen() {
          const paymentRequest = paymentService.createPremiumPaymentRequest()
          
          // Gọi API tạo thanh toán
-         const paymentResponse = await paymentService.createSubscriptionPayment(paymentRequest)
+         await paymentService.createSubscriptionPayment(paymentRequest)
          
          // Đóng modal premium
          setShowPremiumModal(false)
          
-         // Mở PaymentWebView với checkout URL
-         setPaymentCheckoutUrl(paymentResponse.checkoutUrl)
-         setShowPaymentWebView(true)
+         // TODO: Implement payment WebView or redirect to payment URL
+         Alert.alert(
+            'Thanh toán',
+            'Chức năng thanh toán đang được phát triển. Vui lòng thử lại sau.',
+            [{ text: 'Đóng' }]
+         )
          
       } catch (error) {
          console.error('Error creating payment:', error)
@@ -474,333 +190,7 @@ export default function ProfileScreen() {
       }
    }
 
-   // Handle payment WebView close
-   const handlePaymentWebViewClose = useCallback(() => {
-      setShowPaymentWebView(false)
-      setPaymentCheckoutUrl('')
-   }, [])
 
-   // Handle payment success
-   const handlePaymentSuccess = useCallback(() => {
-      // Refresh user profile để cập nhật subscription status
-      loadUserProfile()
-      
-      // Refresh posts để cập nhật UI
-      loadUserPosts()
-      
-      // Đóng WebView
-      handlePaymentWebViewClose()
-   }, [loadUserProfile, loadUserPosts, handlePaymentWebViewClose])
-
-   // Handle payment cancel
-   const handlePaymentCancel = useCallback(() => {
-      // Đóng WebView
-      handlePaymentWebViewClose()
-   }, [handlePaymentWebViewClose])
-
-   // Render list view when a post is selected
-   if (viewMode === 'list') {
-      return (
-         <SafeAreaView style={styles.container}>
-            {/* List View Header */}
-            <View style={styles.header}>
-               <View style={styles.headerContent}>
-                  <TouchableOpacity 
-                     style={styles.backButton}
-                     onPress={handleBackToProfile}
-                     activeOpacity={0.7}
-                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                  >
-                     <Ionicons name="arrow-back" size={24} color="#111827" />
-                  </TouchableOpacity>
-                  <Text style={styles.headerTitle}>Bài viết ({allUserPosts.length})</Text>
-                  <View style={styles.headerSpacer} />
-               </View>
-            </View>
-
-
-            {/* Enhanced Filter and Search Bar */}
-            <View style={styles.filterContainer}>
-               {/* Search Bar */}
-               <View style={styles.searchContainer}>
-                  <Ionicons name="search-outline" size={18} color="#6B7280" />
-                  <TextInput
-                     style={styles.searchInput}
-                     placeholder="Tìm kiếm bài viết..."
-                     value={searchQuery}
-                     onChangeText={setSearchQuery}
-                     placeholderTextColor="#9CA3AF"
-                  />
-                  {searchQuery.length > 0 && (
-                     <TouchableOpacity onPress={() => setSearchQuery('')}>
-                        <Ionicons name="close-circle" size={18} color="#6B7280" />
-                     </TouchableOpacity>
-                  )}
-               </View>
-
-               {/* Filter Toggle Button */}
-            <TouchableOpacity 
-                  style={[styles.filterToggleButton, showFilters && styles.filterToggleButtonActive]}
-                  onPress={() => setShowFilters(!showFilters)}
-                  activeOpacity={0.7}
-               >
-                  <Ionicons name="options-outline" size={18} color={showFilters ? "#FFFFFF" : "#F97316"} />
-                  <Text style={[styles.filterToggleText, showFilters && styles.filterToggleTextActive]}>
-                     Bộ lọc
-                  </Text>
-                  <Ionicons 
-                     name={showFilters ? "chevron-up" : "chevron-down"} 
-                     size={14} 
-                     color={showFilters ? "#FFFFFF" : "#F97316"} 
-                  />
-            </TouchableOpacity>
-            </View>
-
-            {/* Active Filters Summary */}
-            {(appliedImageFilter !== 'all' || appliedTimeFilter !== 'all' || appliedSearchQuery.length > 0 || appliedSortBy !== 'newest') && (
-               <View style={styles.activeFiltersContainer}>
-                  <Text style={styles.activeFiltersTitle}>Bộ lọc đang áp dụng:</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.activeFiltersScroll}>
-                     {appliedImageFilter !== 'all' && (
-                        <View style={styles.activeFilterTag}>
-                           <Text style={styles.activeFilterText}>
-                              {appliedImageFilter === 'with-images' ? 'Có ảnh' : 'Chỉ text'}
-                           </Text>
-                           <TouchableOpacity onPress={() => {
-                              setAppliedImageFilter('all')
-                              setSelectedImageFilter('all')
-                           }}>
-                              <Ionicons name="close" size={14} color="#6B7280" />
-                           </TouchableOpacity>
-                        </View>
-                     )}
-                     {appliedTimeFilter !== 'all' && (
-                        <View style={styles.activeFilterTag}>
-                           <Text style={styles.activeFilterText}>
-                              {appliedTimeFilter === 'today' ? 'Hôm nay' : 
-                                  appliedTimeFilter === 'week' ? 'Tuần này' : 
-                                  appliedTimeFilter === 'month' ? 'Tháng này' : appliedTimeFilter}
-                           </Text>
-                           <TouchableOpacity onPress={() => {
-                              setAppliedTimeFilter('all')
-                              setSelectedTimeFilter('all')
-                           }}>
-                              <Ionicons name="close" size={14} color="#6B7280" />
-                           </TouchableOpacity>
-                        </View>
-                     )}
-                     {appliedSearchQuery.length > 0 && (
-                        <View style={styles.activeFilterTag}>
-                           <Text style={styles.activeFilterText}>
-                              "{appliedSearchQuery}"
-                           </Text>
-                           <TouchableOpacity onPress={() => {
-                              setAppliedSearchQuery('')
-                              setSearchQuery('')
-                           }}>
-                              <Ionicons name="close" size={14} color="#6B7280" />
-                           </TouchableOpacity>
-                        </View>
-                     )}
-                     {appliedSortBy !== 'newest' && (
-                        <View style={styles.activeFilterTag}>
-                           <Text style={styles.activeFilterText}>
-                              {appliedSortBy === 'oldest' ? 'Cũ nhất' : appliedSortBy}
-                           </Text>
-                           <TouchableOpacity onPress={() => {
-                              setAppliedSortBy('newest')
-                              setSortBy('newest')
-                           }}>
-                              <Ionicons name="close" size={14} color="#6B7280" />
-                           </TouchableOpacity>
-                        </View>
-                     )}
-                  </ScrollView>
-               </View>
-            )}
-
-            {/* Enhanced Filter Panel */}
-            {showFilters && (
-               <View style={styles.filterPanel}>
-                  {/* Image Type Filter */}
-                  <View style={styles.filterSection}>
-                     <View style={styles.filterSectionHeader}>
-                        <Ionicons name="images-outline" size={16} color="#6B7280" />
-                        <Text style={styles.filterSectionTitle}>Loại bài viết</Text>
-                     </View>
-                     <View style={styles.filterButtons}>
-                        {[
-                           { key: 'all', label: 'Tất cả', icon: 'grid-outline' },
-                           { key: 'with-images', label: 'Có ảnh', icon: 'image-outline' },
-                           { key: 'text-only', label: 'Chỉ text', icon: 'document-text-outline' }
-                        ].map((filter) => (
-                           <TouchableOpacity
-                              key={filter.key}
-                              style={[
-                                 styles.filterButton,
-                                 selectedImageFilter === filter.key && styles.filterButtonActive
-                              ]}
-                              onPress={() => setSelectedImageFilter(filter.key as any)}
-                              activeOpacity={0.7}
-                           >
-                              <Ionicons 
-                                 name={filter.icon as any} 
-                                 size={14} 
-                                 color={selectedImageFilter === filter.key ? "#FFFFFF" : "#6B7280"} 
-                              />
-                              <Text style={[
-                                 styles.filterButtonText,
-                                 selectedImageFilter === filter.key && styles.filterButtonTextActive
-                              ]}>
-                                 {filter.label}
-                              </Text>
-                           </TouchableOpacity>
-                        ))}
-                     </View>
-                  </View>
-
-
-                  {/* Time Filter */}
-                  <View style={styles.filterSection}>
-                     <View style={styles.filterSectionHeader}>
-                        <Ionicons name="time-outline" size={16} color="#6B7280" />
-                        <Text style={styles.filterSectionTitle}>Thời gian</Text>
-                     </View>
-                     <View style={styles.filterButtons}>
-                        {[
-                           { key: 'all', label: 'Tất cả', icon: 'calendar-outline' },
-                           { key: 'today', label: 'Hôm nay', icon: 'today-outline' },
-                           { key: 'week', label: 'Tuần này', icon: 'calendar-outline' },
-                           { key: 'month', label: 'Tháng này', icon: 'calendar-outline' }
-                        ].map((filter) => (
-                           <TouchableOpacity
-                              key={filter.key}
-                              style={[
-                                 styles.filterButton,
-                                 selectedTimeFilter === filter.key && styles.filterButtonActive
-                              ]}
-                              onPress={() => setSelectedTimeFilter(filter.key as any)}
-                              activeOpacity={0.7}
-                           >
-                              <Ionicons 
-                                 name={filter.icon as any} 
-                                 size={14} 
-                                 color={selectedTimeFilter === filter.key ? "#FFFFFF" : "#6B7280"} 
-                              />
-                              <Text style={[
-                                 styles.filterButtonText,
-                                 selectedTimeFilter === filter.key && styles.filterButtonTextActive
-                              ]}>
-                                 {filter.label}
-                              </Text>
-                           </TouchableOpacity>
-                        ))}
-                     </View>
-                     
-                  </View>
-
-                  {/* Sort Options */}
-                  <View style={styles.filterSection}>
-                     <View style={styles.filterSectionHeader}>
-                        <Ionicons name="swap-vertical-outline" size={16} color="#6B7280" />
-                        <Text style={styles.filterSectionTitle}>Sắp xếp</Text>
-                     </View>
-                     <View style={styles.filterButtons}>
-                        {[
-                           { key: 'newest', label: 'Mới nhất' },
-                           { key: 'oldest', label: 'Cũ nhất' }
-                        ].map((filter) => (
-                           <TouchableOpacity
-                              key={filter.key}
-                              style={[
-                                 styles.filterButton,
-                                 sortBy === filter.key && styles.filterButtonActive
-                              ]}
-                              onPress={() => setSortBy(filter.key as any)}
-                              activeOpacity={0.7}
-                           >
-                              <Text style={[
-                                 styles.filterButtonText,
-                                 sortBy === filter.key && styles.filterButtonTextActive
-                              ]}>
-                                 {filter.label}
-                              </Text>
-                           </TouchableOpacity>
-                        ))}
-                     </View>
-                  </View>
-
-                  {/* Apply and Clear Filters Buttons */}
-                  <View style={styles.filterActionsContainer}>
-                     <TouchableOpacity 
-                        style={styles.applyFiltersButton}
-                        onPress={() => {
-                           setAppliedImageFilter(selectedImageFilter)
-                           setAppliedTimeFilter(selectedTimeFilter)
-                           setAppliedSearchQuery(searchQuery)
-                           setAppliedSortBy(sortBy)
-                           setShowFilters(false)
-                        }}
-                        activeOpacity={0.7}
-                     >
-                        <Ionicons name="checkmark-outline" size={16} color="#FFFFFF" />
-                        <Text style={styles.applyFiltersText}>Áp dụng</Text>
-                     </TouchableOpacity>
-                     
-                     <TouchableOpacity 
-                        style={styles.clearFiltersButton}
-                        onPress={() => {
-                           setSelectedImageFilter('all')
-                           setSelectedTimeFilter('all')
-                           setSearchQuery('')
-                           setSortBy('newest')
-                           setAppliedImageFilter('all')
-                           setAppliedTimeFilter('all')
-                           setAppliedSearchQuery('')
-                           setAppliedSortBy('newest')
-                        }}
-                        activeOpacity={0.7}
-                     >
-                        <Text style={styles.clearFiltersText}>Xóa tất cả bộ lọc</Text>
-                     </TouchableOpacity>
-                  </View>
-               </View>
-            )}
-
-            {/* List of all user posts */}
-            <FlatList
-               data={allUserPosts}
-               keyExtractor={(item) => item.id}
-               showsVerticalScrollIndicator={false}
-               initialScrollIndex={
-                  selectedPostForList 
-                     ? Math.max(0, allUserPosts.findIndex(p => p.id === selectedPostForList.id))
-                     : 0
-               }
-               getItemLayout={(data, index) => ({
-                  length: 600, // Approximate height of each post card
-                  offset: 600 * index,
-                  index,
-               })}
-               renderItem={({ item: post }) => (
-                  <PostCard
-                     post={post}
-                     onCommentPress={() => {
-                        Alert.alert('Comments', 'Comment feature coming soon!')
-                     }}
-                  />
-               )}
-               refreshControl={
-                  <RefreshControl
-                     refreshing={isRefreshing}
-                     onRefresh={handleRefresh}
-                     tintColor="#F97316"
-                  />
-               }
-            />
-         </SafeAreaView>
-      )
-   }
 
    return (
       <SafeAreaView style={styles.container}>
@@ -827,14 +217,14 @@ export default function ProfileScreen() {
             <View style={styles.profileSection}>
                {/* Avatar */}
                <View style={styles.avatarContainer}>
-                  <Image
-                        source={{ 
-                           uri: userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(userInfo?.username || user?.name, user?.email) 
-                        }}
-                     style={styles.profileImage}
-                     contentFit="cover"
-                  />
-               </View>
+               <Image
+                     source={{ 
+                        uri: userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(userInfo?.username || user?.name, user?.email) 
+                     }}
+                  style={styles.profileImage}
+                  contentFit="cover"
+               />
+                  </View>
 
                {/* Profile Info */}
                <View style={styles.profileInfo}>
@@ -873,12 +263,10 @@ export default function ProfileScreen() {
                {/* Action Buttons Row */}
                <View style={styles.buttonsRow}>
                   <TouchableOpacity 
-                     style={styles.manageAccountButton}
-                     onPress={() => {
-                        Alert.alert('Quản lý tài khoản', 'Thay đổi avatar, thông tin, mật khẩu sẽ được mở ở bản sau.')
-                     }}
-                     activeOpacity={0.9}
-                  >
+                    style={styles.manageAccountButton}
+                    onPress={() => router.push('/profile/AccountManagement')}
+                    activeOpacity={0.9}
+                 >
                      <Text style={styles.manageAccountButtonText}>Quản lý tài khoản</Text>
                   </TouchableOpacity>
                </View>
@@ -916,7 +304,7 @@ export default function ProfileScreen() {
 
             {/* Quick actions list */}
             <View style={styles.quickList}>
-               <TouchableOpacity style={styles.quickItem} onPress={() => setViewMode('list')} activeOpacity={0.8}>
+               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/profile/MyPosts')} activeOpacity={0.8}>
                   <View style={styles.quickLeft}>
                      <Ionicons name="document-text-outline" size={18} color="#111827" />
                      <Text style={styles.quickTextDark}>Quản lý bài đăng</Text>
@@ -937,7 +325,7 @@ export default function ProfileScreen() {
                   </View>
                   <Ionicons name="chevron-forward" size={16} color="#6B7280" />
                </TouchableOpacity>
-               <TouchableOpacity style={styles.quickItem} onPress={() => setShowPaymentHistory(true)} activeOpacity={0.8}>
+               <TouchableOpacity style={styles.quickItem} onPress={() => router.push('/profile/PaymentHistory')} activeOpacity={0.8}>
                   <View style={styles.quickLeft}>
                      <Ionicons name="card-outline" size={18} color="#111827" />
                      <Text style={styles.quickTextDark}>Lịch sử thanh toán</Text>
@@ -1238,167 +626,12 @@ export default function ProfileScreen() {
             </SafeAreaView>
          </Modal>
 
+         {/* Edit Profile Modal removed: moved to /profile/AccountManagement */}
+
       </SafeAreaView>
    )
 }
 
-// Enhanced PostCard component for list view - similar to community screen
-function PostCard({ 
-   post, 
-   onCommentPress 
-}: { 
-   post: PostResponse
-   onCommentPress: () => void
-}) {
-   const [isLiked, setIsLiked] = useState(post.hasReacted || false)
-
-   const handleToggleLike = useCallback(async () => {
-      try {
-         setIsLiked(!isLiked)
-         // You can call postService.toggleReaction(post.id) here
-      } catch (error) {
-         console.error('Error toggling like:', error)
-         setIsLiked(isLiked) // Revert on error
-      }
-   }, [isLiked, post.id])
-
-   // Format time ago helper function
-   const formatTimeAgo = (dateString: string): string => {
-      const now = new Date()
-      const postDate = new Date(dateString)
-      
-      if (isNaN(postDate.getTime())) {
-         return 'Không xác định'
-      }
-      
-      const diffMs = now.getTime() - postDate.getTime()
-      const diffMins = Math.floor(diffMs / (1000 * 60))
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-      if (diffMins < 1) return 'Vừa xong'
-      if (diffMins < 60) return `${diffMins} phút trước`
-      if (diffHours < 24) return `${diffHours} giờ trước`
-      if (diffDays < 7) return `${diffDays} ngày trước`
-      
-      return postDate.toLocaleDateString('vi-VN')
-   }
-
-   return (
-      <View style={styles.postCard}>
-         {/* Post Header */}
-         <View style={styles.postHeader}>
-            <View style={styles.postHeaderContent}>
-               <View style={styles.userInfo}>
-                  <Image
-                     source={{ uri: post.authorAvatar || getDefaultAvatar(post.authorName) }}
-                     style={styles.postCardAvatar}
-                     contentFit="cover"
-                  />
-                  <View>
-                     <Text style={styles.postCardUserName}>{post.authorName || 'Unknown User'}</Text>
-                     <View style={styles.postCardLocationContainer}>
-                        <Text style={styles.postCardTimeText}>
-                           {formatTimeAgo(post.createdAt)}
-                        </Text>
-                        {post.moodName && (
-                           <>
-                              <Text style={styles.postCardSeparator}>•</Text>
-                              <Text style={styles.postCardMoodText}>{post.moodEmoji} {post.moodName}</Text>
-                           </>
-                        )}
-                     </View>
-                  </View>
-               </View>
-               <TouchableOpacity style={styles.postCardMoreButton}>
-                  <Ionicons name="ellipsis-horizontal" size={16} color="#6B7280" />
-               </TouchableOpacity>
-            </View>
-         </View>
-
-         {/* Post Images - Only show if there are images */}
-         {post.imageUrls && post.imageUrls.length > 0 && (
-            <View style={styles.postCardImageContainer}>
-            <ScrollView 
-               horizontal 
-               pagingEnabled 
-               showsHorizontalScrollIndicator={false}
-                  style={styles.postCardImageScrollView}
-            >
-               {post.imageUrls.map((imageUrl, index) => (
-                  <Image
-                     key={index}
-                     source={{ uri: imageUrl }}
-                     style={styles.postCardImage}
-                     contentFit="cover"
-                  />
-               ))}
-            </ScrollView>
-               {/* Multiple images indicator */}
-               {post.imageUrls.length > 1 && (
-                  <View style={styles.multipleImagesIndicator}>
-                     <Text style={styles.multipleImagesText}>
-                        {post.imageUrls.length}
-                     </Text>
-                  </View>
-               )}
-            </View>
-         )}
-
-         {/* Post Content */}
-         <View style={styles.postCardContent}>
-            <Text style={styles.postCardCaption}>{post.content}</Text>
-            
-            {/* Tags */}
-            {post.tags && post.tags.length > 0 && (
-               <View style={styles.postCardTagsContainer}>
-                  {post.tags.map((tag) => (
-                     <View key={tag.id} style={styles.postCardTag}>
-                        <Text style={styles.postCardTagText}>#{tag.name}</Text>
-                     </View>
-                  ))}
-               </View>
-            )}
-
-            {/* Actions */}
-            <View style={styles.postCardActions}>
-               <View style={styles.postCardActionsLeft}>
-                  <TouchableOpacity 
-                     style={styles.postCardActionButton}
-                     onPress={handleToggleLike}
-                  >
-                     <Ionicons 
-                        name={isLiked ? 'heart' : 'heart-outline'} 
-                        size={22} 
-                        color={isLiked ? '#EF4444' : '#6B7280'} 
-                     />
-                     <Text style={[styles.postCardActionText, isLiked && styles.likedText]}>
-                        {post.reactionCount}
-                     </Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity 
-                     style={styles.postCardActionButton}
-                     onPress={onCommentPress}
-                  >
-                     <Ionicons name="chatbubble-outline" size={22} color="#6B7280" />
-                     <Text style={styles.postCardActionText}>{post.commentCount}</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity style={styles.postCardActionButton}>
-                     <Ionicons name="share-outline" size={22} color="#6B7280" />
-                     <Text style={styles.postCardActionText}>Chia sẻ</Text>
-                  </TouchableOpacity>
-               </View>
-
-               <TouchableOpacity style={styles.postCardSaveButton}>
-                  <Ionicons name="bookmark-outline" size={22} color="#6B7280" />
-               </TouchableOpacity>
-            </View>
-         </View>
-      </View>
-   )
-}
 
 const styles = StyleSheet.create({
    container: {
@@ -1580,301 +813,9 @@ const styles = StyleSheet.create({
       fontSize: 14,
       fontWeight: '500',
    },
-   analyticsSection: {
-      marginBottom: 16,
-      marginHorizontal: 16,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: '#FED7AA',
-      backgroundColor: '#FFF7ED',
-      padding: 16,
-   },
-   analyticsHeader: {
-      marginBottom: 12,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-   },
-   analyticsTitle: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   analyticsTitleText: {
-      marginLeft: 8,
-      fontWeight: '600',
-      color: '#9A3412',
-   },
-   analyticsBadge: {
-      borderRadius: 4,
-      backgroundColor: '#F97316',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-   },
-   analyticsBadgeText: {
-      fontSize: 12,
-      fontWeight: '500',
-      color: '#FFFFFF',
-   },
-   analyticsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-   },
-   analyticsItem: {
-      marginBottom: 8,
-      width: '50%',
-   },
-   analyticsLabel: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: '#C2410C',
-   },
-   analyticsValue: {
-      fontSize: 14,
-      color: '#EA580C',
-   },
-   tabsContainer: {
-      marginBottom: 16,
-      marginHorizontal: 16,
-      overflow: 'hidden',
-      borderRadius: 12,
-      backgroundColor: '#FFFFFF',
-      shadowColor: '#000',
-      shadowOffset: {
-         width: 0,
-         height: 1,
-      },
-      shadowOpacity: 0.05,
-      shadowRadius: 3,
-      elevation: 2,
-   },
-   buttonsRow: {
-      flexDirection: 'row',
-      width: '100%',
-   },
-   shareProfileButton: {
-      flex: 1,
-      borderRadius: 10,
-      backgroundColor: '#FFFFFF',
-      borderWidth: 1,
-      borderColor: '#D1D5DB',
-      paddingVertical: 10,
-   },
-   shareProfileButtonText: {
-      textAlign: 'center',
-      fontWeight: '600',
-      color: '#111827',
-   },
-   tabsWrapper: {
-      flexDirection: 'row',
-   },
-   tab: {
-      flex: 1,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 12,
-      backgroundColor: '#F3F4F6',
-   },
-   activeTab: {
-      backgroundColor: '#F97316',
-   },
-   tabText: {
-      marginLeft: 4,
-      color: '#4B5563',
-      fontSize: 14,
-   },
-   activeTabText: {
-      color: '#FFFFFF',
-   },
-   gridContainer: {
-      paddingHorizontal: 16,
-   },
-   gridPostItem: {
-      // Width will be calculated dynamically
-      aspectRatio: 1,
-   },
-   postImageContainer: {
-      position: 'relative',
-      aspectRatio: 1,
-      backgroundColor: '#F3F4F6', // Loading background
-      borderRadius: 4,
-      overflow: 'hidden',
-   },
-   postImage: {
-      height: '100%',
-      width: '100%',
-      borderRadius: 4,
-   },
-   likesOverlay: {
-      position: 'absolute',
-      bottom: 4,
-      right: 4,
-      borderRadius: 4,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      paddingHorizontal: 4,
-      paddingVertical: 2,
-   },
-   likesText: {
-      fontSize: 12,
-      color: '#FFFFFF',
-   },
-   placesList: {
-      gap: 12,
-   },
-   placeItem: {
-      borderRadius: 8,
-      backgroundColor: '#FFFFFF',
-      padding: 12,
-      shadowColor: '#000',
-      shadowOffset: {
-         width: 0,
-         height: 1,
-      },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2,
-   },
-   placeContent: {
-      flexDirection: 'row',
-      alignItems: 'center',
-   },
-   placeImage: {
-      height: 48,
-      width: 48,
-      borderRadius: 8,
-      marginRight: 12,
-   },
-   placeInfo: {
-      flex: 1,
-   },
-   placeName: {
-      fontWeight: '600',
-      color: '#111827',
-      fontSize: 16,
-   },
-   placeVisits: {
-      fontSize: 14,
-      color: '#6B7280',
-   },
-   placeRating: {
-      borderRadius: 4,
-      backgroundColor: '#F3F4F6',
-      paddingHorizontal: 8,
-      paddingVertical: 4,
-   },
-       placeRatingText: {
-       fontSize: 12,
-       color: '#111827',
-    },
-    // Loading state
-    loadingContainer: {
-       flex: 1,
-       justifyContent: 'center',
-       alignItems: 'center',
-       paddingVertical: 40,
-    },
-    loadingText: {
-       marginTop: 12,
-       fontSize: 16,
-       color: '#6B7280',
-    },
-    // Empty state
-    emptyState: {
-       flex: 1,
-       justifyContent: 'center',
-       alignItems: 'center',
-       paddingVertical: 40,
-    },
-    emptyStateText: {
-       marginTop: 12,
-       fontSize: 16,
-       color: '#9CA3AF',
-       textAlign: 'center',
-    },
-    // Multiple images indicator
-    multipleImagesIndicator: {
-       position: 'absolute',
-       top: 8,
-       right: 8,
-       backgroundColor: 'rgba(0, 0, 0, 0.6)',
-       borderRadius: 12,
-       padding: 4,
-    },
-    multipleImagesText: {
-       fontSize: 12,
-       fontWeight: '600',
-       color: '#FFFFFF',
-    },
-    // Text posts styles
-    textPostsList: {
-       gap: 16,
-       marginHorizontal: 16,
-    },
-    textPostItem: {
-       backgroundColor: '#FFFFFF',
-       borderRadius: 12,
-       padding: 16,
-       shadowColor: '#000',
-       shadowOffset: {
-          width: 0,
-          height: 1,
-       },
-       shadowOpacity: 0.05,
-       shadowRadius: 3,
-       elevation: 2,
-    },
-    textPostHeader: {
+    buttonsRow: {
        flexDirection: 'row',
-       alignItems: 'center',
-       marginBottom: 12,
-    },
-    textPostAvatar: {
-       width: 40,
-       height: 40,
-       borderRadius: 20,
-       marginRight: 12,
-    },
-    textPostInfo: {
-       flex: 1,
-    },
-    textPostAuthor: {
-       fontSize: 16,
-       fontWeight: '600',
-       color: '#111827',
-    },
-    textPostTime: {
-       fontSize: 12,
-       color: '#6B7280',
-       marginTop: 2,
-    },
-    textPostMood: {
-       backgroundColor: '#FEF3C7',
-       borderRadius: 16,
-       paddingHorizontal: 8,
-       paddingVertical: 4,
-    },
-    textPostMoodEmoji: {
-       fontSize: 16,
-    },
-    textPostContent: {
-       fontSize: 15,
-       lineHeight: 22,
-       color: '#374151',
-       marginBottom: 12,
-    },
-    textPostActions: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       gap: 24,
-    },
-    textPostAction: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       gap: 6,
-    },
-    textPostActionText: {
-       fontSize: 14,
-       color: '#6B7280',
+       width: '100%',
     },
     logoutButton: {
        flexDirection: 'row',
@@ -1892,133 +833,6 @@ const styles = StyleSheet.create({
        fontSize: 14,
        fontWeight: '500',
        color: '#DC2626',
-    },
-    // PostCard styles
-    postCard: {
-       backgroundColor: '#FFFFFF',
-       marginBottom: 16,
-       borderRadius: 12,
-       shadowColor: '#000',
-       shadowOffset: {
-          width: 0,
-          height: 2,
-       },
-       shadowOpacity: 0.1,
-       shadowRadius: 3,
-       elevation: 3,
-       marginHorizontal: 16,
-    },
-    postHeader: {
-       paddingHorizontal: 16,
-       paddingVertical: 12,
-    },
-    postHeaderContent: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       justifyContent: 'space-between',
-    },
-    userInfo: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       flex: 1,
-    },
-    postCardAvatar: {
-       width: 40,
-       height: 40,
-       borderRadius: 20,
-       marginRight: 12,
-    },
-    postCardUserName: {
-       fontSize: 16,
-       fontWeight: '600',
-       color: '#111827',
-    },
-    postCardLocationContainer: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       marginTop: 2,
-    },
-    postCardTimeText: {
-       fontSize: 12,
-       color: '#6B7280',
-    },
-    postCardSeparator: {
-       fontSize: 12,
-       color: '#6B7280',
-       marginHorizontal: 4,
-    },
-    postCardMoodText: {
-       fontSize: 12,
-       color: '#6B7280',
-    },
-    postCardMoreButton: {
-       padding: 8,
-    },
-    postCardImageContainer: {
-       position: 'relative',
-    },
-    postCardImageScrollView: {
-       height: 300,
-    },
-    postCardImage: {
-       width: width,
-       height: 300,
-    },
-    postCardContent: {
-       paddingHorizontal: 16,
-       paddingBottom: 16,
-    },
-    postCardCaption: {
-       fontSize: 15,
-       lineHeight: 22,
-       color: '#374151',
-       marginBottom: 12,
-    },
-    postCardTagsContainer: {
-       flexDirection: 'row',
-       flexWrap: 'wrap',
-       marginBottom: 12,
-    },
-    postCardTag: {
-       backgroundColor: '#EFF6FF',
-       borderRadius: 12,
-       paddingHorizontal: 8,
-       paddingVertical: 4,
-       marginRight: 8,
-       marginBottom: 8,
-    },
-    postCardTagText: {
-       fontSize: 12,
-       color: '#1D4ED8',
-       fontWeight: '500',
-    },
-    postCardActions: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       justifyContent: 'space-between',
-       paddingTop: 12,
-       borderTopWidth: 1,
-       borderTopColor: '#E5E7EB',
-    },
-    postCardActionsLeft: {
-       flexDirection: 'row',
-       alignItems: 'center',
-    },
-    postCardActionButton: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       marginRight: 20,
-    },
-    postCardActionText: {
-       marginLeft: 6,
-       fontSize: 14,
-       color: '#6B7280',
-    },
-    likedText: {
-       color: '#EF4444',
-    },
-    postCardSaveButton: {
-       padding: 4,
     },
     // Premium Banner styles - Modern Design
     premiumBanner: {
@@ -2613,229 +1427,5 @@ const styles = StyleSheet.create({
        height: 1,
        backgroundColor: '#E5E7EB',
        marginHorizontal: 16,
-    },
-    // Enhanced Filter styles
-    filterContainer: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       paddingHorizontal: 16,
-       paddingVertical: 14,
-       backgroundColor: '#FFFFFF',
-       borderBottomWidth: 1,
-       borderBottomColor: '#E5E7EB',
-       gap: 12,
-    },
-    searchContainer: {
-       flex: 1,
-       flexDirection: 'row',
-       alignItems: 'center',
-       backgroundColor: '#F8FAFC',
-       borderRadius: 12,
-       paddingHorizontal: 14,
-       paddingVertical: 10,
-       gap: 10,
-       borderWidth: 1,
-       borderColor: '#E2E8F0',
-    },
-    searchInput: {
-       flex: 1,
-       fontSize: 15,
-       color: '#1E293B',
-       fontWeight: '400',
-    },
-    filterToggleButton: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       backgroundColor: '#FFF7ED',
-       borderWidth: 1,
-       borderColor: '#FED7AA',
-       borderRadius: 12,
-       paddingHorizontal: 14,
-       paddingVertical: 10,
-       gap: 8,
-       shadowColor: '#F97316',
-       shadowOffset: { width: 0, height: 2 },
-       shadowOpacity: 0.1,
-       shadowRadius: 4,
-       elevation: 2,
-    },
-    filterToggleButtonActive: {
-       backgroundColor: '#F97316',
-       borderColor: '#F97316',
-    },
-    filterToggleText: {
-       fontSize: 14,
-       fontWeight: '600',
-       color: '#F97316',
-    },
-    filterToggleTextActive: {
-       color: '#FFFFFF',
-    },
-    // Active Filters Summary
-    activeFiltersContainer: {
-       backgroundColor: '#F8FAFC',
-       borderBottomWidth: 1,
-       borderBottomColor: '#E2E8F0',
-       paddingHorizontal: 16,
-       paddingVertical: 12,
-    },
-    activeFiltersTitle: {
-       fontSize: 13,
-       fontWeight: '600',
-       color: '#475569',
-       marginBottom: 8,
-    },
-    activeFiltersScroll: {
-       flexDirection: 'row',
-    },
-    activeFilterTag: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       backgroundColor: '#FFFFFF',
-       borderWidth: 1,
-       borderColor: '#E2E8F0',
-       borderRadius: 20,
-       paddingHorizontal: 12,
-       paddingVertical: 6,
-       marginRight: 8,
-       shadowColor: '#000',
-       shadowOffset: { width: 0, height: 1 },
-       shadowOpacity: 0.05,
-       shadowRadius: 2,
-       elevation: 1,
-    },
-    activeFilterText: {
-       fontSize: 12,
-       fontWeight: '500',
-       color: '#475569',
-       marginRight: 6,
-    },
-    // Enhanced Filter Panel
-    filterPanel: {
-       backgroundColor: '#FFFFFF',
-       borderBottomWidth: 1,
-       borderBottomColor: '#E2E8F0',
-       paddingHorizontal: 16,
-       paddingVertical: 20,
-    },
-    filterSection: {
-       marginBottom: 20,
-    },
-    filterSectionHeader: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       marginBottom: 12,
-       gap: 8,
-    },
-    filterSectionTitle: {
-       fontSize: 15,
-       fontWeight: '700',
-       color: '#1E293B',
-       letterSpacing: -0.2,
-    },
-    filterButtons: {
-       flexDirection: 'row',
-       flexWrap: 'wrap',
-       gap: 10,
-    },
-    filterButton: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       backgroundColor: '#F8FAFC',
-       borderWidth: 1,
-       borderColor: '#E2E8F0',
-       borderRadius: 10,
-       paddingHorizontal: 14,
-       paddingVertical: 8,
-       gap: 6,
-       shadowColor: '#000',
-       shadowOffset: { width: 0, height: 1 },
-       shadowOpacity: 0.03,
-       shadowRadius: 2,
-       elevation: 1,
-    },
-    filterButtonActive: {
-       backgroundColor: '#F97316',
-       borderColor: '#F97316',
-       shadowColor: '#F97316',
-       shadowOpacity: 0.2,
-       shadowRadius: 4,
-       elevation: 3,
-    },
-    filterButtonText: {
-       fontSize: 13,
-       fontWeight: '600',
-       color: '#475569',
-    },
-    filterButtonTextActive: {
-       color: '#FFFFFF',
-    },
-    clearFiltersButton: {
-       flexDirection: 'row',
-       alignItems: 'center',
-       justifyContent: 'center',
-       backgroundColor: '#F1F5F9',
-       borderWidth: 1,
-       borderColor: '#CBD5E1',
-       borderRadius: 12,
-       paddingVertical: 12,
-       paddingHorizontal: 20,
-       gap: 8,
-       marginTop: 12,
-       shadowColor: '#000',
-       shadowOffset: { width: 0, height: 1 },
-       shadowOpacity: 0.05,
-       shadowRadius: 2,
-       elevation: 1,
-    },
-    clearFiltersText: {
-       fontSize: 14,
-       fontWeight: '600',
-       color: '#FFFFFF',
-    },
-    // Filter Actions Container
-    filterActionsContainer: {
-       flexDirection: 'row',
-       gap: 12,
-       marginTop: 20,
-    },
-    applyFiltersButton: {
-       flex: 1,
-       flexDirection: 'row',
-       alignItems: 'center',
-       justifyContent: 'center',
-       backgroundColor: '#F97316',
-       borderRadius: 12,
-       paddingVertical: 12,
-       paddingHorizontal: 20,
-       gap: 8,
-       shadowColor: '#F97316',
-       shadowOffset: { width: 0, height: 2 },
-       shadowOpacity: 0.2,
-       shadowRadius: 4,
-       elevation: 3,
-    },
-    applyFiltersText: {
-       fontSize: 14,
-       fontWeight: '600',
-       color: '#FFFFFF',
-    },
-    clearFiltersButton: {
-       flex: 1,
-       flexDirection: 'row',
-       alignItems: 'center',
-       justifyContent: 'center',
-       backgroundColor: '#EF4444',
-       borderWidth: 1,
-       borderColor: '#DC2626',
-       borderRadius: 12,
-       paddingVertical: 12,
-       paddingHorizontal: 20,
-       gap: 8,
-       shadowColor: '#EF4444',
-       shadowOffset: { width: 0, height: 2 },
-       shadowOpacity: 0.2,
-       shadowRadius: 4,
-       elevation: 3,
     },
  })
