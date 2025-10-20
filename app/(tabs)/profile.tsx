@@ -24,23 +24,70 @@ import {
 import { WebView } from 'react-native-webview'
 
 
+type ExtendedUserInfo = UserInformationResponse & {
+   subscriptionPlan?: 'FREE' | 'PREMIUM'
+   subscriptionStatus?: 'ACTIVE' | 'EXPIRED' | 'CANCELED'
+   subscriptionStartsAt?: string | null
+   subscriptionExpiresAt?: string | null
+   subscriptionRemainingDays?: number | null
+}
+
 export default function ProfileScreen() {
    const router = useRouter()
    const { user, logout } = useAuth()
    const [isRefreshing, setIsRefreshing] = useState(false)
-   const [userInfo, setUserInfo] = useState<UserInformationResponse | null>(null)
+   const [userInfo, setUserInfo] = useState<ExtendedUserInfo | null>(null)
    const [showPremiumModal, setShowPremiumModal] = useState(false)
-   const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('premium')
+   const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('free')
    const [isCreatingPayment, setIsCreatingPayment] = useState(false)
    const [showPaymentWebView, setShowPaymentWebView] = useState(false)
    const [paymentUrl, setPaymentUrl] = useState('')
+
+   // Helper: format ISO date to dd/MM/yyyy
+   const formatDate = useCallback((iso?: string | null) => {
+      if (!iso) return ''
+      try {
+         const d = new Date(iso)
+         const dd = String(d.getDate()).padStart(2, '0')
+         const mm = String(d.getMonth() + 1).padStart(2, '0')
+         const yyyy = d.getFullYear()
+         return `${dd}/${mm}/${yyyy}`
+      } catch {
+         return ''
+      }
+   }, [])
+
+   // Helper: compute expiry date fallback from remaining days when expiresAt missing
+   const computeExpiryDate = useCallback(() => {
+      if (userInfo?.subscriptionExpiresAt) return userInfo.subscriptionExpiresAt
+      const days = userInfo?.subscriptionRemainingDays
+      if (typeof days === 'number' && days >= 1) {
+         const d = new Date()
+         d.setDate(d.getDate() + days)
+         return d.toISOString()
+      }
+      if (userInfo?.subscriptionStartsAt) {
+         const d = new Date(userInfo.subscriptionStartsAt)
+         d.setDate(d.getDate() + 30)
+         return d.toISOString()
+      }
+      // Cuối cùng: không có dữ liệu từ BE, hiển thị mặc định hôm nay + 30 ngày
+      const d = new Date()
+      d.setDate(d.getDate() + 30)
+      return d.toISOString()
+   }, [userInfo])
+
+   // Helper: determine premium plan presence (looser condition for UI)
+   const hasPremiumPlan = useCallback(() => {
+      return !!(userInfo && (userInfo.subscriptionPlan === 'PREMIUM' || user?.isPremium))
+   }, [userInfo, user])
 
 
    // Load user profile data from API
    const loadUserProfile = useCallback(async () => {
       try {
          const profileData = await userService.getUserInformation()
-         setUserInfo(profileData)
+         setUserInfo(profileData as unknown as ExtendedUserInfo)
       } catch (error) {
          console.error('Error loading user profile:', error)
          // Keep userInfo as null to use fallback data
@@ -52,6 +99,13 @@ export default function ProfileScreen() {
    useEffect(() => {
       loadUserProfile()
    }, [loadUserProfile])
+
+   // Reset selectedPlan when modal opens
+   useEffect(() => {
+      if (showPremiumModal) {
+         setSelectedPlan('free')
+      }
+   }, [showPremiumModal])
 
    // Refetch when screen gains focus
    useFocusEffect(
@@ -101,7 +155,6 @@ export default function ProfileScreen() {
          // Gọi API tạo thanh toán
          const response = await paymentService.createSubscriptionPayment(paymentRequest)
          
-         console.log('Payment response:', response)
          
          if (response.checkoutUrl) {
             setPaymentUrl(response.checkoutUrl)
@@ -240,35 +293,48 @@ export default function ProfileScreen() {
                </View>
             </View>
 
-            {/* Premium Banner */}
-            {userInfo?.subscriptionPlan !== 'PREMIUM' && !user?.isPremium && (
-               <TouchableOpacity 
-                  style={styles.premiumBanner}
-                  onPress={() => setShowPremiumModal(true)}
-                  activeOpacity={0.8}
-               >
-                  <CrossPlatformGradient
-                     colors={["#F97316", "#FB923C"]}
-                     start={{ x: 0, y: 0 }}
-                     end={{ x: 1, y: 0 }}
-                     style={styles.premiumBannerContent}
-                  >
-                     <View style={styles.premiumBannerLeft}>
-                        <View style={styles.premiumBannerIcon}>
-                           <Ionicons name="star" size={24} color="#FFFFFF" />
-                        </View>
-                        <View style={styles.premiumBannerText}>
-                           <Text style={styles.premiumBannerTitle}>Premium</Text>
-                           <Text style={styles.premiumBannerSubtitle}>Không giới hạn, nhiều đặc quyền chờ bạn khám phá!</Text>
-                        </View>
-                     </View>
-                     <View style={styles.premiumBannerButton}>
-                        <Text style={styles.premiumBannerButtonText}>Nâng cấp</Text>
-                        <Ionicons name="chevron-forward" size={16} color="#8B5CF6" />
-                     </View>
-                  </CrossPlatformGradient>
-               </TouchableOpacity>
-            )}
+           {/* Premium Banner - luôn hiển thị, thay đổi nội dung theo trạng thái */}
+           {(
+              <TouchableOpacity 
+                 style={styles.premiumBanner}
+                 onPress={() => setShowPremiumModal(true)}
+                 activeOpacity={0.8}
+              >
+                 <CrossPlatformGradient
+                    colors={["#F97316", "#FB923C"]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.premiumBannerContent}
+                 >
+                    {(() => {
+                       const premiumPlan = hasPremiumPlan()
+                       const expiryIso = computeExpiryDate()
+                       const expiryText = formatDate(expiryIso)
+                       const subtitle = premiumPlan
+                          ? `Hết hạn: ${expiryText}${typeof userInfo?.subscriptionRemainingDays === 'number' && (userInfo?.subscriptionRemainingDays as number) > 0 ? ` • Còn ${userInfo?.subscriptionRemainingDays} ngày` : ''}`
+                          : 'Không giới hạn, nhiều đặc quyền chờ bạn khám phá!'
+                       const buttonText = premiumPlan ? 'Xem chi tiết' : 'Nâng cấp'
+                       return (
+                          <>
+                             <View style={styles.premiumBannerLeft}>
+                                <View style={styles.premiumBannerIcon}>
+                                   <Ionicons name="star" size={24} color="#FFFFFF" />
+                                </View>
+                                <View style={styles.premiumBannerText}>
+                                   <Text style={styles.premiumBannerTitle}>Premium</Text>
+                                   <Text style={styles.premiumBannerSubtitle}>{subtitle}</Text>
+                                </View>
+                             </View>
+                             <View style={styles.premiumBannerButton}>
+                                <Text style={styles.premiumBannerButtonText}>{buttonText}</Text>
+                                <Ionicons name="chevron-forward" size={16} color="#8B5CF6" />
+                             </View>
+                          </>
+                       )
+                    })()}
+                 </CrossPlatformGradient>
+              </TouchableOpacity>
+           )}
 
             {/* Quick actions list */}
             <View style={styles.quickList}>
@@ -347,7 +413,7 @@ export default function ProfileScreen() {
                   </View>
 
                   {/* Plan Card */}
-                  {selectedPlan === 'free' ? (
+                  {selectedPlan === 'free' && (
                      <View style={styles.freeCard}>
                         <View style={styles.freeCardContent}>
                            <View style={styles.freeCardTitle}>
@@ -393,7 +459,9 @@ export default function ProfileScreen() {
                            </View>
                         </View>
                      </View>
-                  ) : (
+                  )}
+
+                  {selectedPlan === 'premium' && (
                      <View style={styles.premiumCard}>
                         <View style={styles.premiumCardHeader}>
                            <Text style={styles.premiumCardBadge}>Phổ biến nhất</Text>
@@ -405,7 +473,7 @@ export default function ProfileScreen() {
                               <Text style={styles.premiumCardTitleText}>Premium</Text>
                            </View>
                            
-                           <Text style={styles.premiumCardPrice}>36.000đ/tháng</Text>
+                           <Text style={styles.premiumCardPrice}>5.000đ/tháng</Text>
                            
                            <View style={styles.premiumFeatures}>
                               <View style={styles.premiumFeature}>
@@ -445,13 +513,16 @@ export default function ProfileScreen() {
                      </View>
                   )}
 
-                  {/* Subscribe Button - Only show for Premium plan */}
+                  {/* Subscribe Button - Premium plan; disable nếu đã ACTIVE */}
                   {selectedPlan === 'premium' && (
                      <TouchableOpacity 
-                        style={[styles.subscribeButton, isCreatingPayment && styles.subscribeButtonDisabled]}
+                        style={[
+                           styles.subscribeButton,
+                           (isCreatingPayment || hasPremiumPlan()) && styles.subscribeButtonDisabled
+                        ]}
                         onPress={handleCreatePayment}
-                        disabled={isCreatingPayment}
-                        activeOpacity={isCreatingPayment ? 1 : 0.8}
+                        disabled={isCreatingPayment || hasPremiumPlan()}
+                        activeOpacity={(isCreatingPayment || hasPremiumPlan()) ? 1 : 0.8}
                      >
                         {isCreatingPayment ? (
                            <View style={styles.subscribeButtonLoading}>
@@ -459,7 +530,9 @@ export default function ProfileScreen() {
                               <Text style={styles.subscribeButtonText}>Đang tạo thanh toán...</Text>
                            </View>
                         ) : (
-                           <Text style={styles.subscribeButtonText}>Đăng ký ngay</Text>
+                           <Text style={styles.subscribeButtonText}>
+                              {hasPremiumPlan() ? 'Đã đăng ký' : 'Đăng ký ngay'}
+                           </Text>
                         )}
                      </TouchableOpacity>
                   )}
