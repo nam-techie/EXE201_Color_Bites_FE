@@ -4,13 +4,13 @@ import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { useState } from 'react'
 import {
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TextInput,
-   TouchableOpacity,
-   View,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 
 const trendingHashtags = [
@@ -67,14 +67,14 @@ const nearbyPlaces = [
    },
 ]
 
-export default function ExploreScreen() {
+export default function ChallengeScreen() {
    const [searchQuery, setSearchQuery] = useState('')
 
    return (
       <SafeAreaView style={styles.container}>
          {/* Header */}
          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Explore</Text>
+            <Text style={styles.headerTitle}>Challenge</Text>
             <View style={styles.searchContainer}>
                <Ionicons
                   name="search-outline"

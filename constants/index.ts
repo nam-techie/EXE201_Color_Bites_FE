@@ -63,6 +63,7 @@ const getApiBaseUrl = () => {
 }
 
 export const API_BASE_URL = getApiBaseUrl()
+// export const API_BASE_URL = 'https://api-mumii.namtechie.id.vn'
 if (__DEV__) {
   console.log('[ENV DEBUG] API base URL:', API_BASE_URL)
   console.log('[ENV DEBUG] Platform.OS:', Platform.OS)
@@ -99,12 +100,22 @@ export const API_ENDPOINTS = {
       LOGOUT: '/api/auth/logout',
       REFRESH: '/api/auth/refresh',
       VERIFY_TOKEN: '/api/auth/verify',
+      CHANGE_PASSWORD: '/api/auth/change-password',
       ME: '/api/auth/me',
    },
    // User Information endpoints
    USER_INFO: {
       GET: '/api/user-info',
+      UPDATE: '/api/user-info',
+      UPLOAD_AVATAR: '/api/user-info/uploadAvatar', // usage: `${UPLOAD_AVATAR}/${accountId}`
    },
+  // Payment endpoints
+  PAYMENT: {
+     CREATE: '/api/payment/subscription/create',
+     STATUS: '/api/payment/subscription/status',
+     CONFIRM: '/api/payment/subscription/confirm',
+     HISTORY: '/api/payment/history',
+  },
 }
 
 // Map Configuration

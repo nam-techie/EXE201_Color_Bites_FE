@@ -39,6 +39,34 @@ export class AuthService {
   }
 
   /**
+   * Đổi mật khẩu (đã đăng nhập)
+   */
+  async changePassword(oldPassword: string, newPassword: string, confirmPassword: string): Promise<string> {
+    try {
+      const payload = { oldPassword, newPassword, confirmPassword }
+      // Need auth token for protected endpoint
+      const token = await AsyncStorage.getItem('authToken')
+      const response = await this.axiosInstance.put<ApiResponse<unknown>>(
+        API_ENDPOINTS.AUTH.CHANGE_PASSWORD,
+        payload,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+      )
+
+      if (response.data.status === 200) {
+        return response.data.message || 'Đổi mật khẩu thành công'
+      }
+
+      throw new Error(response.data.message || 'Đổi mật khẩu thất bại')
+    } catch (error: any) {
+      if (error.response?.data) {
+        const errorData = error.response.data
+        throw new Error(errorData.message || 'Lỗi khi đổi mật khẩu')
+      }
+      throw new Error(error.message || 'Không thể kết nối đến server')
+    }
+  }
+
+  /**
    * Login với BE thật
    */
   async login(email: string, password: string): Promise<LoginResponse> {

@@ -100,19 +100,17 @@ const styles = StyleSheet.create({
 
   /* Trung tâm màn hình */
   main: {
-    flexGrow: 1,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 0,
-    marginTop: 30
+    paddingVertical: 60
   },
 
   /* Logo */
   logoWrap: {
     width: 140,
     alignItems: 'center',
-    marginBottom: -450
+    marginBottom: 40
   },
   
   logo: {
@@ -132,15 +130,14 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: MAX_WIDTH,
     alignItems: 'center',
-    marginTop: 490,
-    marginBottom: 15
+    marginBottom: 50
   },
   slogan: {
     fontSize: 25,
     fontWeight: '500',
     color: '#111',
     textAlign: 'center',
-    marginBottom: 150
+    marginBottom: 55
   },
   headline: {
     fontSize: 33,
@@ -148,7 +145,7 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'center',
     letterSpacing: -0.5,
-    marginBottom: 20
+    marginBottom: 25
   },
   legal: {
     fontSize: 16,
@@ -164,11 +161,11 @@ const styles = StyleSheet.create({
 
   /* Buttons */
   actions: {
-    width: '95%',
+    width: '100%',
     maxWidth: MAX_WIDTH,
-    marginTop: 15,
-    gap: 20,
-    alignSelf: 'center'
+    gap: 16,
+    alignSelf: 'center',
+    marginBottom: -140
   },
   btnPrimary: {
     height: BTN_HEIGHT,
@@ -209,8 +206,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 130,
-    paddingTop: 20
+    paddingBottom: 120,
+    paddingTop: 0
   },
   footerText: {
     fontSize: 20,
