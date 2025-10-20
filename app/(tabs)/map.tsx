@@ -8,6 +8,9 @@ import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
+// Lazy load Mapbox to avoid module init errors before dev client is ready
+// and ensure the route always has a default export
+// We'll dynamically import '@/services/GoongMapConfig' inside the component
 import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
 import type { MapRegion, Restaurant } from '@/type/location'
@@ -26,7 +29,6 @@ import {
   TouchableOpacity,
   View
 } from 'react-native'
-import MapView, { Polyline } from 'react-native-maps'
 
 interface RouteStop {
   restaurant: Restaurant
@@ -76,11 +78,13 @@ export default function MapScreen() {
     longitudeDelta: 0.08,
   })
   const [routePlanningMode, setRoutePlanningMode] = useState(false)
-  const [selectedProfile, setSelectedProfile] = useState('cycling-regular')
+  const [selectedProfile, setSelectedProfile] = useState('car')
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
-  const mapRef = useRef<MapView>(null)
+  const [MapboxModule, setMapboxModule] = useState<any>(null)
+  const [goongStyleUrl, setGoongStyleUrl] = useState<string | null>(null)
+  const mapRef = useRef<any>(null)
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
@@ -212,6 +216,17 @@ export default function MapScreen() {
   }, [user])
 
   useEffect(() => {
+    // Dynamically import Mapbox only in native environment/dev client
+    ;(async () => {
+      try {
+        const mod = await import('@/services/GoongMapConfig')
+        setMapboxModule(mod)
+        setGoongStyleUrl(mod.GOONG_STYLE_URL)
+      } catch (e) {
+        console.warn('Mapbox not available yet. Run dev client (expo run:android).', e)
+      }
+    })()
+
     const fetchInitialData = async () => {
       try {
         const location = await getCurrentUserLocation()
@@ -241,13 +256,14 @@ export default function MapScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProfile])
 
-  const getResponsiveStrokeWidth = () => {
-    const zoom = mapRegion.latitudeDelta
-    if (zoom < 0.01) return 8
-    if (zoom < 0.03) return 6
-    if (zoom < 0.08) return 4
-    return 2
-  }
+  // Remove unused function
+  // const getResponsiveStrokeWidth = () => {
+  //   const zoom = mapRegion.latitudeDelta
+  //   if (zoom < 0.01) return 8
+  //   if (zoom < 0.03) return 6
+  //   if (zoom < 0.08) return 4
+  //   return 2
+  // }
 
   const handleMarkerPress = (restaurant: Restaurant) => {
     if (routePlanningMode) {
@@ -324,35 +340,78 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        region={mapRegion}
-        onRegionChangeComplete={setMapRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={false}
-        showsCompass={false}
-        showsScale={false}
-      >
+      {MapboxModule && goongStyleUrl ? (
+        <MapboxModule.MapView
+          ref={mapRef}
+          style={styles.map}
+          styleURL={goongStyleUrl}
+          logoEnabled={false}
+          onRegionDidChange={(feature: any) => {
+            if (feature.geometry.type === 'Point') {
+              const coords = feature.geometry.coordinates
+              setMapRegion({
+                latitude: coords[1],
+                longitude: coords[0],
+                latitudeDelta: 0.05,
+                longitudeDelta: 0.05,
+              })
+            }
+          }}
+        >
+          <MapboxModule.Camera
+            zoomLevel={14}
+            centerCoordinate={[mapRegion.longitude, mapRegion.latitude]}
+            animationMode="flyTo"
+            animationDuration={1000}
+          />
+        
+          <MapboxModule.UserLocation visible={true} />
+
         {/* Restaurant markers */}
         {(restaurants || []).map((restaurant) => (
-          <CustomMarker
+          <MapboxModule.PointAnnotation
             key={restaurant.id}
-            restaurant={restaurant}
-            onPress={handleMarkerPress}
-            isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
-          />
+            id={restaurant.id.toString()}
+            coordinate={[restaurant.lon, restaurant.lat]}
+            onSelected={() => handleMarkerPress(restaurant)}
+          >
+            <CustomMarker
+              restaurant={restaurant}
+              onPress={handleMarkerPress}
+              isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
+            />
+          </MapboxModule.PointAnnotation>
         ))}
 
-        {/* Route polyline */}
+        {/* Route Line */}
         {routeCoordinates.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor="#4285F4"
-            strokeWidth={getResponsiveStrokeWidth()}
-          />
+          <MapboxModule.ShapeSource
+            id="routeSource"
+            shape={{
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: routeCoordinates.map(c => [c.longitude, c.latitude])
+              },
+              properties: {}
+            }}
+          >
+            <MapboxModule.LineLayer
+              id="routeLine"
+              style={{
+                lineColor: '#4285F4',
+                lineWidth: 4,
+                lineOpacity: 0.8
+              }}
+            />
+          </MapboxModule.ShapeSource>
         )}
-      </MapView>
+        </MapboxModule.MapView>
+      ) : (
+        <View style={styles.map}>
+          {/* Placeholder while Mapbox is not available (Expo Go or before dev client build) */}
+        </View>
+      )}
 
       {/* Search Bar - Google Maps Style */}
       <RestaurantSearchBar

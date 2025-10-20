@@ -1,11 +1,10 @@
 'use client'
 
-import { getCuisineIcon } from '@/services/MapService'
+import { getCuisineIcon } from '@/services/GoongMapService'
 import type { Restaurant } from '@/type/location'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import { useRef } from 'react'
 import { Animated, StyleSheet, Text, View } from 'react-native'
-import { Marker } from 'react-native-maps'
 
 interface Props {
    restaurant: Restaurant
@@ -49,56 +48,49 @@ export default function CustomMarker({
    }
 
    return (
-      <Marker
-         coordinate={{ latitude: restaurant.lat, longitude: restaurant.lon }}
-         onPress={handlePress}
-         anchor={{ x: 0.5, y: 1 }}
-         centerOffset={{ x: 0, y: -markerSize / 2 }}
-      >
-         <View style={styles.container}>
-            {showDistance && distance && (
-               <View style={styles.distanceContainer}>
-                  <Text style={styles.distanceText}>{distance}</Text>
+      <View style={styles.container}>
+         {showDistance && distance && (
+            <View style={styles.distanceContainer}>
+               <Text style={styles.distanceText}>{distance}</Text>
+            </View>
+         )}
+
+         <Animated.View
+            style={[
+               styles.markerBase,
+               {
+                  width: markerSize,
+                  height: markerSize,
+                  borderRadius: markerSize / 2,
+                  transform: [{ scale: scaleAnim }],
+                  borderColor: isSelected ? '#2563EB' : '#D1D5DB',
+                  borderWidth: isSelected ? 2 : 1,
+               },
+            ]}
+         >
+            <MaterialCommunityIcons
+               name={iconName}
+               size={isSelected ? 24 : 20}
+               color={isSelected ? '#2563EB' : iconColor}
+            />
+
+            {isInRoute && routeOrder !== undefined && (
+               <View style={styles.routeNumber}>
+                  <Text style={styles.routeNumberText}>{routeOrder}</Text>
                </View>
             )}
+         </Animated.View>
 
-            <Animated.View
-               style={[
-                  styles.markerBase,
-                  {
-                     width: markerSize,
-                     height: markerSize,
-                     borderRadius: markerSize / 2,
-                     transform: [{ scale: scaleAnim }],
-                     borderColor: isSelected ? '#2563EB' : '#D1D5DB',
-                     borderWidth: isSelected ? 2 : 1,
-                  },
-               ]}
-            >
-               <MaterialCommunityIcons
-                  name={iconName}
-                  size={isSelected ? 24 : 20}
-                  color={isSelected ? '#2563EB' : iconColor}
-               />
+         <View style={styles.pointer} />
 
-               {isInRoute && routeOrder !== undefined && (
-                  <View style={styles.routeNumber}>
-                     <Text style={styles.routeNumberText}>{routeOrder}</Text>
-                  </View>
-               )}
-            </Animated.View>
-
-            <View style={styles.pointer} />
-
-            {isSelected && (
-               <View style={styles.labelContainer}>
-                  <Text style={styles.labelText} numberOfLines={1}>
-                     {restaurant.name}
-                  </Text>
-               </View>
-            )}
-         </View>
-      </Marker>
+         {isSelected && (
+            <View style={styles.labelContainer}>
+               <Text style={styles.labelText} numberOfLines={1}>
+                  {restaurant.name}
+               </Text>
+            </View>
+         )}
+      </View>
    )
 }
 

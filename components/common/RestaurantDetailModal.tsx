@@ -1,17 +1,18 @@
 'use client'
 
-import { formatOpeningHours, getCuisineIcon } from '@/services/MapService'
+import { formatOpeningHours, getCuisineIcon } from '@/services/GoongMapService'
 import { Restaurant } from '@/type/location'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
+import type { ComponentProps } from 'react'
 import {
-   Alert,
-   Linking,
-   Modal,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View,
+    Alert,
+    Linking,
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 
 interface Props {
@@ -99,7 +100,7 @@ export default function RestaurantDetailModal({ restaurant, visible, onClose, on
             <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
                {/* Cuisine Type */}
                <View style={styles.cuisineContainer}>
-                  <MaterialCommunityIcons name={cuisineIcon.name} size={24} color={cuisineIcon.color} style={styles.cuisineIcon} />
+                  <MaterialCommunityIcons name={cuisineIcon.name as ComponentProps<typeof MaterialCommunityIcons>['name']} size={24} color={cuisineIcon.color} style={styles.cuisineIcon} />
                   <Text style={styles.cuisineText}>{restaurant.tags.cuisine || 'Quán ăn'}</Text>
                </View>
 

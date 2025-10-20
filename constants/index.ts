@@ -3,25 +3,24 @@
 import Constants from 'expo-constants'
 import { Platform } from 'react-native'
 
-const envKey = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY
-const extraKey = (Constants?.expoConfig as any)?.extra?.OPENROUTE_API_KEY as
-  | string
-  | undefined
+// Goong Maps Configuration
+const goongApiKey = process.env.EXPO_PUBLIC_GOONG_API_KEY
+const goongMapTilesKey = process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY
+const extraGoongApi = (Constants?.expoConfig as any)?.extra?.GOONG_API_KEY
+const extraGoongTiles = (Constants?.expoConfig as any)?.extra?.GOONG_MAPTILES_KEY
 
-export const OPENROUTE_API_KEY = envKey || extraKey || ''
+export const GOONG_API_KEY = goongApiKey || extraGoongApi || ''
+export const GOONG_MAPTILES_KEY = goongMapTilesKey || extraGoongTiles || ''
 
-// Dev diagnostics: verify env is loaded (will NOT print actual key)
+// Goong Map Style URL
+export const GOONG_MAP_STYLE = `https://tiles.goong.io/assets/goong_map_web.json?api_key=${GOONG_MAPTILES_KEY}`
+
+// Dev diagnostics: verify Goong keys are loaded
 if (__DEV__) {
-  const hasEnv = !!envKey
-  const hasExtra = !!extraKey
-  const len = (envKey || extraKey || '').length
-  // This helps diagnose "not configured" vs "expired" quickly without leaking the key
-  console.log('[ENV DEBUG] ORS key source:', hasEnv ? 'env' : hasExtra ? 'extra' : 'none', 'length:', len)
-}
-
-// Map Provider - OpenStreetMap only
-if (__DEV__) {
-  console.log('[ENV DEBUG] Map provider: OpenStreetMap')
+  const hasGoongApi = !!GOONG_API_KEY
+  const hasGoongTiles = !!GOONG_MAPTILES_KEY
+  console.log('[ENV DEBUG] Goong API key:', hasGoongApi ? 'configured' : 'missing')
+  console.log('[ENV DEBUG] Goong Map Tiles key:', hasGoongTiles ? 'configured' : 'missing')
 }
    
 // Backend API Configuration
