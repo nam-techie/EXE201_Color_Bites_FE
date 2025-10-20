@@ -4,7 +4,7 @@
      "slug": "mumii",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/icon.jpg",
     "scheme": "mumii",
     "userInterfaceStyle": "automatic",
     "android": {
@@ -51,7 +51,7 @@
       "eas": {
         "projectId": "b0e31c11-8020-4fba-97bc-4e7c853787e8"
       },
-      "API_BASE_URL": "http://192.168.2.8:8080",
+      "API_BASE_URL": "http://172.27.16.1:8080",
       "OPENROUTE_API_KEY": "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImFiMWU5ZjI3MzkzYjRhZTJhOGY5MWNjMDU1OTk4M2E3IiwiaCI6Im11cm11cjY0In0="
     },
     "owner": "namphun"

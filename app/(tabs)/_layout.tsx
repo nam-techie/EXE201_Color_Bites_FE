@@ -9,7 +9,8 @@ export default function TabLayout() {
       <Tabs
          screenOptions={({ route }) => ({
             tabBarIcon: ({ focused, color }) => {
-               let iconName: keyof typeof MaterialIcons.glyphMap
+               let iconName: keyof typeof Ionicons.glyphMap
+               const size = 24
 
                if (route.name === 'index') {
                   iconName = focused ? 'home' : 'home-outline'
