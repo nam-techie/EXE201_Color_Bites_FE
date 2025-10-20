@@ -12,6 +12,8 @@ interface User {
    email: string
    avatar?: string
    isPremium: boolean
+   gender?: 'MALE' | 'FEMALE'
+   bio?: string
 }
 
 interface AuthContextType {
@@ -21,6 +23,7 @@ interface AuthContextType {
    register: (username: string, email: string, password: string, confirmPassword: string) => Promise<string>
    logout: () => Promise<void>
    updateUserAvatar: (avatarUrl: string) => Promise<void>
+   updateUser: (userData: Partial<User>) => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -170,8 +173,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
    }
 
+   const updateUser = (userData: Partial<User>) => {
+      try {
+         if (user) {
+            const updatedUser = { ...user, ...userData }
+            setUser(updatedUser)
+            AsyncStorage.setItem('user', JSON.stringify(updatedUser))
+            console.log('✅ User updated in context:', userData)
+         }
+      } catch (error) {
+         console.error('❌ Error updating user data:', error)
+      }
+   }
+
    return (
-      <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUserAvatar }}>
+      <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUserAvatar, updateUser }}>
          {children}
       </AuthContext.Provider>
    )

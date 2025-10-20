@@ -3,11 +3,11 @@
 import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
-import { paymentService, type PaymentHistoryItem } from '@/services/PaymentService'
+import { paymentService } from '@/services/PaymentService'
 import { userService, type UserInformationResponse } from '@/services/UserService'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import { useRouter } from 'expo-router'
+import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useEffect, useState } from 'react'
 import {
    ActivityIndicator,
@@ -21,6 +21,7 @@ import {
    TouchableOpacity,
    View
 } from 'react-native'
+import { WebView } from 'react-native-webview'
 
 
 export default function ProfileScreen() {
@@ -31,9 +32,8 @@ export default function ProfileScreen() {
    const [showPremiumModal, setShowPremiumModal] = useState(false)
    const [selectedPlan, setSelectedPlan] = useState<'free' | 'premium'>('premium')
    const [isCreatingPayment, setIsCreatingPayment] = useState(false)
-   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([])
-   const [isLoadingPaymentHistory, setIsLoadingPaymentHistory] = useState(false)
-   const [showPaymentHistory, setShowPaymentHistory] = useState(false)
+   const [showPaymentWebView, setShowPaymentWebView] = useState(false)
+   const [paymentUrl, setPaymentUrl] = useState('')
 
 
    // Load user profile data from API
@@ -47,90 +47,25 @@ export default function ProfileScreen() {
       }
    }, [])
 
-   // Load payment history from API
-   const loadPaymentHistory = useCallback(async () => {
-      try {
-         setIsLoadingPaymentHistory(true)
-         
-         const transactionHistory = await paymentService.getUserTransactionHistory()
-         
-         // Convert PaymentStatusResponse[] to PaymentHistoryItem[]
-         const convertedHistory: PaymentHistoryItem[] = transactionHistory.map((transaction, index) => ({
-            id: transaction.transactionId || `txn_${index}`,
-            orderCode: transaction.orderCode,
-            amount: transaction.amount,
-            description: transaction.description,
-            status: transaction.status as 'PENDING' | 'SUCCESS' | 'FAILED' | 'CANCELLED',
-            gatewayName: transaction.gatewayName,
-            createdAt: transaction.createdAt,
-            updatedAt: transaction.updatedAt,
-            subscriptionPlan: 'PREMIUM', // Default value
-            subscriptionDuration: 30 // Default value
-         }))
-         
-         setPaymentHistory(convertedHistory)
-         
-      } catch (error) {
-         console.error('Error loading payment history:', error)
-         
-         // Mock data for testing UI when API is not ready
-         const mockPaymentHistory: PaymentHistoryItem[] = [
-            {
-               id: '1',
-               orderCode: 123456789,
-               amount: 36000,
-               description: 'Premium Color Bites',
-               status: 'SUCCESS',
-               gatewayName: 'PayOS',
-               createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-               updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-               subscriptionPlan: 'PREMIUM',
-               subscriptionDuration: 30
-            },
-            {
-               id: '2',
-               orderCode: 123456788,
-               amount: 36000,
-               description: 'Premium Color Bites',
-               status: 'PENDING',
-               gatewayName: 'PayOS',
-               createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-               updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-               subscriptionPlan: 'PREMIUM',
-               subscriptionDuration: 30
-            },
-            {
-               id: '3',
-               orderCode: 123456787,
-               amount: 36000,
-               description: 'Premium Color Bites',
-               status: 'FAILED',
-               gatewayName: 'PayOS',
-               createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-               updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-               subscriptionPlan: 'PREMIUM',
-               subscriptionDuration: 30
-            }
-         ]
-         setPaymentHistory(mockPaymentHistory)
-      } finally {
-         setIsLoadingPaymentHistory(false)
-      }
-   }, [])
 
    // Load data on component mount
    useEffect(() => {
       loadUserProfile()
-      loadPaymentHistory()
-   }, [loadUserProfile, loadPaymentHistory])
+   }, [loadUserProfile])
+
+   // Refetch when screen gains focus
+   useFocusEffect(
+      useCallback(() => {
+         loadUserProfile()
+      }, [loadUserProfile])
+   )
 
 
    // Handle refresh
    const handleRefresh = useCallback(() => {
       setIsRefreshing(true)
       loadUserProfile()
-      loadPaymentHistory()
-   }, [loadUserProfile, loadPaymentHistory])
+   }, [loadUserProfile])
 
 
    const handleLogout = async () => {
@@ -160,21 +95,21 @@ export default function ProfileScreen() {
       try {
          setIsCreatingPayment(true)
          
-         // Tạo payment request
+         // Tạo payment request cho Premium subscription
          const paymentRequest = paymentService.createPremiumPaymentRequest()
          
          // Gọi API tạo thanh toán
-         await paymentService.createSubscriptionPayment(paymentRequest)
+         const response = await paymentService.createSubscriptionPayment(paymentRequest)
          
-         // Đóng modal premium
-         setShowPremiumModal(false)
+         console.log('Payment response:', response)
          
-         // TODO: Implement payment WebView or redirect to payment URL
-         Alert.alert(
-            'Thanh toán',
-            'Chức năng thanh toán đang được phát triển. Vui lòng thử lại sau.',
-            [{ text: 'Đóng' }]
-         )
+         if (response.checkoutUrl) {
+            setPaymentUrl(response.checkoutUrl)
+            setShowPaymentWebView(true)
+            setShowPremiumModal(false) // Đóng modal premium
+         } else {
+            throw new Error('Không nhận được link thanh toán từ server')
+         }
          
       } catch (error) {
          console.error('Error creating payment:', error)
@@ -187,6 +122,39 @@ export default function ProfileScreen() {
          )
       } finally {
          setIsCreatingPayment(false)
+      }
+   }
+
+   // Handle WebView navigation events
+   const handleWebViewNavigationStateChange = (navState: any) => {
+      const { url } = navState
+      
+      // Kiểm tra nếu user đã thanh toán thành công
+      if (url.includes('payment/success') || url.includes('success')) {
+         setShowPaymentWebView(false)
+         Alert.alert(
+            'Thanh toán thành công!',
+            'Chúc mừng bạn đã nâng cấp lên Premium!',
+            [
+               { 
+                  text: 'OK', 
+                  onPress: () => {
+                     // Refresh user profile để cập nhật subscription status
+                     loadUserProfile()
+                  }
+               }
+            ]
+         )
+      }
+      
+      // Kiểm tra nếu user hủy thanh toán
+      if (url.includes('payment/cancel') || url.includes('cancel')) {
+         setShowPaymentWebView(false)
+         Alert.alert(
+            'Thanh toán bị hủy',
+            'Bạn đã hủy quá trình thanh toán.',
+            [{ text: 'OK' }]
+         )
       }
    }
 
@@ -499,134 +467,48 @@ export default function ProfileScreen() {
             </View>
          </Modal>
 
-         {/* Payment History Modal - Full Screen */}
+         {/* Edit Profile Modal removed: moved to /profile/AccountManagement */}
+
+         {/* Payment WebView Modal */}
          <Modal
-            visible={showPaymentHistory}
+            visible={showPaymentWebView}
             transparent={false}
             animationType="slide"
-            onRequestClose={() => setShowPaymentHistory(false)}
+            onRequestClose={() => setShowPaymentWebView(false)}
          >
-            <SafeAreaView style={styles.fullScreenModalContainer}>
-               {/* Modal Header */}
-               <View style={styles.fullScreenModalHeader}>
+            <SafeAreaView style={styles.webViewContainer}>
+               <View style={styles.webViewHeader}>
                   <TouchableOpacity
-                     onPress={() => setShowPaymentHistory(false)}
-                     style={styles.fullScreenModalBackButton}
+                     onPress={() => setShowPaymentWebView(false)}
+                     style={styles.webViewCloseButton}
                   >
-                     <Ionicons name="arrow-back" size={24} color="#111827" />
+                     <Ionicons name="close" size={24} color="#6B7280" />
                   </TouchableOpacity>
-                  <Text style={styles.fullScreenModalTitle}>Lịch sử thanh toán</Text>
-                  <View style={styles.fullScreenModalHeaderSpacer} />
+                  <Text style={styles.webViewTitle}>Thanh toán Premium</Text>
+                  <View style={styles.webViewSpacer} />
                </View>
-
-               {/* Payment History Content */}
-               <ScrollView 
-                  style={styles.fullScreenModalContent}
-                  contentContainerStyle={styles.fullScreenModalContentContainer}
-                  showsVerticalScrollIndicator={false}
-               >
-                  {isLoadingPaymentHistory ? (
-                     <View style={styles.fullScreenLoadingContainer}>
-                        <ActivityIndicator size="large" color="#F97316" />
-                        <Text style={styles.fullScreenLoadingText}>Đang tải lịch sử...</Text>
-                     </View>
-                  ) : paymentHistory.length === 0 ? (
-                     <View style={styles.fullScreenEmptyState}>
-                        <View style={styles.fullScreenEmptyStateIcon}>
-                           <Ionicons name="card-outline" size={64} color="#9CA3AF" />
+               
+               {paymentUrl ? (
+                  <WebView
+                     source={{ uri: paymentUrl }}
+                     style={styles.webView}
+                     onNavigationStateChange={handleWebViewNavigationStateChange}
+                     startInLoadingState={true}
+                     renderLoading={() => (
+                        <View style={styles.webViewLoading}>
+                           <ActivityIndicator size="large" color="#F97316" />
+                           <Text style={styles.webViewLoadingText}>Đang tải trang thanh toán...</Text>
                         </View>
-                        <Text style={styles.fullScreenEmptyStateTitle}>Chưa có lịch sử thanh toán</Text>
-                        <Text style={styles.fullScreenEmptyStateSubtitle}>
-                           Các giao dịch của bạn sẽ hiển thị ở đây
-                        </Text>
-                     </View>
-                  ) : (
-                     <View style={styles.fullScreenPaymentList}>
-                        {paymentHistory.map((payment, index) => (
-                           <View key={payment.id} style={styles.fullScreenPaymentItem}>
-                              {/* Payment Header */}
-                              <View style={styles.fullScreenPaymentHeader}>
-                                 <View style={styles.fullScreenPaymentLeft}>
-                                    <View style={styles.fullScreenPaymentIconContainer}>
-                                       <Ionicons 
-                                          name="card" 
-                                          size={20} 
-                                          color={payment.status === 'SUCCESS' ? '#10B981' : 
-                                                payment.status === 'PENDING' ? '#F59E0B' : 
-                                                payment.status === 'FAILED' ? '#EF4444' : '#6B7280'} 
-                                       />
-                                    </View>
-                                    <View style={styles.fullScreenPaymentInfo}>
-                                       <Text style={styles.fullScreenPaymentTitle}>
-                                          {payment.description}
-                                       </Text>
-                                       <Text style={styles.fullScreenPaymentOrderCode}>
-                                          Mã đơn: {payment.orderCode}
-                                       </Text>
-                                    </View>
-                                 </View>
-                                 <View style={styles.fullScreenPaymentRight}>
-                                    <Text style={styles.fullScreenPaymentAmount}>
-                                       {payment.amount.toLocaleString('vi-VN')}đ
-                                    </Text>
-                                    <View style={[
-                                       styles.fullScreenPaymentStatusBadge,
-                                       payment.status === 'SUCCESS' && styles.fullScreenPaymentStatusSuccess,
-                                       payment.status === 'PENDING' && styles.fullScreenPaymentStatusPending,
-                                       payment.status === 'FAILED' && styles.fullScreenPaymentStatusFailed,
-                                       payment.status === 'CANCELLED' && styles.fullScreenPaymentStatusCancelled,
-                                    ]}>
-                                       <Text style={[
-                                          styles.fullScreenPaymentStatusText,
-                                          payment.status === 'SUCCESS' && styles.fullScreenPaymentStatusTextSuccess,
-                                          payment.status === 'PENDING' && styles.fullScreenPaymentStatusTextPending,
-                                          payment.status === 'FAILED' && styles.fullScreenPaymentStatusTextFailed,
-                                          payment.status === 'CANCELLED' && styles.fullScreenPaymentStatusTextCancelled,
-                                       ]}>
-                                          {payment.status === 'SUCCESS' ? 'Thành công' :
-                                           payment.status === 'PENDING' ? 'Đang xử lý' :
-                                           payment.status === 'FAILED' ? 'Thất bại' :
-                                           payment.status === 'CANCELLED' ? 'Đã hủy' : payment.status}
-                                       </Text>
-                                    </View>
-                                 </View>
-                              </View>
-                              
-                              {/* Payment Footer */}
-                              <View style={styles.fullScreenPaymentFooter}>
-                                 <View style={styles.fullScreenPaymentDateContainer}>
-                                    <Ionicons name="time-outline" size={14} color="#6B7280" />
-                                    <Text style={styles.fullScreenPaymentDate}>
-                                       {new Date(payment.createdAt).toLocaleDateString('vi-VN', {
-                                          year: 'numeric',
-                                          month: 'long',
-                                          day: 'numeric',
-                                          hour: '2-digit',
-                                          minute: '2-digit'
-                                       })}
-                                    </Text>
-                                 </View>
-                                 <View style={styles.fullScreenPaymentGatewayContainer}>
-                                    <Ionicons name="card-outline" size={14} color="#6B7280" />
-                                    <Text style={styles.fullScreenPaymentGateway}>
-                                       {payment.gatewayName}
-                                    </Text>
-                                 </View>
-                              </View>
-                              
-                              {/* Divider */}
-                              {index < paymentHistory.length - 1 && (
-                                 <View style={styles.fullScreenPaymentDivider} />
-                              )}
-                           </View>
-                        ))}
-                     </View>
-                  )}
-               </ScrollView>
+                     )}
+                  />
+               ) : (
+                  <View style={styles.webViewError}>
+                     <Ionicons name="alert-circle-outline" size={48} color="#EF4444" />
+                     <Text style={styles.webViewErrorText}>Không thể tải trang thanh toán</Text>
+                  </View>
+               )}
             </SafeAreaView>
          </Modal>
-
-         {/* Edit Profile Modal removed: moved to /profile/AccountManagement */}
 
       </SafeAreaView>
    )
@@ -1104,113 +986,6 @@ const styles = StyleSheet.create({
        lineHeight: 20,
        textDecorationLine: 'line-through',
     },
-    // Payment History Modal styles
-    modalTitle: {
-       fontSize: 18,
-       fontWeight: '600',
-       color: '#111827',
-       flex: 1,
-       textAlign: 'center',
-    },
-    paymentHistoryContent: {
-       flex: 1,
-       paddingHorizontal: 16,
-    },
-    paymentHistoryItem: {
-       backgroundColor: '#FFFFFF',
-       borderRadius: 12,
-       padding: 16,
-       marginBottom: 12,
-       borderWidth: 1,
-       borderColor: '#E5E7EB',
-       shadowColor: '#000',
-       shadowOffset: {
-          width: 0,
-          height: 1,
-       },
-       shadowOpacity: 0.05,
-       shadowRadius: 2,
-       elevation: 1,
-    },
-    paymentHistoryHeader: {
-       flexDirection: 'row',
-       justifyContent: 'space-between',
-       alignItems: 'flex-start',
-       marginBottom: 12,
-    },
-    paymentHistoryLeft: {
-       flex: 1,
-       marginRight: 12,
-    },
-    paymentHistoryTitle: {
-       fontSize: 16,
-       fontWeight: '600',
-       color: '#111827',
-       marginBottom: 4,
-    },
-    paymentHistoryOrderCode: {
-       fontSize: 12,
-       color: '#6B7280',
-    },
-    paymentHistoryRight: {
-       alignItems: 'flex-end',
-    },
-    paymentHistoryAmount: {
-       fontSize: 16,
-       fontWeight: '700',
-       color: '#111827',
-       marginBottom: 8,
-    },
-    paymentStatusBadge: {
-       paddingHorizontal: 8,
-       paddingVertical: 4,
-       borderRadius: 6,
-    },
-    paymentStatusSuccess: {
-       backgroundColor: '#D1FAE5',
-    },
-    paymentStatusPending: {
-       backgroundColor: '#FEF3C7',
-    },
-    paymentStatusFailed: {
-       backgroundColor: '#FEE2E2',
-    },
-    paymentStatusCancelled: {
-       backgroundColor: '#F3F4F6',
-    },
-    paymentStatusText: {
-       fontSize: 12,
-       fontWeight: '500',
-    },
-    paymentStatusTextSuccess: {
-       color: '#065F46',
-    },
-    paymentStatusTextPending: {
-       color: '#92400E',
-    },
-    paymentStatusTextFailed: {
-       color: '#DC2626',
-    },
-    paymentStatusTextCancelled: {
-       color: '#6B7280',
-    },
-    paymentHistoryFooter: {
-       flexDirection: 'row',
-       justifyContent: 'space-between',
-       alignItems: 'center',
-       paddingTop: 12,
-       borderTopWidth: 1,
-       borderTopColor: '#F3F4F6',
-    },
-    paymentHistoryDate: {
-       fontSize: 12,
-       color: '#6B7280',
-    },
-    paymentHistoryGateway: {
-       fontSize: 12,
-       color: '#6B7280',
-       fontWeight: '500',
-    },
     // Full Screen Modal Styles
     fullScreenModalContainer: {
        flex: 1,
@@ -1299,133 +1074,66 @@ const styles = StyleSheet.create({
        textAlign: 'center',
        lineHeight: 24,
     },
-    fullScreenPaymentList: {
-       paddingHorizontal: 16,
-       paddingTop: 16,
-    },
-    fullScreenPaymentItem: {
-       backgroundColor: '#FFFFFF',
-       borderRadius: 12,
-       marginBottom: 12,
-       shadowColor: '#000',
-       shadowOffset: {
-          width: 0,
-          height: 1,
-       },
-       shadowOpacity: 0.05,
-       shadowRadius: 3,
-       elevation: 2,
-    },
-    fullScreenPaymentHeader: {
-       flexDirection: 'row',
-       alignItems: 'flex-start',
-       justifyContent: 'space-between',
-       padding: 16,
-       paddingBottom: 12,
-    },
-    fullScreenPaymentLeft: {
-       flexDirection: 'row',
-       alignItems: 'flex-start',
+    // WebView styles
+    webViewContainer: {
        flex: 1,
-       marginRight: 12,
+       backgroundColor: '#FFFFFF',
     },
-    fullScreenPaymentIconContainer: {
-       width: 40,
-       height: 40,
-       borderRadius: 20,
+    webViewHeader: {
+       flexDirection: 'row',
+       alignItems: 'center',
+       justifyContent: 'space-between',
+       paddingHorizontal: 16,
+       paddingVertical: 12,
+       borderBottomWidth: 1,
+       borderBottomColor: '#E5E7EB',
+       backgroundColor: '#FFFFFF',
+    },
+    webViewCloseButton: {
+       width: 32,
+       height: 32,
+       borderRadius: 16,
        backgroundColor: '#F3F4F6',
        alignItems: 'center',
        justifyContent: 'center',
-       marginRight: 12,
     },
-    fullScreenPaymentInfo: {
-       flex: 1,
-    },
-    fullScreenPaymentTitle: {
-       fontSize: 16,
+    webViewTitle: {
+       fontSize: 18,
        fontWeight: '600',
        color: '#111827',
-       marginBottom: 4,
-       lineHeight: 22,
+       flex: 1,
+       textAlign: 'center',
     },
-    fullScreenPaymentOrderCode: {
-       fontSize: 12,
-       color: '#6B7280',
-       lineHeight: 16,
+    webViewSpacer: {
+       width: 32,
     },
-    fullScreenPaymentRight: {
-       alignItems: 'flex-end',
-    },
-    fullScreenPaymentAmount: {
-       fontSize: 18,
-       fontWeight: '700',
-       color: '#111827',
-       marginBottom: 8,
-    },
-    fullScreenPaymentStatusBadge: {
-       paddingHorizontal: 8,
-       paddingVertical: 4,
-       borderRadius: 6,
-    },
-    fullScreenPaymentStatusSuccess: {
-       backgroundColor: '#D1FAE5',
-    },
-    fullScreenPaymentStatusPending: {
-       backgroundColor: '#FEF3C7',
-    },
-    fullScreenPaymentStatusFailed: {
-       backgroundColor: '#FEE2E2',
-    },
-    fullScreenPaymentStatusCancelled: {
-       backgroundColor: '#F3F4F6',
-    },
-    fullScreenPaymentStatusText: {
-       fontSize: 12,
-       fontWeight: '500',
-    },
-    fullScreenPaymentStatusTextSuccess: {
-       color: '#065F46',
-    },
-    fullScreenPaymentStatusTextPending: {
-       color: '#92400E',
-    },
-    fullScreenPaymentStatusTextFailed: {
-       color: '#DC2626',
-    },
-    fullScreenPaymentStatusTextCancelled: {
-       color: '#6B7280',
-    },
-    fullScreenPaymentFooter: {
-       flexDirection: 'row',
-       justifyContent: 'space-between',
-       alignItems: 'center',
-       paddingHorizontal: 16,
-       paddingBottom: 16,
-       paddingTop: 8,
-    },
-    fullScreenPaymentDateContainer: {
-       flexDirection: 'row',
-       alignItems: 'center',
+    webView: {
        flex: 1,
     },
-    fullScreenPaymentDate: {
-       fontSize: 12,
-       color: '#6B7280',
-       marginLeft: 4,
-    },
-    fullScreenPaymentGatewayContainer: {
-       flexDirection: 'row',
+    webViewLoading: {
+       flex: 1,
+       justifyContent: 'center',
        alignItems: 'center',
+       backgroundColor: '#F9FAFB',
     },
-    fullScreenPaymentGateway: {
-       fontSize: 12,
+    webViewLoadingText: {
+       marginTop: 16,
+       fontSize: 16,
        color: '#6B7280',
        fontWeight: '500',
-       marginLeft: 4,
     },
-    fullScreenPaymentDivider: {
-       height: 1,
-       backgroundColor: '#E5E7EB',
-       marginHorizontal: 16,
+    webViewError: {
+       flex: 1,
+       justifyContent: 'center',
+       alignItems: 'center',
+       backgroundColor: '#F9FAFB',
+       paddingHorizontal: 32,
+    },
+    webViewErrorText: {
+       marginTop: 16,
+       fontSize: 16,
+       color: '#6B7280',
+       textAlign: 'center',
+       fontWeight: '500',
     },
  })

@@ -44,9 +44,12 @@ export class AuthService {
   async changePassword(oldPassword: string, newPassword: string, confirmPassword: string): Promise<string> {
     try {
       const payload = { oldPassword, newPassword, confirmPassword }
+      // Need auth token for protected endpoint
+      const token = await AsyncStorage.getItem('authToken')
       const response = await this.axiosInstance.put<ApiResponse<unknown>>(
         API_ENDPOINTS.AUTH.CHANGE_PASSWORD,
-        payload
+        payload,
+        token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
       )
 
       if (response.data.status === 200) {
