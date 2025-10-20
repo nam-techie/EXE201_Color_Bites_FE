@@ -10,24 +10,21 @@
          "env": {
             "NODE_VERSION": "20.19.4",
             "EXPO_USE_NPM": "1"
-         },
-         "image": "ubuntu-22.04-node-20"
+         }
       },
       "preview": {
          "distribution": "internal",
          "env": {
             "NODE_VERSION": "20.19.4",
             "EXPO_USE_NPM": "1"
-         },
-         "image": "ubuntu-22.04-node-20"
+         }
       },
       "production": {
          "autoIncrement": true,
          "env": {
             "NODE_VERSION": "20.19.4",
             "EXPO_USE_NPM": "1"
-         },
-         "image": "ubuntu-22.04-node-20"
+         }
       }
    },
    "submit": {
