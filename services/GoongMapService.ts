@@ -8,14 +8,14 @@ const GOONG_API_BASE = 'https://rsapi.goong.io'
 interface GoongPlace {
   place_id: string
   formatted_address: string
-  geometry: {
-    location: {
+  geometry?: {
+    location?: {
       lat: number
       lng: number
     }
   }
   name: string
-  types: string[]
+  types?: string[]
   vicinity?: string
 }
 
@@ -99,16 +99,18 @@ export async function searchPlaces(
       return []
     }
 
-    return data.predictions.map((place) => ({
-      id: stableStringToNumberId(place.place_id),
-      name: place.name || 'Không rõ tên',
-      lat: place.geometry.location.lat,
-      lon: place.geometry.location.lng,
-      tags: {
-        cuisine: place.types?.[0] || 'restaurant',
-        'addr:street': place.formatted_address,
-      },
-    }))
+    return data.predictions
+      .filter((place) => place?.geometry?.location)
+      .map((place) => ({
+        id: stableStringToNumberId(place.place_id),
+        name: place.name || 'Không rõ tên',
+        lat: place.geometry!.location!.lat,
+        lon: place.geometry!.location!.lng,
+        tags: {
+          cuisine: place.types?.[0] || 'restaurant',
+          'addr:street': place.formatted_address,
+        },
+      }))
   } catch (error) {
     console.error('Error fetching places from Goong:', error)
     return []
@@ -154,6 +156,9 @@ export async function getPlaceDetail(placeId: string): Promise<Restaurant | null
     }
 
     const place = data.result
+    if (!place?.geometry?.location) {
+      return null
+    }
     return {
       id: stableStringToNumberId(place.place_id),
       name: place.name || 'Không rõ tên',
@@ -218,16 +223,18 @@ export async function fetchRestaurantsNearby(
       return []
     }
 
-    return data.predictions.map((place) => ({
-      id: stableStringToNumberId(place.place_id),
-      name: place.name || 'Không rõ tên',
-      lat: place.geometry.location.lat,
-      lon: place.geometry.location.lng,
-      tags: {
-        cuisine: place.types?.[0] || 'restaurant',
-        'addr:street': place.formatted_address,
-      },
-    }))
+    return data.predictions
+      .filter((place) => place?.geometry?.location)
+      .map((place) => ({
+        id: stableStringToNumberId(place.place_id),
+        name: place.name || 'Không rõ tên',
+        lat: place.geometry!.location!.lat,
+        lon: place.geometry!.location!.lng,
+        tags: {
+          cuisine: place.types?.[0] || 'restaurant',
+          'addr:street': place.formatted_address,
+        },
+      }))
   } catch (error) {
     console.error('Error fetching nearby restaurants from Goong:', error)
     return []
