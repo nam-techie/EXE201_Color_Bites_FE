@@ -2,7 +2,7 @@
 import FilterButtons from '@/components/common/FilterButtons'
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
-import CustomMarker from '@/components/map/CustomMapMarker'
+import MapGoongWebView from '@/components/map/MapGoongWebView'
 import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
@@ -12,8 +12,7 @@ import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
 import type { MapRegion, Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
-import MapLibreGL from '@maplibre/maplibre-react-native'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+// removed AsyncStorage/Constants usage in Goong-only mode
 import * as Location from 'expo-location'
 import { useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -25,7 +24,6 @@ import {
   PanResponderGestureState,
   Pressable,
   StyleSheet,
-  Text,
   TouchableOpacity,
   View
 } from 'react-native'
@@ -37,22 +35,7 @@ interface RouteStop {
   duration?: number
 }
 
-// Định nghĩa 5 map styles với validation
-const MAPTILER_KEY = process.env.EXPO_PUBLIC_MAPTILER_KEY
-
-const MAP_STYLES = [
-  { id: 'streets', name: 'Đường phố', url: `https://api.maptiler.com/maps/streets/style.json?key=${MAPTILER_KEY}` },
-  { id: 'bright', name: 'Sáng', url: `https://api.maptiler.com/maps/bright/style.json?key=${MAPTILER_KEY}` },
-  { id: 'outdoor', name: 'Ngoài trời', url: `https://api.maptiler.com/maps/outdoor/style.json?key=${MAPTILER_KEY}` },
-  { id: 'satellite', name: 'Vệ tinh', url: `https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}` },
-  { id: 'basic', name: 'Cơ bản', url: `https://api.maptiler.com/maps/basic/style.json?key=${MAPTILER_KEY}` },
-]
-
-// Validate API key
-if (!MAPTILER_KEY || MAPTILER_KEY === 'YOUR_ACTUAL_KEY_HERE') {
-  console.error('❌ MapTiler API key is missing or not configured!')
-  console.error('Please add EXPO_PUBLIC_MAPTILER_KEY to your .env file')
-}
+// Using Goong WebView exclusively; MapTiler/MapLibre removed
 
 const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
   const scale = useRef(new Animated.Value(1)).current
@@ -100,7 +83,7 @@ export default function MapScreen() {
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
-  const mapRef = useRef<any>(null)
+  // removed mapRef (MapLibre-only)
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
@@ -108,9 +91,7 @@ export default function MapScreen() {
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
   
-  // Map style states
-  const [selectedMapStyle, setSelectedMapStyle] = useState('streets')
-  const [mapStyleModalVisible, setMapStyleModalVisible] = useState(false)
+  // Map style selection removed when using Goong WebView
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -235,20 +216,7 @@ export default function MapScreen() {
     }
   }, [user])
 
-  // Load saved map style preference
-  useEffect(() => {
-    const loadMapStylePreference = async () => {
-      try {
-        const savedStyle = await AsyncStorage.getItem('selectedMapStyle')
-        if (savedStyle) {
-          setSelectedMapStyle(savedStyle)
-        }
-      } catch (error) {
-        console.log('Error loading map style preference:', error)
-      }
-    }
-    loadMapStylePreference()
-  }, [])
+  // Map style preference not used with Goong WebView
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -280,27 +248,10 @@ export default function MapScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProfile])
 
-  const getResponsiveStrokeWidth = () => {
-    const zoom = mapRegion.latitudeDelta
-    if (zoom < 0.01) return 8
-    if (zoom < 0.03) return 6
-    if (zoom < 0.08) return 4
-    return 2
-  }
+  // stroke width fixed for WebView route rendering
+  // const getResponsiveStrokeWidth = () => 4
 
-  const handleMarkerPress = (restaurant: Restaurant) => {
-    if (routePlanningMode) {
-      const isAlreadyAdded = routeStops.some((stop) => stop.restaurant.id === restaurant.id)
-      if (!isAlreadyAdded) {
-        const newStops = [...routeStops, { restaurant }]
-        setRouteStops(newStops)
-        calculateRouteForStops(newStops)
-      }
-    } else {
-      setSelectedRestaurant(restaurant)
-      setModalVisible(true)
-    }
-  }
+  // marker press handled in WebView mode via onMessage tap events
 
   const handleMyLocation = async () => {
     const location = await getCurrentUserLocation()
@@ -361,97 +312,29 @@ export default function MapScreen() {
     // TODO: Implement filter logic for restaurants
   }
 
-  // Map style selection handlers
-  const handleMapStyleSelect = async (styleId: string) => {
-    setSelectedMapStyle(styleId)
-    setMapStyleModalVisible(false)
-    
-    // Save preference to AsyncStorage
-    try {
-      await AsyncStorage.setItem('selectedMapStyle', styleId)
-    } catch (error) {
-      console.log('Error saving map style preference:', error)
-    }
-  }
+  // Map style selection removed
 
-  // Error boundary for MapLibre
-  const [mapError, setMapError] = useState<string | null>(null)
-  const [isMapReady, setIsMapReady] = useState(false)
+  // MapLibre error boundary removed
 
-  if (mapError) {
-    return (
-      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={{ color: 'red', textAlign: 'center', margin: 20 }}>
-          Map Error: {mapError}
-        </Text>
-        <TouchableOpacity 
-          style={{ backgroundColor: '#007AFF', padding: 10, borderRadius: 5, marginTop: 10 }}
-          onPress={() => setMapError(null)}
-        >
-          <Text style={{ color: 'white' }}>Retry</Text>
-        </TouchableOpacity>
-      </View>
-    )
-  }
+  // Goong WebView only
+  // const useGoong = true
 
   return (
     <View style={styles.container}>
-      <MapLibreGL.MapView
-        ref={mapRef}
-        style={styles.map}
-        styleURL={MAP_STYLES.find(style => style.id === selectedMapStyle)?.url || MAP_STYLES[0].url}
-        onDidFinishLoadingMap={() => {
-          console.log('Map loaded successfully')
-          setIsMapReady(true)
-        }}
-        onDidFailLoadingMap={(error: any) => {
-          console.error('Map failed to load:', error)
-          setMapError('Failed to load map. Please check your API key and internet connection.')
-        }}
-        onRegionDidChange={async () => {
-          try {
-            // Note: MapLibreGL doesn't have Mapbox.getCenter, using alternative approach
-            // This is a simplified version - you might need to adjust based on your needs
-          } catch {
-            // ignore
+      <MapGoongWebView
+        center={{ lat: mapRegion.latitude, lon: mapRegion.longitude }}
+        markers={(restaurants || []).map(r => ({ id: String(r.id), lat: r.lat, lon: r.lon }))}
+        routeGeoJSON={routeCoordinates.length > 0 ? {
+          type: 'Feature',
+          geometry: { type: 'LineString', coordinates: routeCoordinates.map(p => [p.longitude, p.latitude]) },
+          properties: {}
+        } : undefined}
+        onMessage={(msg) => {
+          if (msg?.type === 'tap') {
+            // future: add marker or open add-stop dialog
           }
         }}
-      >
-        <MapLibreGL.Camera
-          centerCoordinate={[mapRegion.longitude, mapRegion.latitude]}
-          zoomLevel={13}
-        />
-
-        {/* Restaurant markers */}
-        {(restaurants || []).map((restaurant) => (
-          <CustomMarker
-            key={restaurant.id}
-            restaurant={restaurant}
-            onPress={handleMarkerPress}
-            isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
-          />
-        ))}
-
-        {/* Route polyline */}
-        {routeCoordinates.length > 0 && (
-          <MapLibreGL.ShapeSource
-            id="route"
-            shape={{
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: routeCoordinates.map((p) => [p.longitude, p.latitude]),
-              },
-              properties: {},
-            }}
-          >
-            <MapLibreGL.LineLayer
-              id="routeLine"
-              style={{ lineColor: '#4285F4', lineWidth: getResponsiveStrokeWidth() }}
-            />
-          </MapLibreGL.ShapeSource>
-        )}
-      </MapLibreGL.MapView>
+      />
 
       {/* Search Bar - Google Maps Style */}
       <RestaurantSearchBar
@@ -462,6 +345,17 @@ export default function MapScreen() {
         onAvatarPress={handleAvatarPress}
         onMicPress={handleMicPress}
         avatarUrl={userAvatar}
+        onPlaceSelected={async (placeId) => {
+          const detail = await (await import('@/services/GoongService')).GoongService.placeDetailV2(placeId)
+          if (detail) {
+            setMapRegion({
+              latitude: detail.lat,
+              longitude: detail.lon,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            })
+          }
+        }}
       />
 
       {/* Filter Buttons */}
@@ -555,13 +449,7 @@ export default function MapScreen() {
         <Ionicons name="locate" size={24} color="#5F6368" />
       </TouchableOpacity>
 
-      {/* Layers Button - bottom right */}
-      <TouchableOpacity
-        style={styles.layersButton}
-        onPress={() => setMapStyleModalVisible(true)}
-      >
-        <Ionicons name="layers" size={24} color="#5F6368" />
-      </TouchableOpacity>
+      {/* Layers button removed when using Goong WebView only */}
 
       <RestaurantDetailModal
         restaurant={selectedRestaurant}
@@ -573,47 +461,7 @@ export default function MapScreen() {
         onNavigateToRestaurant={handleNavigateToRestaurant}
       />
 
-      {/* Map Style Selection Overlay (replacing Modal to avoid type issues) */}
-      {mapStyleModalVisible && (
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Chọn loại bản đồ</Text>
-              <TouchableOpacity
-                onPress={() => setMapStyleModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Ionicons name="close" size={24} color="#666" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.mapStyleList}>
-              {MAP_STYLES.map((style) => (
-                <TouchableOpacity
-                  key={style.id}
-                  style={[
-                    styles.mapStyleItem,
-                    selectedMapStyle === style.id && styles.mapStyleItemSelected
-                  ]}
-                  onPress={() => handleMapStyleSelect(style.id)}
-                >
-                  <View style={styles.mapStyleInfo}>
-                    <Text style={[
-                      styles.mapStyleName,
-                      selectedMapStyle === style.id && styles.mapStyleNameSelected
-                    ]}>
-                      {style.name}
-                    </Text>
-                  </View>
-                  {selectedMapStyle === style.id && (
-                    <Ionicons name="checkmark-circle" size={24} color="#3B82F6" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </View>
-      )}
+      {/* Map style modal removed */}
     </View>
   )
 }

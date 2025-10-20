@@ -11,7 +11,9 @@
  */
 
 import type { Restaurant } from '@/type/location'
+import Constants from 'expo-constants'
 import type { DirectionResult } from './DirectionService'
+import { GoongService, decodePolyline } from './GoongService'
 
 // Import OpenStreetMap services
 import * as OpenRouteService from './DirectionService'
@@ -54,6 +56,28 @@ export const MapProvider = {
     destination: { lat: number; lon: number },
     profile: string = 'driving-car',
   ): Promise<DirectionResult | null> {
+    const extra = (Constants.expoConfig?.extra as any) || {}
+    const useGoong = extra?.EXPO_PUBLIC_USE_GOONG_WEBVIEW === 'true'
+    const hasGoongKey = (extra?.EXPO_PUBLIC_GOONG_API_KEY as string)?.length > 0
+
+    if (useGoong && hasGoongKey) {
+      const vehicle = profile.includes('foot')
+        ? 'foot'
+        : profile.includes('cycling')
+          ? 'bike'
+          : 'car'
+      const res = await GoongService.directionsV2(origin, destination, vehicle)
+      if (!res) return null
+      const coords = decodePolyline(res.polyline).map(p => [p.longitude, p.latitude])
+      return {
+        distance: res.distance,
+        duration: res.duration,
+        steps: [],
+        geometry: coords,
+        summary: { distance: res.distance, duration: res.duration },
+      }
+    }
+
     return OpenRouteService.getDirections(origin, destination, profile)
   },
 
@@ -138,12 +162,12 @@ export const MapProvider = {
  * Re-export từ MapService (cả 2 provider đều dùng chung)
  */
 export {
-  calculateDistance, formatOpeningHours, getCuisineIcon, getPriceRange, getRestaurantRating, isRestaurantOpen
+    calculateDistance, formatOpeningHours, getCuisineIcon, getPriceRange, getRestaurantRating, isRestaurantOpen
 } from './MapService'
 
 export {
-  calculateEstimatedCost, convertCoordinatesToMapFormat, formatCost, formatDistance,
-  formatDuration, getEstimatedTimeWithTraffic, getInstructionIcon
+    calculateEstimatedCost, convertCoordinatesToMapFormat, formatCost, formatDistance,
+    formatDuration, getEstimatedTimeWithTraffic, getInstructionIcon
 } from './DirectionService'
 
 /**

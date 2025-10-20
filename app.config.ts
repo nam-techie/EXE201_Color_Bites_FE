@@ -7,7 +7,7 @@ export default {
     slug: "mumii",
     version: "1.0.0",
     orientation: "portrait",
-  icon: "./assets/images/icon.png",
+  icon: "./assets/images/icon.jpg",
     scheme: "mumii",
     userInterfaceStyle: "automatic",
     android: {
@@ -44,17 +44,6 @@ export default {
         {
           locationWhenInUsePermission: "We need your location to show it on the map!"
         }
-      ],
-      [
-        "@maplibre/maplibre-react-native",
-        {
-          "android": {
-            "enableMapLibre": true
-          },
-          "ios": {
-            "enableMapLibre": true
-          }
-        }
       ]
     ],
     updates: {
@@ -65,6 +54,11 @@ export default {
     },
     extra: {
       EXPO_PUBLIC_API_BASE_URL: "https://api-mumii.namtechie.id.vn",
+      EXPO_PUBLIC_GOONG_API_URL: "https://rsapi.goong.io/",
+      EXPO_PUBLIC_GOONG_API_KEY: "",
+      EXPO_PUBLIC_GOONG_MAP_KEY: "",
+      EXPO_PUBLIC_GOONG_MAP_STYLE_URL: "https://tiles.goong.io/assets/goong_map_web.json",
+      EXPO_PUBLIC_USE_GOONG_WEBVIEW: "true",
       router: {},
       eas: {
         projectId: "a22fb735-2eb2-4fde-a856-f33c7ce20e4a"

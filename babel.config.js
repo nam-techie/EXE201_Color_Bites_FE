@@ -1,11 +1,11 @@
 module.exports = function (api) {
   api.cache(true);
   return {
-    presets: [require.resolve('babel-preset-expo')],
+    presets: ['babel-preset-expo'],
     plugins: [
-      'expo-router/babel',
+      'expo-router/babel',       // phải đứng đầu
       'nativewind/babel',
-      'react-native-worklets/plugin',
+      'react-native-reanimated/plugin', // phải đứng cuối
     ],
   };
 };
