@@ -33,6 +33,8 @@ function RootLayoutNav() {
          <Stack.Screen name="auth" />
          <Stack.Screen name="post" />
          <Stack.Screen name="profile" />
+         <Stack.Screen name="profile-images" />
+         <Stack.Screen name="profile-posts" />
       </Stack>
    )
 }

@@ -32,11 +32,9 @@ export interface Post {
 
 // API Request/Response Types (match backend exactly)
 export interface CreatePostRequest {
-   title: string        // @NotBlank, max 200 chars
    content: string      // @NotBlank, max 5000 chars  
    moodId: string       // max 50 chars
-   imageUrls?: string[] // max 10 images
-   videoUrl?: string    // optional
+   files?: File[]       // multipart files for upload
 }
 
 export interface UpdatePostRequest {
@@ -220,4 +218,42 @@ export interface DirectionResult {
    duration: number
    steps: RouteStep[]
    geometry: string
+}
+
+// Payment Types
+export interface CreatePaymentRequest {
+  amount: number
+  description: string
+  currency: string
+  returnUrl?: string
+  cancelUrl?: string
+  items: PaymentItem[]
+}
+
+export interface PaymentItem {
+  name: string
+  quantity: number
+  price: number
+}
+
+export interface PaymentResponse {
+  checkoutUrl: string
+  paymentLinkId: string
+  orderCode: number
+  qrCode?: string
+  status: string
+  createdAt: string
+  message: string
+}
+
+export interface PaymentStatusResponse {
+  transactionId: string
+  orderCode: number
+  status: string
+  amount: number
+  description: string
+  gatewayName: string
+  message: string
+  createdAt: string
+  updatedAt: string
 }
