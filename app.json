@@ -36,17 +36,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "We need your location to show it on the map!"                                                                         
-        }
-      ],
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsDownloadToken": "sk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw",
-          "RNMapboxMapsImpl": "mapbox"
+          "locationWhenInUsePermission": "We need your location to show it on the map!"                                                                          
         }
       ]
-    ],
+      ],
       "extra": {
         "eas": {
           "projectId": "c29c07da-27fc-4c9c-8d03-dc4b8f31de9e"

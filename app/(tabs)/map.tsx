@@ -2,7 +2,7 @@
 import FilterButtons from '@/components/common/FilterButtons'
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
-import CustomMarker from '@/components/map/CustomMapMarker'
+import MapLibreView from '@/components/map/MapLibreView'
 import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
@@ -82,7 +82,6 @@ export default function MapScreen() {
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
-  const [MapboxModule, setMapboxModule] = useState<any>(null)
   const [goongStyleUrl, setGoongStyleUrl] = useState<string | null>(null)
   const mapRef = useRef<any>(null)
 
@@ -216,14 +215,13 @@ export default function MapScreen() {
   }, [user])
 
   useEffect(() => {
-    // Dynamically import Mapbox only in native environment/dev client
+    // Lấy Goong style URL
     ;(async () => {
       try {
         const mod = await import('@/services/GoongMapConfig')
-        setMapboxModule(mod)
         setGoongStyleUrl(mod.GOONG_STYLE_URL)
       } catch (e) {
-        console.warn('Mapbox not available yet. Run dev client (expo run:android).', e)
+        console.warn('Style URL not available', e)
       }
     })()
 
@@ -340,73 +338,8 @@ export default function MapScreen() {
 
   return (
     <View style={styles.container}>
-      {MapboxModule && goongStyleUrl ? (
-        <MapboxModule.MapView
-          ref={mapRef}
-          style={styles.map}
-          styleURL={goongStyleUrl}
-          logoEnabled={false}
-          onRegionDidChange={(feature: any) => {
-            if (feature.geometry.type === 'Point') {
-              const coords = feature.geometry.coordinates
-              setMapRegion({
-                latitude: coords[1],
-                longitude: coords[0],
-                latitudeDelta: 0.05,
-                longitudeDelta: 0.05,
-              })
-            }
-          }}
-        >
-          <MapboxModule.Camera
-            zoomLevel={14}
-            centerCoordinate={[mapRegion.longitude, mapRegion.latitude]}
-            animationMode="flyTo"
-            animationDuration={1000}
-          />
-        
-          <MapboxModule.UserLocation visible={true} />
-
-        {/* Restaurant markers */}
-        {(restaurants || []).map((restaurant) => (
-          <MapboxModule.PointAnnotation
-            key={restaurant.id}
-            id={restaurant.id.toString()}
-            coordinate={[restaurant.lon, restaurant.lat]}
-            onSelected={() => handleMarkerPress(restaurant)}
-          >
-            <CustomMarker
-              restaurant={restaurant}
-              onPress={handleMarkerPress}
-              isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
-            />
-          </MapboxModule.PointAnnotation>
-        ))}
-
-        {/* Route Line */}
-        {routeCoordinates.length > 0 && (
-          <MapboxModule.ShapeSource
-            id="routeSource"
-            shape={{
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: routeCoordinates.map(c => [c.longitude, c.latitude])
-              },
-              properties: {}
-            }}
-          >
-            <MapboxModule.LineLayer
-              id="routeLine"
-              style={{
-                lineColor: '#4285F4',
-                lineWidth: 4,
-                lineOpacity: 0.8
-              }}
-            />
-          </MapboxModule.ShapeSource>
-        )}
-        </MapboxModule.MapView>
+      {goongStyleUrl ? (
+        <MapLibreView styleURL={goongStyleUrl} />
       ) : (
         <View style={styles.map}>
           {/* Placeholder while Mapbox is not available (Expo Go or before dev client build) */}
