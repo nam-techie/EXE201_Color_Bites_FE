@@ -1,9 +1,9 @@
 /**
- * Map Provider - OpenStreetMap Service
+ * Map Provider - Goong Maps Service
  * 
  * Service này sử dụng:
- * - OpenStreetMap (Overpass API) - Tìm nhà hàng
- * - OpenRouteService - Chỉ đường
+ * - Goong Maps API - Tìm nhà hàng và địa điểm
+ * - Goong Direction API - Chỉ đường
  * 
  * @example
  * import { MapProvider } from '@/services/MapProvider'
@@ -11,24 +11,22 @@
  */
 
 import type { Restaurant } from '@/type/location'
-import Constants from 'expo-constants'
-import type { DirectionResult } from './DirectionService'
-import { GoongService, decodePolyline } from './GoongService'
+import type { DirectionResult } from './GoongDirectionService'
 
-// Import OpenStreetMap services
-import * as OpenRouteService from './DirectionService'
-import * as OpenStreetMapService from './MapService'
+// Import Goong services
+import * as GoongDirectionService from './GoongDirectionService'
+import * as GoongMapService from './GoongMapService'
 
 if (__DEV__) {
-  console.log('[MapProvider] Using OpenStreetMap + OpenRouteService')
+  console.log('[MapProvider] Using Goong Maps + Goong Direction API')
 }
 
 /**
- * MapProvider - Interface for OpenStreetMap services
+ * MapProvider - Interface for Goong Maps services
  */
 export const MapProvider = {
   /**
-   * Fetch restaurants nearby using OpenStreetMap
+   * Fetch restaurants nearby using Goong Maps
    * 
    * @param latitude - Vĩ độ
    * @param longitude - Kinh độ
@@ -40,11 +38,11 @@ export const MapProvider = {
     longitude: number,
     radius: number = 2000,
   ): Promise<Restaurant[]> {
-    return OpenStreetMapService.fetchRestaurantsNearby(latitude, longitude, radius)
+    return GoongMapService.fetchRestaurantsNearby(latitude, longitude, radius)
   },
 
   /**
-   * Get directions using OpenRouteService
+   * Get directions using Goong Direction API
    * 
    * @param origin - Điểm xuất phát {lat, lon}
    * @param destination - Điểm đến {lat, lon}
@@ -54,31 +52,9 @@ export const MapProvider = {
   async getDirections(
     origin: { lat: number; lon: number },
     destination: { lat: number; lon: number },
-    profile: string = 'driving-car',
+    profile: string = 'car',
   ): Promise<DirectionResult | null> {
-    const extra = (Constants.expoConfig?.extra as any) || {}
-    const useGoong = extra?.EXPO_PUBLIC_USE_GOONG_WEBVIEW === 'true'
-    const hasGoongKey = (extra?.EXPO_PUBLIC_GOONG_API_KEY as string)?.length > 0
-
-    if (useGoong && hasGoongKey) {
-      const vehicle = profile.includes('foot')
-        ? 'foot'
-        : profile.includes('cycling')
-          ? 'bike'
-          : 'car'
-      const res = await GoongService.directionsV2(origin, destination, vehicle)
-      if (!res) return null
-      const coords = decodePolyline(res.polyline).map(p => [p.longitude, p.latitude])
-      return {
-        distance: res.distance,
-        duration: res.duration,
-        steps: [],
-        geometry: coords,
-        summary: { distance: res.distance, duration: res.duration },
-      }
-    }
-
-    return OpenRouteService.getDirections(origin, destination, profile)
+    return GoongDirectionService.getDirections(origin, destination, profile)
   },
 
   /**
@@ -90,9 +66,9 @@ export const MapProvider = {
    */
   async getOptimizedRoute(
     waypoints: { lat: number; lon: number }[],
-    profile: string = 'driving-car',
+    profile: string = 'car',
   ): Promise<DirectionResult | null> {
-    return OpenRouteService.getOptimizedRoute(waypoints, profile)
+    return GoongDirectionService.getOptimizedRoute(waypoints, profile)
   },
 
   /**
@@ -107,10 +83,10 @@ export const MapProvider = {
   async getRouteAlternatives(
     origin: { lat: number; lon: number },
     destination: { lat: number; lon: number },
-    profile: string = 'driving-car',
+    profile: string = 'car',
     alternativeRoutes: number = 2,
   ): Promise<DirectionResult[] | null> {
-    return OpenRouteService.getRouteAlternatives(
+    return GoongDirectionService.getRouteAlternatives(
       origin,
       destination,
       profile,
@@ -133,61 +109,52 @@ export const MapProvider = {
     longitude?: number,
     radius: number = 5000,
   ): Promise<Restaurant[]> {
-    // OpenStreetMap: filter trên kết quả nearby
+    // Use Goong Autocomplete API
     if (latitude !== undefined && longitude !== undefined) {
-      const restaurants = await OpenStreetMapService.fetchRestaurantsNearby(
-        latitude,
-        longitude,
-        radius,
-      )
-      return restaurants.filter(
-        (r) =>
-          r.name.toLowerCase().includes(query.toLowerCase()) ||
-          r.tags.cuisine?.toLowerCase().includes(query.toLowerCase()),
-      )
+      return GoongMapService.searchPlaces(query, { lat: latitude, lng: longitude })
     }
-    return []
+    return GoongMapService.searchPlaces(query)
   },
 
   /**
    * Get available route profiles
    */
   getRouteProfiles() {
-    return OpenRouteService.ROUTE_PROFILES
+    return GoongDirectionService.ROUTE_PROFILES
   },
 }
 
 /**
  * Utility functions - Provider agnostic
- * Re-export từ MapService (cả 2 provider đều dùng chung)
+ * Re-export từ GoongMapService và GoongDirectionService
  */
 export {
     calculateDistance, formatOpeningHours, getCuisineIcon, getPriceRange, getRestaurantRating, isRestaurantOpen
-} from './MapService'
+} from './GoongMapService'
 
 export {
     calculateEstimatedCost, convertCoordinatesToMapFormat, formatCost, formatDistance,
     formatDuration, getEstimatedTimeWithTraffic, getInstructionIcon
-} from './DirectionService'
+} from './GoongDirectionService'
 
 /**
- * Provider status check for OpenStreetMap
+ * Provider status check for Goong Maps
  */
 export function checkProviderStatus(): {
   provider: string
   configured: boolean
   message: string
 } {
-  // OpenStreetMap không cần API key cho Overpass API
-  // Nhưng cần key cho OpenRouteService
-  const orsKey = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY || ''
-  const configured = orsKey.length > 0
+  const goongApiKey = process.env.EXPO_PUBLIC_GOONG_API_KEY || ''
+  const goongMapTilesKey = process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY || ''
+  const configured = goongApiKey.length > 0 && goongMapTilesKey.length > 0
+  
   return {
-    provider: 'OpenStreetMap',
+    provider: 'Goong Maps',
     configured,
     message: configured
-      ? 'OpenStreetMap + OpenRouteService configured'
-      : 'OpenRouteService API key not found. Please set EXPO_PUBLIC_OPENROUTE_API_KEY in .env',
+      ? 'Goong Maps + Goong Direction API configured'
+      : 'Goong API keys not found. Please set EXPO_PUBLIC_GOONG_API_KEY and EXPO_PUBLIC_GOONG_MAPTILES_KEY in .env',
   }
 }
 

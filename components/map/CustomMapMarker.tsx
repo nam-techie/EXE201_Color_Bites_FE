@@ -1,6 +1,6 @@
 'use client'
 
-import { getCuisineIcon } from '@/services/MapService'
+import { getCuisineIcon } from '@/services/GoongMapService'
 import type { Restaurant } from '@/type/location'
 import { MaterialCommunityIcons } from '@expo/vector-icons'
 import MapLibreGL from '@maplibre/maplibre-react-native'
@@ -49,55 +49,49 @@ export default function CustomMarker({
    }
 
    return (
-      <MapLibreGL.PointAnnotation
-         id={String(restaurant.id)}
-         coordinate={[restaurant.lon, restaurant.lat]}
-         onSelected={handlePress}
-      >
-         <View style={styles.container}>
-            {showDistance && distance && (
-               <View style={styles.distanceContainer}>
-                  <Text style={styles.distanceText}>{distance}</Text>
+      <View style={styles.container}>
+         {showDistance && distance && (
+            <View style={styles.distanceContainer}>
+               <Text style={styles.distanceText}>{distance}</Text>
+            </View>
+         )}
+
+         <Animated.View
+            style={[
+               styles.markerBase,
+               {
+                  width: markerSize,
+                  height: markerSize,
+                  borderRadius: markerSize / 2,
+                  transform: [{ scale: scaleAnim }],
+                  borderColor: isSelected ? '#2563EB' : '#D1D5DB',
+                  borderWidth: isSelected ? 2 : 1,
+               },
+            ]}
+         >
+            <MaterialCommunityIcons
+               name={iconName}
+               size={isSelected ? 24 : 20}
+               color={isSelected ? '#2563EB' : iconColor}
+            />
+
+            {isInRoute && routeOrder !== undefined && (
+               <View style={styles.routeNumber}>
+                  <Text style={styles.routeNumberText}>{routeOrder}</Text>
                </View>
             )}
+         </Animated.View>
 
-            <Animated.View
-               style={[
-                  styles.markerBase,
-                  {
-                     width: markerSize,
-                     height: markerSize,
-                     borderRadius: markerSize / 2,
-                     transform: [{ scale: scaleAnim }],
-                     borderColor: isSelected ? '#2563EB' : '#D1D5DB',
-                     borderWidth: isSelected ? 2 : 1,
-                  },
-               ]}
-            >
-               <MaterialCommunityIcons
-                  name={iconName as keyof typeof MaterialCommunityIcons.glyphMap}
-                  size={isSelected ? 24 : 20}
-                  color={isSelected ? '#2563EB' : iconColor}
-               />
+         <View style={styles.pointer} />
 
-               {isInRoute && routeOrder !== undefined && (
-                  <View style={styles.routeNumber}>
-                     <Text style={styles.routeNumberText}>{routeOrder}</Text>
-                  </View>
-               )}
-            </Animated.View>
-
-            <View style={styles.pointer} />
-
-            {isSelected && (
-               <View style={styles.labelContainer}>
-                  <Text style={styles.labelText} numberOfLines={1}>
-                     {restaurant.name}
-                  </Text>
-               </View>
-            )}
-         </View>
-      </MapLibreGL.PointAnnotation>
+         {isSelected && (
+            <View style={styles.labelContainer}>
+               <Text style={styles.labelText} numberOfLines={1}>
+                  {restaurant.name}
+               </Text>
+            </View>
+         )}
+      </View>
    )
 }
 
