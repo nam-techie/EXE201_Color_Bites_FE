@@ -104,6 +104,7 @@ function normalizePost(p: any): PostResponse {
       isOwner: Boolean(p.isOwner),
       hasReacted: Boolean(p.hasReacted),
       userReactionType: p.userReactionType ?? null,
+      visibility: p.visibility ?? 'PUBLIC', // Default to PUBLIC if not specified
       createdAt,
       updatedAt: p.updatedAt ?? ''
    } as PostResponse
@@ -130,6 +131,32 @@ function formatTimeAgo(dateString: string): string {
    if (diffDays < 7) return `${diffDays} ngày trước`
    
    return postDate.toLocaleDateString('vi-VN')
+}
+
+// Privacy icon component
+function PrivacyIcon({ visibility }: { visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' }) {
+   const getPrivacyIcon = () => {
+      switch (visibility) {
+         case 'PUBLIC':
+            return { name: 'globe-outline', color: '#6B7280', size: 14 }
+         case 'FRIENDS':
+            return { name: 'people-outline', color: '#6B7280', size: 14 }
+         case 'PRIVATE':
+            return { name: 'lock-closed-outline', color: '#6B7280', size: 14 }
+         default:
+            return { name: 'globe-outline', color: '#6B7280', size: 14 }
+      }
+   }
+
+   const icon = getPrivacyIcon()
+   
+   return (
+      <Ionicons 
+         name={icon.name as any} 
+         size={icon.size} 
+         color={icon.color} 
+      />
+   )
 }
 
 export default function CommunityScreen() {
@@ -174,6 +201,7 @@ export default function CommunityScreen() {
                      isOwner: Boolean(post.isOwner),
                      hasReacted: Boolean(post.hasReacted),
                      userReactionType: post.userReactionType ?? null,
+                     visibility: post.visibility ?? 'PUBLIC', // Default to PUBLIC
                      createdAt: post.createdAt ?? new Date().toISOString(),
                      updatedAt: post.updatedAt ?? ''
                   } as PostResponse
@@ -488,6 +516,8 @@ function PostCard({
                      <Text style={styles.userName}>{post.authorName || 'Unknown User'}</Text>
                      <View style={styles.locationContainer}>
                         <Text style={styles.timeText}>{formatTimeAgo(post.createdAt)}</Text>
+                        <Text style={styles.separator}>•</Text>
+                        <PrivacyIcon visibility={post.visibility} />
                         {post.moodName && (
                            <>
                               <Text style={styles.separator}>•</Text>
