@@ -3,9 +3,8 @@ module.exports = function (api) {
   return {
     presets: ['babel-preset-expo'],
     plugins: [
-      'expo-router/babel',       // phải đứng đầu
       'nativewind/babel',
-      'react-native-reanimated/plugin', // phải đứng cuối
+      'react-native-reanimated/plugin', // Quan trọng: Plugin này phải luôn ở cuối cùng
     ],
   };
 };

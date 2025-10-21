@@ -1,10 +1,10 @@
 {
   "expo": {
     "name": "mumii",
-     "slug": "mumii",
+    "slug": "mumii",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.jpg",
+    "icon": "./assets/images/icon.png",
     "scheme": "mumii",
     "userInterfaceStyle": "automatic",
     "android": {
@@ -13,7 +13,6 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION"
@@ -36,7 +35,7 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "We need your location to show it on the map!"                                                                         
+          "locationWhenInUsePermission": "We need your location to show it on the map!"
         }
       ],
       [
@@ -47,14 +46,14 @@
         }
       ]
     ],
-      "extra": {
-        "eas": {
-          "projectId": "c29c07da-27fc-4c9c-8d03-dc4b8f31de9e"
-        },
-        "API_BASE_URL": "https://homelike-debora-harmotomic.ngrok-free.dev",
-        "GOONG_API_KEY": "60vuXQwfXJeCqjSp1On6EqqszwBN7q5c3tRSbgKd",
-        "GOONG_MAPTILES_KEY": "IUVEYS4RvLCnyRWb34A15Ckf3LSLF90McVmXlnk"
+    "extra": {
+      "eas": {
+        "projectId": "a22fb735-2eb2-4fde-a856-f33c7ce20e4a"
       },
+      "API_BASE_URL": "https://homelike-debora-harmotomic.ngrok-free.dev",
+      "GOONG_API_KEY": "60vuXQwfXJeCqjSp1On6EqqszwBN7q5c3tRSbgKd",
+      "GOONG_MAPTILES_KEY": "IUVEYS4RvLCnyRWb34A15Ckf3LSLF90McVmXlnk"
+    },
     "owner": "pwnam"
   }
 }
