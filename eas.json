@@ -8,23 +8,17 @@
          "developmentClient": true,
          "distribution": "internal",
          "node": "20.19.4",
-         "env": {
-            "EXPO_USE_NPM": "1"
-         }
+         "npm": {}
       },
       "preview": {
          "distribution": "internal",
          "node": "20.19.4",
-         "env": {
-            "EXPO_USE_NPM": "1"
-         }
+         "npm": {}
       },
       "production": {
          "autoIncrement": true,
          "node": "20.19.4",
-         "env": {
-            "EXPO_USE_NPM": "1"
-         }
+         "npm": {}
       }
    },
    "submit": {
