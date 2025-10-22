@@ -6,15 +6,15 @@ import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native'
 
 export default function LoginScreen() {
@@ -157,26 +157,26 @@ export default function LoginScreen() {
             <Text style={styles.forgotText}>Quên mật khẩu?</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Bottom Google button (pinned at bottom) */}
-        <View style={styles.bottomBar}>
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>hoặc</Text>
-            <View style={styles.dividerLine} />
-          </View>
-          
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => console.log('Google OAuth')}
-          >
-            <View style={styles.googleBtn}>
-              <Ionicons name="logo-google" size={20} color="#DB4437" />
-              <Text style={styles.googleText}>Tiếp tục với Google</Text>
-            </View>
-          </TouchableOpacity>
-        </View>
       </KeyboardAvoidingView>
+
+      {/* Bottom Google button (fixed at bottom, outside keyboard view) */}
+      <View style={styles.bottomBar}>
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>hoặc</Text>
+          <View style={styles.dividerLine} />
+        </View>
+        
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => console.log('Google OAuth')}
+        >
+          <View style={styles.googleBtn}>
+            <Ionicons name="logo-google" size={18} color="#FF6B35" />
+            <Text style={styles.googleText}>Tiếp tục với Google</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   )
 }
@@ -331,13 +331,14 @@ const styles = StyleSheet.create({
   /* Bottom Section */
   bottomBar: {
     paddingHorizontal: 20,
-    paddingBottom: 24,
+    paddingBottom: 20,
     paddingTop: 12,
+    backgroundColor: '#F9FAFB',
   },
   divider: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   dividerLine: {
     flex: 1,
@@ -346,29 +347,29 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     marginHorizontal: 12,
-    fontSize: 13,
+    fontSize: 12,
     color: '#9CA3AF',
     fontWeight: '500',
   },
   googleBtn: {
-    height: 52,
-    borderRadius: 26,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    borderWidth: 2,
+    borderColor: '#FF6B35',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
+    gap: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2,
+    shadowRadius: 2,
+    elevation: 1,
   },
   googleText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#374151',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FF6B35',
   },
 })
