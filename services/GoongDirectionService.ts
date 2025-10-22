@@ -283,6 +283,33 @@ export function convertCoordinatesToMapFormat(
   }))
 }
 
+// Convert route to Mapbox GeoJSON format
+export function convertRouteToMapboxGeoJSON(route: DirectionResult) {
+  if (!route.geometry || route.geometry.length === 0) return null
+
+  return {
+    type: 'Feature',
+    geometry: {
+      type: 'LineString',
+      coordinates: route.geometry // Already in [lng, lat] format
+    },
+    properties: {
+      distance: route.distance,
+      duration: route.duration,
+      steps: route.steps,
+      summary: route.summary
+    }
+  }
+}
+
+// Convert multiple routes to Mapbox GeoJSON FeatureCollection
+export function convertRoutesToMapboxGeoJSON(routes: DirectionResult[]) {
+  return {
+    type: 'FeatureCollection',
+    features: routes.map(route => convertRouteToMapboxGeoJSON(route)).filter(Boolean)
+  }
+}
+
 // Get instruction icon based on step type
 export function getInstructionIcon(stepType: number): string {
   const iconMap: { [key: number]: string } = {

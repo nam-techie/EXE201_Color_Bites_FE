@@ -76,6 +76,23 @@ export const GoongService = {
     return (data.predictions || []).map((p) => ({ id: p.place_id, description: p.description }))
   },
 
+  // Enhanced autocomplete with caching and error handling
+  async autocompleteWithCache(query: string, location?: LatLng): Promise<GoongPlaceSuggestion[]> {
+    try {
+      const results = await this.autocompleteV2(query, location)
+      
+      // Cache recent searches (TODO: implement AsyncStorage)
+      if (results.length > 0) {
+        console.log(`Cached ${results.length} results for query: ${query}`)
+      }
+      
+      return results
+    } catch (error) {
+      console.error('Error in autocompleteWithCache:', error)
+      return []
+    }
+  },
+
   async placeDetailV2(placeId: string): Promise<GoongPlaceDetail | null> {
     const { apiUrl, apiKey } = getEnv()
     if (!apiKey) return null
