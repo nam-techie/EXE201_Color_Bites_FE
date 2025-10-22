@@ -1,37 +1,41 @@
 import { getDefaultAvatar } from '@/constants/defaultImages'
+import { useAuth } from '@/context/AuthProvider'
 import { commentService } from '@/services/CommentService'
 import type { CommentResponse, CreateCommentRequest } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
-   ActivityIndicator,
-   FlatList,
-   Keyboard,
-   KeyboardAvoidingView,
-   Modal,
-   Platform,
-   SafeAreaView,
-   StyleSheet,
-   Text,
-   TextInput,
-   TouchableOpacity,
-   View,
+    ActivityIndicator,
+    FlatList,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    SafeAreaView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 import Toast from 'react-native-toast-message'
+import { CommentActionModal } from './CommentActionModal'
 
 interface CommentModalProps {
    visible: boolean
    postId: string
    onClose: () => void
+   onCommentCountChange?: (postId: string, delta: number) => void // +1 for create, -1 for delete
 }
 
 interface CommentItemProps {
    comment: CommentResponse
    onReply: (commentId: string, authorName: string) => void
+   onLongPress: (comment: CommentResponse) => void
 }
 
-function CommentItem({ comment, onReply }: CommentItemProps) {
+function CommentItem({ comment, onReply, onLongPress }: CommentItemProps) {
    // Debug comment data
    console.log('🔍 CommentItem rendering:', comment)
    console.log('👤 Author name:', comment.authorName)
@@ -59,7 +63,12 @@ function CommentItem({ comment, onReply }: CommentItemProps) {
    }
 
    return (
-      <View style={[styles.commentItem, { marginLeft: comment.depth * 20 }]}>
+      <TouchableOpacity 
+         style={[styles.commentItem, { marginLeft: comment.depth * 20 }]}
+         onLongPress={() => onLongPress(comment)}
+         delayLongPress={500}
+         activeOpacity={0.7}
+      >
          <Image
             source={{ uri: comment.authorAvatar || getDefaultAvatar(comment.authorName) }}
             style={styles.commentAvatar}
@@ -80,16 +89,19 @@ function CommentItem({ comment, onReply }: CommentItemProps) {
                </TouchableOpacity>
             </View>
          </View>
-      </View>
+      </TouchableOpacity>
    )
 }
 
-export function CommentModal({ visible, postId, onClose }: CommentModalProps) {
+export function CommentModal({ visible, postId, onClose, onCommentCountChange }: CommentModalProps) {
+   const { user } = useAuth()
    const [comments, setComments] = useState<CommentResponse[]>([])
    const [isLoading, setIsLoading] = useState(false)
    const [isSubmitting, setIsSubmitting] = useState(false)
    const [commentText, setCommentText] = useState('')
    const [replyingTo, setReplyingTo] = useState<{ id: string, name: string } | null>(null)
+   const [selectedComment, setSelectedComment] = useState<CommentResponse | null>(null)
+   const [showActionModal, setShowActionModal] = useState(false)
 
    // Load comments
    const loadComments = useCallback(async () => {
@@ -192,6 +204,9 @@ export function CommentModal({ visible, postId, onClose }: CommentModalProps) {
             text1: 'Thành công',
             text2: 'Comment đã được đăng',
          })
+
+         // Notify parent about comment count change
+         onCommentCountChange?.(postId, 1)
       } catch (error) {
          console.error('Error submitting comment:', error)
          Toast.show({
@@ -212,6 +227,51 @@ export function CommentModal({ visible, postId, onClose }: CommentModalProps) {
    const cancelReply = () => {
       setReplyingTo(null)
       setCommentText('')
+   }
+
+   // Handle long press on comment
+   const handleCommentLongPress = (comment: CommentResponse) => {
+      setSelectedComment(comment)
+      setShowActionModal(true)
+   }
+
+   // Handle delete comment
+   const handleDeleteComment = async () => {
+      if (!selectedComment) return
+
+      try {
+         console.log('Deleting comment:', selectedComment.id)
+         await commentService.deleteComment(selectedComment.id)
+         
+         // Remove comment from local state
+         setComments(prev => prev.filter(c => c.id !== selectedComment.id))
+         
+         Toast.show({
+            type: 'success',
+            text1: 'Thành công',
+            text2: 'Comment đã được xóa',
+         })
+
+         // Notify parent about comment count change
+         onCommentCountChange?.(postId, -1)
+      } catch (error) {
+         console.error('Error deleting comment:', error)
+         Toast.show({
+            type: 'error',
+            text1: 'Lỗi',
+            text2: 'Không thể xóa comment',
+         })
+      } finally {
+         setSelectedComment(null)
+         setShowActionModal(false)
+      }
+   }
+
+   // Check if current user owns the comment
+   const isCommentOwner = (comment: CommentResponse): boolean => {
+      if (!user) return false
+      // Check both accountId and authorName for compatibility
+      return comment.accountId === user.id || comment.authorName === user.name
    }
 
    return (
@@ -236,7 +296,11 @@ export function CommentModal({ visible, postId, onClose }: CommentModalProps) {
                data={comments}
                keyExtractor={(item) => item.id}
                renderItem={({ item }) => (
-                  <CommentItem comment={item} onReply={handleReply} />
+                  <CommentItem 
+                     comment={item} 
+                     onReply={handleReply} 
+                     onLongPress={handleCommentLongPress}
+                  />
                )}
                style={styles.commentsList}
                contentContainerStyle={styles.commentsContent}
@@ -302,6 +366,17 @@ export function CommentModal({ visible, postId, onClose }: CommentModalProps) {
                   </TouchableOpacity>
                </View>
             </KeyboardAvoidingView>
+
+            {/* Comment Action Modal */}
+            <CommentActionModal
+               visible={showActionModal}
+               onClose={() => {
+                  setShowActionModal(false)
+                  setSelectedComment(null)
+               }}
+               onDelete={handleDeleteComment}
+               isOwner={selectedComment ? isCommentOwner(selectedComment) : false}
+            />
          </SafeAreaView>
       </Modal>
    )

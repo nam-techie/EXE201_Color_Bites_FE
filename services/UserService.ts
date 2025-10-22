@@ -103,8 +103,7 @@ export class UserService {
          type: 'image/jpeg',
       })
 
-      // @ts-ignore - apiService may expose postForm via runtime
-      const response = await apiService.postForm<string>(
+      const response = await apiService.upload<string>(
          `${API_ENDPOINTS.USER_INFO.UPLOAD_AVATAR}/${accountId}`,
          formData
       )

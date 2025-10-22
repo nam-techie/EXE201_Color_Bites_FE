@@ -1,9 +1,9 @@
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants'
 import type {
-    CreatePostRequest,
-    PaginatedResponse,
-    PostResponse,
-    UpdatePostRequest
+   CreatePostRequest,
+   PaginatedResponse,
+   PostResponse,
+   UpdatePostRequest
 } from '@/type'
 import { apiService } from './ApiService'
 
@@ -111,6 +111,41 @@ export class PostService {
          throw new Error(response.message || 'Không thể tải danh sách bài viết')
       } catch (error) {
          console.error('Error fetching posts:', error)
+         // Trả về empty response thay vì throw để app không crash
+         console.log('🔄 Returning empty response due to API error')
+         return {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            size: size,
+            number: page - 1,
+            first: true,
+            last: true
+         }
+      }
+   }
+
+   /**
+    * Lấy bài viết theo quyền riêng tư (có phân trang)
+    */
+   async getPostsByPrivacy(page: number = 1, size: number = 10): Promise<PaginatedResponse<PostResponse>> {
+      try {
+         console.log(`Fetching posts by privacy - page: ${page}, size: ${size}`)
+         const response = await apiService.get<PaginatedResponse<PostResponse>>(
+            `${API_ENDPOINTS.POSTS.BY_PRIVACY}?page=${page}&size=${size}`
+         )
+         
+         if (response.status === 200 && response.data) {
+            console.log('Posts by privacy fetched successfully:', response.data.content?.length, 'posts')
+            console.log('=== RAW API RESPONSE ===')
+            console.log('Full response:', JSON.stringify(response, null, 2))
+            console.log('=== END RAW RESPONSE ===')
+            return response.data
+         }
+         
+         throw new Error(response.message || 'Không thể tải bài viết theo quyền riêng tư')
+      } catch (error) {
+         console.error('Error fetching posts by privacy:', error)
          // Trả về empty response thay vì throw để app không crash
          console.log('🔄 Returning empty response due to API error')
          return {

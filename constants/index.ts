@@ -77,6 +77,7 @@ export const API_ENDPOINTS = {
       BY_ID: '/api/posts/read',
       BY_USER: '/api/posts/read/user',
       BY_MOOD: '/api/posts/read/mood',
+      BY_PRIVACY: '/api/posts/read/privacy',
       SEARCH: '/api/posts/search',
       UPDATE: '/api/posts/edit',
       DELETE: '/api/posts/delete',

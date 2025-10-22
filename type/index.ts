@@ -67,6 +67,7 @@ export interface PostResponse {
    isOwner: boolean          // Người xem có phải chủ bài viết không
    hasReacted: boolean       // Người xem đã react chưa
    userReactionType?: string // Loại reaction của người xem
+   visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' // Quyền riêng tư của bài đăng
    createdAt: string
    updatedAt: string
 }
