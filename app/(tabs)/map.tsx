@@ -1,20 +1,21 @@
 'use client'
-import FilterButtons from '@/components/common/FilterButtons'
+// Removed FilterButtons - no longer needed
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
 import MapLibreView from '@/components/map/MapLibreView'
 import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
+import { GOONG_API_KEY, GOONG_STYLE_BASE, GOONG_STYLE_HIGHLIGHT, GOONG_STYLE_SATELLITE } from '@/constants'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
 // Lazy load Mapbox to avoid module init errors before dev client is ready
 // and ensure the route always has a default export
 // We'll dynamically import '@/services/GoongMapConfig' inside the component
-import * as GoongMapService from '@/services/GoongMapService'
+import { GoongService, debounce } from '@/services/GoongService'
 import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
-import type { MapRegion, Restaurant } from '@/type/location'
+import type { Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
 import { useRouter } from 'expo-router'
@@ -73,29 +74,22 @@ export default function MapScreen() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null)
-  const [mapRegion, setMapRegion] = useState<MapRegion>({
-    latitude: 0,
-    longitude: 0,
-    latitudeDelta: 0.08,
-    longitudeDelta: 0.08,
-  })
   const [routePlanningMode, setRoutePlanningMode] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState('car')
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
   const [goongStyleUrl, setGoongStyleUrl] = useState<string | null>(null)
-  const mapRef = useRef<any>(null)
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<Restaurant[]>([])
-  const [selectedFilter, setSelectedFilter] = useState('all')
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
   const [currentAddress, setCurrentAddress] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([])
-  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const [selectedPlace, setSelectedPlace] = useState<Restaurant | null>(null)
+  const [currentStyle, setCurrentStyle] = useState('base')
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -177,9 +171,9 @@ export default function MapScreen() {
         const directions = await MapProvider.getDirections(origin, destination, selectedProfile)
         if (!directions || !directions.geometry) continue
 
-        const routeCoords = directions.geometry.map(([lon, lat]) => ({
-          latitude: lat,
-          longitude: lon,
+        const routeCoords = directions.geometry.map((coord: number[]) => ({
+          latitude: coord[1],
+          longitude: coord[0],
         }))
         if (routeCoords.length > 0) allCoordinates.push(...routeCoords)
 
@@ -212,13 +206,7 @@ export default function MapScreen() {
     setRouteStops(newStops)
     calculateRouteForStops(newStops)
     
-    // Di chuyển map đến vị trí nhà hàng
-    setMapRegion({
-      latitude: restaurant.lat,
-      longitude: restaurant.lon,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    })
+    // Di chuyển map đến vị trí nhà hàng - handled by MapLibreView
   }
 
   // Load user avatar from API
@@ -240,34 +228,30 @@ export default function MapScreen() {
   }, [user])
 
   useEffect(() => {
-    // Lấy Goong style URL
-    ;(async () => {
-      try {
-        const mod = await import('@/services/GoongMapConfig')
-        setGoongStyleUrl(mod.GOONG_STYLE_URL)
-      } catch (e) {
-        console.warn('Style URL not available', e)
+    // Initialize Goong style URL
+    const initializeStyle = () => {
+      if (GOONG_API_KEY) {
+        const styleUrl = `${GOONG_STYLE_BASE}?api_key=${GOONG_API_KEY}`
+        setGoongStyleUrl(styleUrl)
+        console.log('[MAP DEBUG] Goong style URL initialized')
+      } else {
+        console.warn('[MAP DEBUG] GOONG_API_KEY not configured')
       }
-    })()
+    }
+    
+    initializeStyle()
 
     // Debug API keys
     console.log('[MAP DEBUG] API Keys Status:')
-    console.log('[MAP DEBUG] GOONG_API_KEY:', process.env.EXPO_PUBLIC_GOONG_API_KEY ? 'configured' : 'missing')
-    console.log('[MAP DEBUG] GOONG_MAPTILES_KEY:', process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY ? 'configured' : 'missing')
+    console.log('[MAP DEBUG] GOONG_API_KEY:', GOONG_API_KEY ? 'configured' : 'missing')
 
     const fetchInitialData = async () => {
       try {
         const location = await getCurrentUserLocation()
         if (!location) return
         setUserLocation(location)
-        const { latitude, longitude } = location.coords
-        setMapRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        })
-        const data = await MapProvider.fetchRestaurants(latitude, longitude)
+        // Camera movement handled by MapLibreView
+        const data = await MapProvider.fetchRestaurants(location.coords.latitude, location.coords.longitude)
         setRestaurants(data)
       } catch {
         Alert.alert('Lỗi', 'Không thể tải dữ liệu hoặc vị trí')
@@ -311,13 +295,7 @@ export default function MapScreen() {
     const location = await getCurrentUserLocation()
     if (location) {
       setUserLocation(location)
-      const { latitude, longitude } = location.coords
-      setMapRegion({
-        latitude,
-        longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      })
+      // Camera movement handled by MapLibreView
     }
   }
 
@@ -338,9 +316,8 @@ export default function MapScreen() {
   }
 
   // Handler functions for search bar and menu
-  const handleSearchChange = async (query: string) => {
+  const handleSearchChange = debounce(async (query: string) => {
     setSearchQuery(query)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
     
     if (query.trim().length < 3) {
       setSuggestions([])
@@ -348,20 +325,20 @@ export default function MapScreen() {
       return
     }
 
-    debounceRef.current = setTimeout(async () => {
-      try {
-        const preds = await MapProvider.searchAutocomplete(
-          query,
-          userLocation?.coords.latitude,
-          userLocation?.coords.longitude,
-        )
-        setSuggestions(preds)
-      } catch (e) {
-        console.log('Autocomplete error', e)
-        setSuggestions([])
+    try {
+      const result = await GoongService.autocomplete(query)
+      if (result.predictions) {
+        const suggestions = result.predictions.map(pred => ({
+          place_id: pred.place_id,
+          description: pred.description
+        }))
+        setSuggestions(suggestions)
       }
-    }, 350)
-  }
+    } catch (e) {
+      console.log('Autocomplete error', e)
+      setSuggestions([])
+    }
+  }, 400)
 
   const handleClearSearch = () => {
     setSearchQuery('')
@@ -372,17 +349,25 @@ export default function MapScreen() {
   const handleSelectSuggestion = async (item: { place_id: string; description: string }) => {
     try {
       // Fetch place detail to get accurate coordinates
-      const place = await GoongMapService.getPlaceDetail(item.place_id)
+      const result = await GoongService.placeDetail(item.place_id)
       setSuggestions([])
-      if (place) {
-        setMapRegion({
-          latitude: place.lat,
-          longitude: place.lon,
-          latitudeDelta: 0.01,
-          longitudeDelta: 0.01,
-        })
-        // Also set as search results to allow marker display later if needed
-        setSearchResults([place])
+      if (result.result) {
+        const place = result.result
+        const restaurant: Restaurant = {
+          id: Math.abs(place.place_id.split('').reduce((a, b) => a + b.charCodeAt(0), 0)),
+          name: place.name,
+          lat: place.geometry.location.lat,
+          lon: place.geometry.location.lng,
+          tags: {
+            cuisine: place.types?.[0] || 'restaurant',
+            'addr:street': place.formatted_address
+          }
+        }
+        
+        setSelectedPlace(restaurant)
+        setSearchResults([restaurant])
+        
+        // Move camera to selected place - handled by MapLibreView
       }
     } catch (e) {
       console.log('Place detail error', e)
@@ -402,18 +387,44 @@ export default function MapScreen() {
     Alert.alert('Voice Search', 'Tính năng tìm kiếm bằng giọng nói sắp ra mắt!')
   }
 
-  const handleFilterChange = (filter: string) => {
-    setSelectedFilter(filter)
-    // TODO: Implement filter logic for restaurants
+  // Removed filter functionality - no longer needed
+  
+  // Toggle map style
+  const toggleMapStyle = () => {
+    const styles = ['base', 'satellite', 'highlight']
+    const currentIndex = styles.indexOf(currentStyle)
+    const nextIndex = (currentIndex + 1) % styles.length
+    setCurrentStyle(styles[nextIndex])
+    
+    // Update style URL based on current style
+    let styleUrl = ''
+    switch (styles[nextIndex]) {
+      case 'satellite':
+        styleUrl = `${GOONG_STYLE_SATELLITE}?api_key=${GOONG_API_KEY}`
+        break
+      case 'highlight':
+        styleUrl = `${GOONG_STYLE_HIGHLIGHT}?api_key=${GOONG_API_KEY}`
+        break
+      default:
+        styleUrl = `${GOONG_STYLE_BASE}?api_key=${GOONG_API_KEY}`
+    }
+    setGoongStyleUrl(styleUrl)
   }
 
   return (
     <View style={styles.container}>
       {goongStyleUrl ? (
-        <MapLibreView styleURL={goongStyleUrl} />
+        <MapLibreView 
+          styleURL={goongStyleUrl}
+          restaurants={restaurants}
+          selectedRestaurant={selectedRestaurant}
+          onMarkerPress={handleMarkerPress}
+          userLocation={userLocation ? { latitude: userLocation.coords.latitude, longitude: userLocation.coords.longitude } : null}
+          routeCoordinates={routeCoordinates}
+        />
       ) : (
         <View style={styles.map}>
-          {/* Placeholder while Mapbox is not available (Expo Go or before dev client build) */}
+          {/* Placeholder while MapLibre is not available */}
         </View>
       )}
 
@@ -438,11 +449,7 @@ export default function MapScreen() {
         </View>
       )}
 
-      {/* Filter Buttons */}
-      <FilterButtons
-        selectedFilter={selectedFilter}
-        onFilterChange={handleFilterChange}
-      />
+      {/* Removed Filter Buttons - no longer needed */}
 
       {/* Side Menu */}
       <MapSideMenu
@@ -529,13 +536,10 @@ export default function MapScreen() {
         <Ionicons name="locate" size={24} color="#5F6368" />
       </TouchableOpacity>
 
-      {/* Layers Button - bottom right */}
+      {/* Map Style Toggle Button - bottom right */}
       <TouchableOpacity
         style={styles.layersButton}
-        onPress={() => {
-          // TODO: Implement map layers (satellite, terrain, traffic)
-          Alert.alert('Layers', 'Chọn loại bản đồ')
-        }}
+        onPress={toggleMapStyle}
       >
         <Ionicons name="layers" size={24} color="#5F6368" />
       </TouchableOpacity>

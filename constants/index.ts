@@ -136,6 +136,23 @@ export const DEFAULT_MAP_REGION = {
 
 export const DEFAULT_SEARCH_RADIUS = 2000 // meters
 
+// Goong Maps Configuration
+const getGoongApiKey = () => {
+  const envKey = process.env.EXPO_PUBLIC_GOONG_API_KEY
+  const extraKey = (Constants?.expoConfig as any)?.extra?.GOONG_API_KEY as string | undefined
+  return envKey || extraKey || ''
+}
+
+export const GOONG_API_KEY = getGoongApiKey()
+
+// Goong Map Styles
+export const GOONG_STYLE_BASE = 'https://tiles.goong.io/assets/goong_map_web.json'
+export const GOONG_STYLE_SATELLITE = 'https://tiles.goong.io/assets/goong_satellite.json'
+export const GOONG_STYLE_HIGHLIGHT = 'https://tiles.goong.io/assets/goong_map_highlight.json'
+
+// Default map center (Ho Chi Minh City)
+export const DEFAULT_MAP_CENTER = [106.6297, 10.8231] // [lng, lat]
+
 // Route Configuration
 export const DEFAULT_ROUTE_ALTERNATIVES = 2
 export const ROUTE_OPTIMIZATION_PARAMS = {
