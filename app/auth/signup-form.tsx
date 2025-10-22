@@ -2,18 +2,19 @@
 
 import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+   Alert,
+   SafeAreaView,
+   ScrollView,
+   StatusBar,
+   StyleSheet,
+   Text,
+   TextInput,
+   TouchableOpacity,
+   View
 } from 'react-native'
 
 export default function SignUpFormScreen() {
@@ -41,9 +42,9 @@ export default function SignUpFormScreen() {
       const newErrors: {[key: string]: string} = {}
 
       if (!formData.username.trim()) {
-         newErrors.username = 'Vui lòng nhập họ và tên'
+         newErrors.username = 'Vui lòng nhập Username'
       } else if (formData.username.trim().length < 6) {
-         newErrors.username = 'Họ và tên phải có ít nhất 6 ký tự'
+         newErrors.username = 'Username phải có ít nhất 6 ký tự'
       }
 
       if (!formData.email.trim()) {
@@ -76,33 +77,59 @@ export default function SignUpFormScreen() {
       return Object.keys(newErrors).length === 0
    }
 
+
    const handleSubmit = async () => {
       if (!validateForm()) return
 
       setIsLoading(true)
       try {
-         await register(
-            formData.username, 
-            formData.email, 
-            formData.password, 
-            formData.confirmPassword
-         )
+         // Chỉ gửi email để nhận OTP
+         await register(formData.email)
          
+         // Lưu thông tin user vào AsyncStorage để dùng trong verify-otp
+         const userInfo = {
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword
+         }
+         await AsyncStorage.setItem('pendingUserInfo', JSON.stringify(userInfo))
+         
+         // Gửi OTP thành công, chuyển đến trang verify OTP
          Alert.alert(
-            'Đăng ký thành công!', 
-            'Tài khoản đã được tạo. Vui lòng đăng nhập để tiếp tục.',
+            'OTP đã được gửi!', 
+            'Mã OTP đã được gửi đến email của bạn. Vui lòng xác thực để tạo tài khoản.',
             [
                {
-                  text: 'Đăng nhập ngay',
-                  onPress: () => router.replace('/auth/login')
+                  text: 'Xác thực OTP',
+                  onPress: () => router.push({
+                     pathname: '/auth/verify-otp',
+                     params: { 
+                        email: formData.email,
+                        type: 'register'
+                     }
+                  })
                }
             ]
          )
       } catch (error) {
          console.error('Register error:', error)
+         const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi không xác định'
+         
+         // Chỉ hiển thị lỗi cho các vấn đề technical thực sự
+         // KHÔNG hiển thị lỗi cho business logic như "email đã sử dụng"
          Alert.alert(
-            'Đăng ký thất bại',
-            error instanceof Error ? error.message : 'Đã xảy ra lỗi không xác định'
+            'Lỗi đăng ký',
+            errorMessage,
+            [
+               {
+                  text: 'Thử lại',
+                  onPress: () => {
+                     // User có thể thử lại với cùng email hoặc email khác
+                     console.log('User chọn thử lại đăng ký')
+                  }
+               }
+            ]
          )
       } finally {
          setIsLoading(false)
@@ -138,7 +165,7 @@ export default function SignUpFormScreen() {
             <View style={styles.header}>
                <TouchableOpacity 
                   style={styles.backButton}
-                  onPress={() => router.back()}
+                  onPress={() => router.push('/auth/welcome')}
                >
                   <Ionicons name="arrow-back" size={24} color="#111827" />
                </TouchableOpacity>
@@ -153,7 +180,7 @@ export default function SignUpFormScreen() {
                <View style={styles.inputWrap}>
                   <TextInput
                      style={styles.input}
-                     placeholder="Họ và tên"
+                     placeholder="Username"
                      placeholderTextColor="#9AA4B2"
                      value={formData.username}
                      onChangeText={(text) => {

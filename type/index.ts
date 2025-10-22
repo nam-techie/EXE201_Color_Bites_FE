@@ -257,3 +257,33 @@ export interface PaymentStatusResponse {
   createdAt: string
   updatedAt: string
 }
+
+// OTP Types
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface VerifyRegisterRequest {
+  email: string
+  otp: string
+}
+
+export interface VerifyRequest {
+  email: string
+  otp: string
+}
+
+export interface AccountResponse {
+  id: string
+  email: string
+  userName: string
+  role: string
+  token: string
+  active: boolean
+}
+
+export interface ResetPasswordRequest {
+  email: string
+  newPassword: string
+  confirmPassword: string
+}

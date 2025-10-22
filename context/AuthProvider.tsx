@@ -20,10 +20,17 @@ interface AuthContextType {
    user: User | null
    isLoading: boolean
    login: (email: string, password: string) => Promise<void>
-   register: (username: string, email: string, password: string, confirmPassword: string) => Promise<string>
+   register: (email: string) => Promise<string>
    logout: () => Promise<void>
    updateUserAvatar: (avatarUrl: string) => Promise<void>
    updateUser: (userData: Partial<User>) => void
+   // OTP methods
+   forgotPassword: (email: string) => Promise<string>
+   verifyRegister: (email: string, otp: string, username: string, password: string, confirmPassword: string) => Promise<void>
+   verifyResetPassword: (email: string, otp: string) => Promise<string>
+   resetPassword: (email: string, newPassword: string, confirmPassword: string) => Promise<string>
+   // Debug methods
+   testConnection: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -111,7 +118,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
    }
 
-   const register = async (username: string, email: string, password: string, confirmPassword: string) => {
+   const register = async (email: string) => {
       try {
          console.log('📝 Starting register process for:', email)
          
@@ -119,11 +126,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          await AsyncStorage.removeItem('authToken')
          await AsyncStorage.removeItem('user')
          
-         const message = await authService.register(username, email, password, confirmPassword)
+         const message = await authService.register(email)
          
-         console.log('✅ Register successful! No auto-login:', message)
+         console.log('✅ Register successful! OTP sent:', message)
          
-         // Không set user - yêu cầu login riêng
+         // Không set user - cần verify OTP trước
          return message
          
       } catch (error) {
@@ -186,8 +193,88 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
    }
 
+   // OTP Methods
+   const forgotPassword = async (email: string) => {
+      try {
+         console.log('📧 Starting forgot password process for:', email)
+         const message = await authService.forgotPassword(email)
+         console.log('✅ Forgot password OTP sent:', message)
+         return message
+      } catch (error) {
+         console.error('❌ Forgot password failed:', error)
+         throw error
+      }
+   }
+
+   const verifyRegister = async (email: string, otp: string, username: string, password: string, confirmPassword: string) => {
+      try {
+         console.log('🔐 Starting verify register process for:', email)
+         
+         const accountData = await authService.verifyRegister(email, otp, username, password, confirmPassword)
+         
+         console.log('✅ Register OTP verified successfully!')
+         console.log('👤 User:', accountData.userName, '| Role:', accountData.role)
+         
+         // Không lưu user hay token - chỉ cần đăng ký thành công
+         // User sẽ cần login riêng
+         
+      } catch (error) {
+         console.error('❌ Verify register failed:', error)
+         throw error
+      }
+   }
+
+   const verifyResetPassword = async (email: string, otp: string) => {
+      try {
+         console.log('🔐 Starting verify reset password process for:', email)
+         const message = await authService.verifyResetPassword(email, otp)
+         console.log('✅ Reset password OTP verified:', message)
+         return message
+      } catch (error) {
+         console.error('❌ Verify reset password failed:', error)
+         throw error
+      }
+   }
+
+   const resetPassword = async (email: string, newPassword: string, confirmPassword: string) => {
+      try {
+         console.log('🔐 Starting reset password process for:', email)
+         const message = await authService.resetPassword(email, newPassword, confirmPassword)
+         console.log('✅ Password reset successfully:', message)
+         return message
+      } catch (error) {
+         console.error('❌ Reset password failed:', error)
+         throw error
+      }
+   }
+
+   const testConnection = async () => {
+      try {
+         console.log('🔍 Testing backend connection...')
+         const isConnected = await authService.testConnection()
+         console.log('🔍 Connection test result:', isConnected)
+         return isConnected
+      } catch (error) {
+         console.error('❌ Connection test failed:', error)
+         return false
+      }
+   }
+
    return (
-      <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateUserAvatar, updateUser }}>
+      <AuthContext.Provider value={{ 
+         user, 
+         isLoading, 
+         login, 
+         register, 
+         logout, 
+         updateUserAvatar, 
+         updateUser,
+         forgotPassword,
+         verifyRegister,
+         verifyResetPassword,
+         resetPassword,
+         testConnection
+      }}>
          {children}
       </AuthContext.Provider>
    )

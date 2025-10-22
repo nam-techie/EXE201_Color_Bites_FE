@@ -101,7 +101,14 @@ export const API_ENDPOINTS = {
       REFRESH: '/api/auth/refresh',
       VERIFY_TOKEN: '/api/auth/verify',
       CHANGE_PASSWORD: '/api/auth/change-password',
+      FORGOT_PASSWORD: '/api/auth/forgot-password',
+      RESET_PASSWORD: '/api/auth/reset-password',
       ME: '/api/auth/me',
+   },
+   // OTP endpoints
+   OTP: {
+      VERIFY_REGISTER: '/api/otp/verify-register',
+      VERIFY_RESET_PASSWORD: '/api/otp/verify-reset-password',
    },
    // User Information endpoints
    USER_INFO: {
