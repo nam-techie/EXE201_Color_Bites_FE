@@ -24,6 +24,13 @@
     "plugins": [
       "expo-router",
       [
+        "@rnmapbox/maps",
+        {
+          "RNMapboxMapsDownloadToken": "pk.eyJ1IjoicHduYW0iLCJhIjoiY21nN3l6dGJ5MDIwazJrb2NpZHV0MTRydyJ9.F93cqvzJul7ItypzDIvrxQ",
+          "RNMapboxMapsImpl": "mapbox"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -37,19 +44,13 @@
         {
           "locationWhenInUsePermission": "We need your location to show it on the map!"
         }
-      ],
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsImpl": "mapbox"
-        }
       ]
     ],
     "extra": {
       "eas": {
-        "projectId": "a22fb735-2eb2-4fde-a856-f33c7ce20e4a"
+        "projectId": "b0e31c11-8020-4fba-97bc-4e7c853787e8"
       }
     },
-    "owner": "pwnam"
+    "owner": "namphun"
   }
 }
