@@ -315,30 +315,37 @@ export default function MapScreen() {
     calculateRouteForStops(updatedStops)
   }
 
-  // Handler functions for search bar and menu
-  const handleSearchChange = debounce(async (query: string) => {
-    setSearchQuery(query)
-    
-    if (query.trim().length < 3) {
-      setSuggestions([])
-      setSearchResults([])
-      return
-    }
-
-    try {
-      const result = await GoongService.autocomplete(query)
-      if (result.predictions) {
-        const suggestions = result.predictions.map(pred => ({
-          place_id: pred.place_id,
-          description: pred.description
-        }))
-        setSuggestions(suggestions)
+  // Handler functions for search bar và menu
+  // Debounce chỉ phần gọi API; cập nhật text hiển thị ngay lập tức
+  const debouncedAutocomplete = useCallback(
+    debounce(async (query: string) => {
+      if (query.trim().length < 3) {
+        setSuggestions([])
+        setSearchResults([])
+        return
       }
-    } catch (e) {
-      console.log('Autocomplete error', e)
-      setSuggestions([])
-    }
-  }, 400)
+
+      try {
+        const result = await GoongService.autocomplete(query)
+        if (result.predictions) {
+          const mapped = result.predictions.map((pred) => ({
+            place_id: pred.place_id,
+            description: pred.description,
+          }))
+          setSuggestions(mapped)
+        }
+      } catch (e) {
+        console.log('Autocomplete error', e)
+        setSuggestions([])
+      }
+    }, 400),
+    []
+  )
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    debouncedAutocomplete(query)
+  }
 
   const handleClearSearch = () => {
     setSearchQuery('')
