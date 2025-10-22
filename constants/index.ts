@@ -136,14 +136,6 @@ export const DEFAULT_MAP_REGION = {
 
 export const DEFAULT_SEARCH_RADIUS = 2000 // meters
 
-// Goong Maps Configuration
-const getGoongApiKey = () => {
-  const envKey = process.env.EXPO_PUBLIC_GOONG_API_KEY
-  const extraKey = (Constants?.expoConfig as any)?.extra?.GOONG_API_KEY as string | undefined
-  return envKey || extraKey || ''
-}
-
-export const GOONG_API_KEY = getGoongApiKey()
 
 // Goong Map Styles
 export const GOONG_STYLE_BASE = 'https://tiles.goong.io/assets/goong_map_web.json'
