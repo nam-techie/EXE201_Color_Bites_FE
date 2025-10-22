@@ -11,6 +11,7 @@ import { useAuth } from '@/context/AuthProvider'
 // Lazy load Mapbox to avoid module init errors before dev client is ready
 // and ensure the route always has a default export
 // We'll dynamically import '@/services/GoongMapConfig' inside the component
+import * as GoongMapService from '@/services/GoongMapService'
 import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
 import type { MapRegion, Restaurant } from '@/type/location'
@@ -26,6 +27,7 @@ import {
   PanResponderGestureState,
   Pressable,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View
 } from 'react-native'
@@ -87,9 +89,13 @@ export default function MapScreen() {
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Restaurant[]>([])
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
+  const [currentAddress, setCurrentAddress] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([])
+  const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -127,6 +133,25 @@ export default function MapScreen() {
         return null
       }
       const location = await Location.getCurrentPositionAsync({})
+      
+      // Reverse geocoding to get address
+      try {
+        const addressData = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        })
+        
+        const address = addressData[0]
+          ? `${addressData[0].name || ''} ${addressData[0].street || ''}, ${addressData[0].city || ''}`.trim()
+          : null
+        
+        setCurrentAddress(address)
+        console.log('Current address:', address)
+      } catch (geocodingError) {
+        console.log('Geocoding error:', geocodingError)
+        setCurrentAddress(null)
+      }
+      
       return location
     } catch (error) {
       console.log('Lỗi khi lấy vị trí:', error)
@@ -225,6 +250,11 @@ export default function MapScreen() {
       }
     })()
 
+    // Debug API keys
+    console.log('[MAP DEBUG] API Keys Status:')
+    console.log('[MAP DEBUG] GOONG_API_KEY:', process.env.EXPO_PUBLIC_GOONG_API_KEY ? 'configured' : 'missing')
+    console.log('[MAP DEBUG] GOONG_MAPTILES_KEY:', process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY ? 'configured' : 'missing')
+
     const fetchInitialData = async () => {
       try {
         const location = await getCurrentUserLocation()
@@ -308,14 +338,55 @@ export default function MapScreen() {
   }
 
   // Handler functions for search bar and menu
-  const handleSearchChange = (query: string) => {
+  const handleSearchChange = async (query: string) => {
     setSearchQuery(query)
-    // TODO: Implement search functionality with backend API
-    // This will search both restaurants and places
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    
+    if (query.trim().length < 3) {
+      setSuggestions([])
+      setSearchResults([])
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const preds = await MapProvider.searchAutocomplete(
+          query,
+          userLocation?.coords.latitude,
+          userLocation?.coords.longitude,
+        )
+        setSuggestions(preds)
+      } catch (e) {
+        console.log('Autocomplete error', e)
+        setSuggestions([])
+      }
+    }, 350)
   }
 
   const handleClearSearch = () => {
     setSearchQuery('')
+    setSearchResults([])
+    setSuggestions([])
+  }
+
+  const handleSelectSuggestion = async (item: { place_id: string; description: string }) => {
+    try {
+      // Fetch place detail to get accurate coordinates
+      const place = await GoongMapService.getPlaceDetail(item.place_id)
+      setSuggestions([])
+      if (place) {
+        setMapRegion({
+          latitude: place.lat,
+          longitude: place.lon,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        })
+        // Also set as search results to allow marker display later if needed
+        setSearchResults([place])
+      }
+    } catch (e) {
+      console.log('Place detail error', e)
+    }
   }
 
   const handleMenuPress = () => {
@@ -355,7 +426,17 @@ export default function MapScreen() {
         onAvatarPress={handleAvatarPress}
         onMicPress={handleMicPress}
         avatarUrl={userAvatar}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSelectSuggestion}
       />
+
+      {/* Current Address Display */}
+      {currentAddress && (
+        <View style={styles.currentAddressContainer}>
+          <Ionicons name="location" size={16} color="#3B82F6" />
+          <Text style={styles.currentAddressText}>{currentAddress}</Text>
+        </View>
+      )}
 
       {/* Filter Buttons */}
       <FilterButtons
@@ -547,5 +628,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
     elevation: 10,
+  },
+  
+  // Current address display
+  currentAddressContainer: {
+    position: 'absolute',
+    top: 120,
+    left: 16,
+    right: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
+  },
+  currentAddressText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
   },
 })

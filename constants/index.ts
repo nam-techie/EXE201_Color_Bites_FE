@@ -9,8 +9,19 @@ const goongMapTilesKey = process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY
 const extraGoongApi = (Constants?.expoConfig as any)?.extra?.GOONG_API_KEY
 const extraGoongTiles = (Constants?.expoConfig as any)?.extra?.GOONG_MAPTILES_KEY
 
+// Prefer env → app.json extra; do NOT hardcode keys in source
 export const GOONG_API_KEY = goongApiKey || extraGoongApi || ''
 export const GOONG_MAPTILES_KEY = goongMapTilesKey || extraGoongTiles || ''
+
+// Debug: Log API key status
+if (__DEV__) {
+  console.log('[CONSTANTS DEBUG] Constants.expoConfig:', Constants.expoConfig)
+  console.log('[CONSTANTS DEBUG] Constants.expoConfig.extra:', Constants.expoConfig?.extra)
+  console.log('[CONSTANTS DEBUG] goongApiKey from env:', !!goongApiKey)
+  console.log('[CONSTANTS DEBUG] extraGoongApi from app.json:', !!extraGoongApi)
+  console.log('[CONSTANTS DEBUG] Final GOONG_API_KEY:', GOONG_API_KEY ? 'configured' : 'missing')
+  console.log('[CONSTANTS DEBUG] Final GOONG_MAPTILES_KEY:', GOONG_MAPTILES_KEY ? 'configured' : 'missing')
+}
 
 // Goong Map Style URL
 export const GOONG_MAP_STYLE = `https://tiles.goong.io/assets/goong_map_web.json?api_key=${GOONG_MAPTILES_KEY}`

@@ -117,6 +117,50 @@ export async function searchPlaces(
   }
 }
 
+// ---------- Autocomplete (raw predictions for suggestions) ----------
+export interface GoongAutocompletePrediction {
+  place_id: string
+  description: string
+}
+
+/**
+ * Get raw autocomplete predictions (description + place_id)
+ * Use this for suggestion dropdown; then call place detail after user selects
+ */
+export async function getAutocompletePredictions(
+  query: string,
+  location?: { lat: number; lng: number },
+  limit: number = 10,
+): Promise<GoongAutocompletePrediction[]> {
+  if (!validateApiKey()) return []
+
+  const params = new URLSearchParams({
+    api_key: GOONG_API_KEY,
+    input: query,
+    limit: String(limit),
+  })
+  if (location) {
+    params.append('location', `${location.lat},${location.lng}`)
+    params.append('radius', '5000')
+  }
+
+  const url = `${GOONG_API_BASE}/Place/AutoComplete?${params.toString()}`
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    })
+    if (!response.ok) return []
+    const data: GoongAutocompleteResponse = await response.json()
+    if (data.status !== 'OK' || !data.predictions) return []
+    return data.predictions.map((p) => ({
+      place_id: p.place_id,
+      description: p.formatted_address || p.name,
+    }))
+  } catch {
+    return []
+  }
+}
+
 /**
  * Get place detail using Goong Place Detail API
  * @param placeId - Goong place ID

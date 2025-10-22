@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
+import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 interface RestaurantSearchBarProps {
    searchQuery: string
@@ -10,6 +10,8 @@ interface RestaurantSearchBarProps {
    onAvatarPress?: () => void
    onMicPress?: () => void
    avatarUrl?: string | null
+   suggestions?: { place_id: string; description: string }[]
+   onSelectSuggestion?: (item: { place_id: string; description: string }) => void
 }
 
 export default function RestaurantSearchBar({
@@ -20,6 +22,8 @@ export default function RestaurantSearchBar({
    onAvatarPress,
    onMicPress,
    avatarUrl,
+   suggestions = [],
+   onSelectSuggestion,
 }: RestaurantSearchBarProps) {
    return (
       <View style={styles.container}>
@@ -77,6 +81,25 @@ export default function RestaurantSearchBar({
                )}
             </TouchableOpacity>
          </View>
+
+         {suggestions && suggestions.length > 0 && (
+            <View style={styles.dropdown}>
+               <FlatList
+                  keyboardShouldPersistTaps="handled"
+                  data={suggestions}
+                  keyExtractor={(item) => item.place_id}
+                  renderItem={({ item }) => (
+                     <TouchableOpacity
+                        style={styles.dropdownItem}
+                        onPress={() => onSelectSuggestion && onSelectSuggestion(item)}
+                     >
+                        <Ionicons name="location-outline" size={16} color="#6B7280" />
+                        <Text style={styles.dropdownText} numberOfLines={2}>{item.description}</Text>
+                     </TouchableOpacity>
+                  )}
+               />
+            </View>
+         )}
       </View>
    )
 }
@@ -104,6 +127,29 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       paddingHorizontal: 16,
       height: 56,
+   },
+   dropdown: {
+      marginTop: 8,
+      backgroundColor: '#ffffff',
+      borderRadius: 12,
+      maxHeight: 220,
+      paddingVertical: 8,
+      shadowColor: '#000',
+      shadowOpacity: 0.15,
+      shadowRadius: 4,
+      elevation: 4,
+   },
+   dropdownItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      gap: 8,
+   },
+   dropdownText: {
+      flex: 1,
+      color: '#111827',
+      fontSize: 14,
    },
    menuButton: {
       marginRight: 12,

@@ -15,6 +15,7 @@ import type { DirectionResult } from './GoongDirectionService'
 
 // Import Goong services
 import * as GoongDirectionService from './GoongDirectionService'
+import type { GoongAutocompletePrediction } from './GoongMapService'
 import * as GoongMapService from './GoongMapService'
 
 if (__DEV__) {
@@ -114,6 +115,20 @@ export const MapProvider = {
       return GoongMapService.searchPlaces(query, { lat: latitude, lng: longitude })
     }
     return GoongMapService.searchPlaces(query)
+  },
+
+  /**
+   * Get autocomplete predictions for suggestion dropdown
+   */
+  async searchAutocomplete(
+    query: string,
+    latitude?: number,
+    longitude?: number,
+  ): Promise<GoongAutocompletePrediction[]> {
+    if (latitude !== undefined && longitude !== undefined) {
+      return GoongMapService.getAutocompletePredictions(query, { lat: latitude, lng: longitude })
+    }
+    return GoongMapService.getAutocompletePredictions(query)
   },
 
   /**
