@@ -1,11 +1,29 @@
-// app.config.js
-
-export default ({ config }) => ({
-  ...config,
+export default {
   expo: {
-    ...config.expo,
-
+    name: 'mumi',
+    slug: 'mumi',
+    version: '1.0.0',
+    orientation: 'portrait',
+    icon: './assets/images/icon.png',
+    scheme: 'mumii',
     userInterfaceStyle: 'automatic',
+    owner: 'pwnam',
+
+    android: {
+      package: 'com.phuongnam.mumii',
+      adaptiveIcon: {
+        foregroundImage: './assets/images/adaptive-icon.png',
+        backgroundColor: '#ffffff',
+      },
+      permissions: [
+        'android.permission.ACCESS_COARSE_LOCATION',
+        'android.permission.ACCESS_FINE_LOCATION',
+      ],
+    },
+
+    web: {
+      favicon: './assets/images/favicon.png',
+    },
 
     plugins: [
       [
@@ -19,7 +37,7 @@ export default ({ config }) => ({
       [
         'expo-splash-screen',
         {
-          image: './assets/images/icon.png',
+          image: './assets/images/splash-icon.png',
           imageWidth: 200,
           resizeMode: 'contain',
           backgroundColor: '#ffffff',
@@ -33,12 +51,11 @@ export default ({ config }) => ({
       ],
     ],
 
-    // ĐÂY LÀ PHẦN ĐÃ ĐƯỢC SỬA LỖI
     extra: {
-      ...(config.expo.extra || {}), // Thêm '|| {}' để đảm bảo an toàn
+      // Định nghĩa projectId trực tiếp ở đây
       eas: {
         projectId: 'c04a32e5-bba5-4b4a-bb95-ca0c163cff97',
       },
     },
   },
-});
+};
