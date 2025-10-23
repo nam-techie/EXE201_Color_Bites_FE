@@ -1,7 +1,7 @@
 export default {
   expo: {
-    name: 'mumi',
-    slug: 'mumi',
+    name: 'mumii',
+    slug: 'mumii',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
@@ -12,7 +12,7 @@ export default {
     android: {
       package: 'com.phuongnam.mumii',
       adaptiveIcon: {
-        foregroundImage: './assets/images/adaptive-icon.png',
+        foregroundImage: './assets/images/icon.png',
         backgroundColor: '#ffffff',
       },
       permissions: [
