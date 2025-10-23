@@ -31,6 +31,7 @@ export default {
         {
           RNMapboxMapsAccessToken: process.env.MAPBOX_ACCESS_TOKEN,
           RNMapboxMapsDownloadToken: process.env.MAPBOX_DOWNLOAD_TOKEN,
+          RNMapboxMapsImpl: 'mapbox',
         },
       ],
       'expo-router',
