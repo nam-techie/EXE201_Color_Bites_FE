@@ -1,15 +1,12 @@
 // app.config.js
 
 export default ({ config }) => ({
-  // Giữ lại các cấu hình gốc như name, slug, version, owner...
   ...config,
-
-  // Tất cả cấu hình dành riêng cho Expo phải nằm trong đối tượng "expo" này
   expo: {
-    // Giữ lại các cấu hình hiện có trong "expo" của bạn
     ...config.expo,
 
-    // SỬA Ở ĐÂY: Đảm bảo mảng "plugins" nằm bên trong "expo"
+    userInterfaceStyle: 'automatic',
+
     plugins: [
       [
         '@rnmapbox/maps',
@@ -36,9 +33,9 @@ export default ({ config }) => ({
       ],
     ],
 
-    // Đảm bảo "extra" và "projectId" cũng nằm trong "expo"
+    // ĐÂY LÀ PHẦN ĐÃ ĐƯỢC SỬA LỖI
     extra: {
-      ...config.expo.extra,
+      ...(config.expo.extra || {}), // Thêm '|| {}' để đảm bảo an toàn
       eas: {
         projectId: 'c04a32e5-bba5-4b4a-bb95-ca0c163cff97',
       },
