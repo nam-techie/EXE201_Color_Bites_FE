@@ -84,8 +84,8 @@ export default function MapScreen() {
   const loadInitialData = useCallback(async () => {
     try {
       const location = await getCurrentLocation()
-      if (location) {
-        setUserLocation(location)
+    if (location) {
+      setUserLocation(location)
         setMapRegion({
           latitude: location.latitude,
           longitude: location.longitude,

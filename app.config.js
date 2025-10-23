@@ -1,8 +1,11 @@
 // app.config.js
 export default ({ config }) => ({
-  ...config,
+  ...config, // Giữ lại toàn bộ cấu hình gốc (name, slug, version...)
+  
   expo: {
-    ...config.expo, 
+    ...config.expo, // Quan trọng: Giữ lại các cấu hình hiện có trong mục "expo" của bạn
+    
+    // Cấu hình các plugin
     plugins: [
       [
         '@rnmapbox/maps',
@@ -12,7 +15,6 @@ export default ({ config }) => ({
           RNMapboxMapsImpl: 'mapbox',
         },
       ],
-      // Các plugin khác của bạn
       'expo-router',
       [
         'expo-splash-screen',
@@ -30,5 +32,26 @@ export default ({ config }) => ({
         },
       ],
     ],
+
+    // Cấu hình Android
+    android: {
+      package: 'com.phuongnam.mumii',
+      adaptiveIcon: {
+        foregroundImage: './assets/images/adaptive-icon.png',
+        backgroundColor: '#ffffff',
+      },
+      permissions: [
+        'android.permission.ACCESS_COARSE_LOCATION',
+        'android.permission.ACCESS_FINE_LOCATION',
+      ],
+    },
+
+    // Quan trọng: Thêm khối "extra" này từ app.json vào đây
+    extra: {
+      ...(config.expo?.extra || {}), // Giữ lại các cấu hình "extra" khác nếu có
+      eas: {
+        projectId: 'c04a32e5-bba5-4b4a-bb95-ca0c163cff97',
+      },
+    },
   },
 });
