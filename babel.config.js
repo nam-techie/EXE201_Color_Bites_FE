@@ -7,7 +7,8 @@ module.exports = function (api) {
     ],
     plugins: [
       'expo-router/babel',
-      'react-native-reanimated/plugin', 
+      'react-native-worklets-core/plugin',    // Thêm worklets plugin
+      'react-native-reanimated/plugin',        // Phải để cuối cùng
     ],
   };
 };
