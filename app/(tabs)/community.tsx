@@ -10,20 +10,20 @@ import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
-    ActivityIndicator,
-    RefreshControl,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+   ActivityIndicator,
+   RefreshControl,
+   SafeAreaView,
+   ScrollView,
+   StyleSheet,
+   Text,
+   TouchableOpacity,
+   View,
 } from 'react-native'
 import Animated, {
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+   useAnimatedStyle,
+   useSharedValue,
+   withSpring,
+   withTiming,
 } from 'react-native-reanimated'
 import Toast from 'react-native-toast-message'
 
@@ -104,6 +104,7 @@ function normalizePost(p: any): PostResponse {
       isOwner: Boolean(p.isOwner),
       hasReacted: Boolean(p.hasReacted),
       userReactionType: p.userReactionType ?? null,
+      visibility: p.visibility ?? 'PUBLIC', // Default to PUBLIC if not specified
       createdAt,
       updatedAt: p.updatedAt ?? ''
    } as PostResponse
@@ -132,6 +133,32 @@ function formatTimeAgo(dateString: string): string {
    return postDate.toLocaleDateString('vi-VN')
 }
 
+// Privacy icon component
+function PrivacyIcon({ visibility }: { visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' }) {
+   const getPrivacyIcon = () => {
+      switch (visibility) {
+         case 'PUBLIC':
+            return { name: 'globe-outline', color: '#6B7280', size: 14 }
+         case 'FRIENDS':
+            return { name: 'people-outline', color: '#6B7280', size: 14 }
+         case 'PRIVATE':
+            return { name: 'lock-closed-outline', color: '#6B7280', size: 14 }
+         default:
+            return { name: 'globe-outline', color: '#6B7280', size: 14 }
+      }
+   }
+
+   const icon = getPrivacyIcon()
+   
+   return (
+      <Ionicons 
+         name={icon.name as any} 
+         size={icon.size} 
+         color={icon.color} 
+      />
+   )
+}
+
 export default function CommunityScreen() {
    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
    const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set())
@@ -146,11 +173,40 @@ export default function CommunityScreen() {
    // Load posts from API - Wrapped với useCallback để tránh infinite loop
    const loadPosts = useCallback(async (pageNumber: number = 1, append: boolean = false) => {
       try {
-         const response = await postService.getAllPosts(pageNumber, 10)
+         console.log('🔄 Loading posts by privacy - page:', pageNumber)
+         const response = await postService.getPostsByPrivacy(pageNumber, 10)
          
          if (response.content) {
-            // Normalize data trước khi set vào state
-            const normalizedPosts = response.content.map(normalizePost)
+            // Normalize data trước khi set vào state với try-catch cho từng post
+            const normalizedPosts = response.content.map((post: any) => {
+               try {
+                  return normalizePost(post)
+               } catch (normalizeError) {
+                  console.warn('⚠️ Error normalizing post:', normalizeError, 'Post data:', post)
+                  // Trả về post với dữ liệu mặc định nếu normalize fail
+                  return {
+                     id: String(post.id || 'unknown'),
+                     accountId: post.author?.accountId ?? post.accountId ?? '',
+                     authorName: post.author?.authorName ?? post.authorName ?? 'Unknown User',
+                     authorAvatar: null as any, // Fallback về null để dùng default avatar
+                     content: post.content ?? '',
+                     moodId: post.moodId ?? '',
+                     moodName: post.moodName ?? '',
+                     moodEmoji: post.moodEmoji ?? '',
+                     imageUrls: [],
+                     videoUrl: undefined,
+                     reactionCount: Number(post.reactionCount ?? 0) || 0,
+                     commentCount: Number(post.commentCount ?? 0) || 0,
+                     tags: Array.isArray(post.tags) ? post.tags : [],
+                     isOwner: Boolean(post.isOwner),
+                     hasReacted: Boolean(post.hasReacted),
+                     userReactionType: post.userReactionType ?? null,
+                     visibility: post.visibility ?? 'PUBLIC', // Default to PUBLIC
+                     createdAt: post.createdAt ?? new Date().toISOString(),
+                     updatedAt: post.updatedAt ?? ''
+                  } as PostResponse
+               }
+            })
             
             if (append) {
                setPosts(prevPosts => [...prevPosts, ...normalizedPosts])
@@ -160,15 +216,19 @@ export default function CommunityScreen() {
             
             setHasMorePosts(!response.last)
             setPage(pageNumber)
+            console.log('✅ Posts loaded successfully:', normalizedPosts.length, 'posts')
          }
       } catch (error) {
-         console.error('Error loading posts:', error)
+         console.error('❌ Error loading posts:', error)
          
-         Toast.show({
-            type: 'error',
-            text1: 'Lỗi',
-            text2: error instanceof Error ? error.message : 'Không thể tải bài viết',
-         })
+         // Không hiển thị toast error để tránh spam user
+         // Chỉ log để debug
+         console.log('🔄 Returning empty response due to API error')
+         
+         // Set empty state thay vì crash
+         if (!append) {
+            setPosts([])
+         }
       } finally {
          setIsLoading(false)
          setIsRefreshing(false)
@@ -456,6 +516,8 @@ function PostCard({
                      <Text style={styles.userName}>{post.authorName || 'Unknown User'}</Text>
                      <View style={styles.locationContainer}>
                         <Text style={styles.timeText}>{formatTimeAgo(post.createdAt)}</Text>
+                        <Text style={styles.separator}>•</Text>
+                        <PrivacyIcon visibility={post.visibility} />
                         {post.moodName && (
                            <>
                               <Text style={styles.separator}>•</Text>

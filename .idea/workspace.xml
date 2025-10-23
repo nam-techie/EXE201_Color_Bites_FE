@@ -7,10 +7,8 @@
     <list default="true" id="daa47c86-f6b9-420b-be87-17d664d737cd" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/constants/index.ts" beforeDir="false" afterPath="$PROJECT_DIR$/constants/index.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/common/CommentModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/common/CommentModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/CommentService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/CommentService.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,6 +77,8 @@
       <workItem from="1759887379580" duration="12448000" />
       <workItem from="1760090745062" duration="3893000" />
       <workItem from="1760285366822" duration="1280000" />
+      <workItem from="1760459538961" duration="598000" />
+      <workItem from="1760491589265" duration="8108000" />
     </task>
     <servers />
   </component>

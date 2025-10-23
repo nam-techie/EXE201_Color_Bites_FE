@@ -1,20 +1,22 @@
 'use client'
 
+import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-   Alert,
-   SafeAreaView,
-   StatusBar,
-   StyleSheet,
-   Text,
-   TextInput,
-   TouchableOpacity,
-   View,
+  Alert,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native'
 
 export default function ForgotPasswordScreen() {
+  const { forgotPassword } = useAuth()
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
@@ -32,13 +34,25 @@ export default function ForgotPasswordScreen() {
 
     setIsLoading(true)
     try {
-      // TODO: gọi API gửi email reset thật
-      await new Promise((r) => setTimeout(r, 1200))
-      Alert.alert('Thành công', 'Email đặt lại mật khẩu đã được gửi!', [
-        { text: 'OK', onPress: () => router.push('/auth/reset-password') },
+      await forgotPassword(email)
+      Alert.alert('Thành công', 'Mã OTP đã được gửi đến email của bạn!', [
+        { 
+          text: 'Xác thực OTP', 
+          onPress: () => router.push({
+            pathname: '/auth/verify-otp',
+            params: { 
+              email: email,
+              type: 'reset-password'
+            }
+          })
+        },
       ])
-    } catch {
-      Alert.alert('Lỗi', 'Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.')
+    } catch (error) {
+      console.error('Forgot password error:', error)
+      Alert.alert(
+        'Lỗi', 
+        error instanceof Error ? error.message : 'Không thể gửi OTP. Vui lòng thử lại.'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -54,7 +68,7 @@ export default function ForgotPasswordScreen() {
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => router.push('/auth/login')}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
           <Ionicons name="arrow-back" size={24} color="#111827" />

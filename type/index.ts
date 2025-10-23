@@ -67,6 +67,7 @@ export interface PostResponse {
    isOwner: boolean          // Người xem có phải chủ bài viết không
    hasReacted: boolean       // Người xem đã react chưa
    userReactionType?: string // Loại reaction của người xem
+   visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' // Quyền riêng tư của bài đăng
    createdAt: string
    updatedAt: string
 }
@@ -256,4 +257,34 @@ export interface PaymentStatusResponse {
   message: string
   createdAt: string
   updatedAt: string
+}
+
+// OTP Types
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface VerifyRegisterRequest {
+  email: string
+  otp: string
+}
+
+export interface VerifyRequest {
+  email: string
+  otp: string
+}
+
+export interface AccountResponse {
+  id: string
+  email: string
+  userName: string
+  role: string
+  token: string
+  active: boolean
+}
+
+export interface ResetPasswordRequest {
+  email: string
+  newPassword: string
+  confirmPassword: string
 }
