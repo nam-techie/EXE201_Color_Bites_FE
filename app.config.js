@@ -8,6 +8,7 @@ export default {
     scheme: 'mumii',
     userInterfaceStyle: 'automatic',
     owner: 'pwnam',
+    "newArchEnabled": true, 
 
     android: {
       package: 'com.phuongnam.mumii',
