@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "mumii",
-    "slug": "mumii",
+    "name": "mumi_fe",
+    "slug": "mumi-fe",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -24,13 +24,6 @@
     "plugins": [
       "expo-router",
       [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsDownloadToken": "pk.eyJ1IjoicHduYW0iLCJhIjoiY21nN3l6dGJ5MDIwazJrb2NpZHV0MTRydyJ9.F93cqvzJul7ItypzDIvrxQ",
-          "RNMapboxMapsImpl": "mapbox"
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -48,9 +41,10 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "b0e31c11-8020-4fba-97bc-4e7c853787e8"
-      }
+        "projectId": "404b853e-2aba-4daa-98d5-bb9c4046cfbd"
+      },
+      "router": {}
     },
-    "owner": "namphun"
+    "owner": "pwnam"
   }
 }
