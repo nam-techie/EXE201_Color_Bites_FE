@@ -22,7 +22,7 @@ export default {
     },
 
     web: {
-      favicon: './assets/images/favicon.png',
+      favicon: './assets/images/icon.png',
     },
 
     plugins: [
@@ -37,7 +37,7 @@ export default {
       [
         'expo-splash-screen',
         {
-          image: './assets/images/splash-icon.png',
+          image: './assets/images/icon.png',
           imageWidth: 200,
           resizeMode: 'contain',
           backgroundColor: '#ffffff',
