@@ -37,6 +37,8 @@ export default function MapLibreView({
         zoomEnabled
         logoEnabled={false}
         attributionEnabled={false}
+        projection="mercator"
+        localizeLabels={true}
       >
         <Camera
           ref={cameraRef}

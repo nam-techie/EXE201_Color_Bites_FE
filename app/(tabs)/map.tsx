@@ -6,9 +6,10 @@ import MapLibreView from '@/components/map/MapLibreView'
 import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
-import { GOONG_API_KEY, GOONG_STYLE_BASE, GOONG_STYLE_HIGHLIGHT, GOONG_STYLE_SATELLITE } from '@/constants'
+import { GOONG_API_KEY } from '@/constants'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
+import { getDefaultMapStyle, getMapStyleUrl, type MapStyle } from '@/services/GoongMapStyles'
 // Lazy load Mapbox to avoid module init errors before dev client is ready
 // and ensure the route always has a default export
 // We'll dynamically import '@/services/GoongMapConfig' inside the component
@@ -89,7 +90,11 @@ export default function MapScreen() {
   const [currentAddress, setCurrentAddress] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([])
   const [selectedPlace, setSelectedPlace] = useState<Restaurant | null>(null)
-  const [currentStyle, setCurrentStyle] = useState('base')
+  const [currentStyle, setCurrentStyle] = useState<MapStyle>(getDefaultMapStyle())
+
+  // Race condition protection for search
+  const reqId = useRef(0)
+  const latestQueryRef = useRef('')
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -231,9 +236,9 @@ export default function MapScreen() {
     // Initialize Goong style URL
     const initializeStyle = () => {
       if (GOONG_API_KEY) {
-        const styleUrl = `${GOONG_STYLE_BASE}?api_key=${GOONG_API_KEY}`
+        const styleUrl = getMapStyleUrl(currentStyle)
         setGoongStyleUrl(styleUrl)
-        console.log('[MAP DEBUG] Goong style URL initialized')
+        console.log('[MAP DEBUG] Goong style URL initialized:', currentStyle)
       } else {
         console.warn('[MAP DEBUG] GOONG_API_KEY not configured')
       }
@@ -259,7 +264,7 @@ export default function MapScreen() {
     }
     fetchInitialData()
     loadUserAvatar()
-  }, [loadUserAvatar])
+  }, [loadUserAvatar, currentStyle])
 
   useEffect(() => {
     if (routeStops.length > 0) {
@@ -325,18 +330,27 @@ export default function MapScreen() {
         return
       }
 
+      const thisReq = ++reqId.current
+      latestQueryRef.current = query
+
       try {
         const result = await GoongService.autocomplete(query)
-        if (result.predictions) {
-          const mapped = result.predictions.map((pred) => ({
-            place_id: pred.place_id,
-            description: pred.description,
-          }))
-          setSuggestions(mapped)
+        
+        // CHỈ nhận kết quả của request MỚI NHẤT
+        if (thisReq === reqId.current && latestQueryRef.current === query) {
+          if (result.predictions) {
+            const mapped = result.predictions.map((pred) => ({
+              place_id: pred.place_id,
+              description: pred.description,
+            }))
+            setSuggestions(mapped)
+          }
         }
       } catch (e) {
-        console.log('Autocomplete error', e)
-        setSuggestions([])
+        if (thisReq === reqId.current) {
+          console.log('Autocomplete error', e)
+          setSuggestions([])
+        }
       }
     }, 400),
     []
@@ -398,23 +412,14 @@ export default function MapScreen() {
   
   // Toggle map style
   const toggleMapStyle = () => {
-    const styles = ['base', 'satellite', 'highlight']
+    const styles: MapStyle[] = ['web', 'light', 'dark', 'satellite', 'highlight']
     const currentIndex = styles.indexOf(currentStyle)
     const nextIndex = (currentIndex + 1) % styles.length
-    setCurrentStyle(styles[nextIndex])
+    const newStyle = styles[nextIndex]
+    setCurrentStyle(newStyle)
     
     // Update style URL based on current style
-    let styleUrl = ''
-    switch (styles[nextIndex]) {
-      case 'satellite':
-        styleUrl = `${GOONG_STYLE_SATELLITE}?api_key=${GOONG_API_KEY}`
-        break
-      case 'highlight':
-        styleUrl = `${GOONG_STYLE_HIGHLIGHT}?api_key=${GOONG_API_KEY}`
-        break
-      default:
-        styleUrl = `${GOONG_STYLE_BASE}?api_key=${GOONG_API_KEY}`
-    }
+    const styleUrl = getMapStyleUrl(newStyle)
     setGoongStyleUrl(styleUrl)
   }
 

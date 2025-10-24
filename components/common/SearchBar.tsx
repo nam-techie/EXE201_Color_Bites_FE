@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { memo } from 'react'
+import { FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 interface RestaurantSearchBarProps {
    searchQuery: string
@@ -14,7 +15,7 @@ interface RestaurantSearchBarProps {
    onSelectSuggestion?: (item: { place_id: string; description: string }) => void
 }
 
-export default function RestaurantSearchBar({
+function RestaurantSearchBar({
    searchQuery,
    onSearchChange,
    onClearSearch,
@@ -45,6 +46,12 @@ export default function RestaurantSearchBar({
                   value={searchQuery}
                   onChangeText={onSearchChange}
                   placeholderTextColor="#9CA3AF"
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  importantForAutofill="no"
+                  blurOnSubmit={false}
+                  disableFullscreenUI={Platform.OS === 'android'}
                />
                {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
@@ -85,7 +92,7 @@ export default function RestaurantSearchBar({
          {suggestions && suggestions.length > 0 && (
             <View style={styles.dropdown}>
                <FlatList
-                  keyboardShouldPersistTaps="handled"
+                  keyboardShouldPersistTaps="always"
                   data={suggestions}
                   keyExtractor={(item) => item.place_id}
                   renderItem={({ item }) => (
@@ -188,3 +195,5 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
    },
 })
+
+export default memo(RestaurantSearchBar)
