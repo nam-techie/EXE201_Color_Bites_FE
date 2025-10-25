@@ -23,7 +23,7 @@ export default function WelcomeScreen() {
         {/* Logo */}
         <View style={styles.logoWrap}>
           <Image
-            source={require('@/assets/images/icon.jpg')}
+            source={require('@/assets/images/icon.png')}
             style={styles.logo}
             contentFit="contain"
             transition={200}
