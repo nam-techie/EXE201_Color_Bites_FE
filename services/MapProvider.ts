@@ -10,6 +10,7 @@
  * const restaurants = await MapProvider.fetchRestaurants(lat, lon)
  */
 
+import { GOONG_API_KEY, GOONG_MAPTILES_KEY } from '@/constants'
 import type { Restaurant } from '@/type/location'
 import type { DirectionResult } from './GoongDirectionService'
 
@@ -144,12 +145,12 @@ export const MapProvider = {
  * Re-export từ GoongMapService và GoongDirectionService
  */
 export {
-    calculateDistance, formatOpeningHours, getCuisineIcon, getPriceRange, getRestaurantRating, isRestaurantOpen
+  calculateDistance, formatOpeningHours, getCuisineIcon, getPriceRange, getRestaurantRating, isRestaurantOpen
 } from './GoongMapService'
 
 export {
-    calculateEstimatedCost, convertCoordinatesToMapFormat, formatCost, formatDistance,
-    formatDuration, getEstimatedTimeWithTraffic, getInstructionIcon
+  calculateEstimatedCost, convertCoordinatesToMapFormat, formatCost, formatDistance,
+  formatDuration, getEstimatedTimeWithTraffic, getInstructionIcon
 } from './GoongDirectionService'
 
 /**
@@ -160,16 +161,14 @@ export function checkProviderStatus(): {
   configured: boolean
   message: string
 } {
-  const goongApiKey = process.env.EXPO_PUBLIC_GOONG_API_KEY || ''
-  const goongMapTilesKey = process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY || ''
-  const configured = goongApiKey.length > 0 && goongMapTilesKey.length > 0
+  const configured = GOONG_API_KEY.length > 0 && GOONG_MAPTILES_KEY.length > 0
   
   return {
     provider: 'Goong Maps',
     configured,
     message: configured
       ? 'Goong Maps + Goong Direction API configured'
-      : 'Goong API keys not found. Please set EXPO_PUBLIC_GOONG_API_KEY and EXPO_PUBLIC_GOONG_MAPTILES_KEY in .env',
+      : 'Goong API keys not found. Please check app.json or .env configuration',
   }
 }
 

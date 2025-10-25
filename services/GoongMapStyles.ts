@@ -1,10 +1,19 @@
-import Constants from 'expo-constants'
+import Constants from 'expo-constants';
 
-// Lấy Maptiles Key từ environment variables
+// --- HÀM LẤY KEY TỪ app.json ---
+const getGoongMaptilesKeyFromAppJson = (): string => {
+  // Constants.expoConfig chứa toàn bộ nội dung của app.json
+  // Chúng ta truy cập vào mục "extra" và lấy key
+  // Dấu ?. là optional chaining để tránh lỗi nếu "extra" không tồn tại
+  const key = (Constants.expoConfig as any)?.extra?.GOONG_MAPTILES_KEY;
+  return key || '';
+};
+
+// Lấy Maptiles Key từ app.json (ưu tiên) hoặc environment variables (fallback)
 const getGoongMaptilesKey = (): string => {
+  const appJsonKey = getGoongMaptilesKeyFromAppJson()
   const envKey = process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY
-  const extraKey = (Constants?.expoConfig as any)?.extra?.GOONG_MAPTILES_KEY as string | undefined
-  return envKey || extraKey || ''
+  return appJsonKey || envKey || ''
 }
 
 const GOONG_MAPTILES_KEY = getGoongMaptilesKey()
@@ -21,10 +30,14 @@ export const GOONG_MAP_STYLES: Record<MapStyle, string> = {
   highlight: `https://tiles.goong.io/assets/goong_map_highlight.json?api_key=${GOONG_MAPTILES_KEY}`
 }
 
-// Debug: Log API key status
+// In ra để kiểm tra xem key đã được load đúng từ app.json chưa
 if (__DEV__) {
-  console.log('[GoongMapStyles] MapTiles Key configured:', GOONG_MAPTILES_KEY ? '✅' : '❌ VUI LÒNG KIỂM TRA LẠI .ENV')
-  console.log('[GoongMapStyles] MapTiles Key value:', GOONG_MAPTILES_KEY ? `${GOONG_MAPTILES_KEY.substring(0, 8)}...` : 'undefined')
+  const appJsonKey = getGoongMaptilesKeyFromAppJson()
+  const envKey = process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY
+  
+  console.log('[GoongMapStyles] Đọc MapTiles Key từ app.json:', appJsonKey ? `✅ CÓ KEY: ...${appJsonKey.slice(-5)}` : '❌ KHÔNG TÌM THẤY KEY TRONG app.json')
+  console.log('[GoongMapStyles] Fallback từ .env:', envKey ? `✅ CÓ KEY: ...${envKey.slice(-5)}` : '❌ KHÔNG CÓ KEY TRONG .ENV')
+  console.log('[GoongMapStyles] Key cuối cùng được sử dụng:', GOONG_MAPTILES_KEY ? `✅ ${GOONG_MAPTILES_KEY.substring(0, 8)}...` : '❌ UNDEFINED')
   
   // Debug: Log generated URLs
   console.log('[GoongMapStyles] Generated URLs:')
