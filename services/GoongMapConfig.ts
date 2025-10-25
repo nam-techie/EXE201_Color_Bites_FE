@@ -1,4 +1,6 @@
-import { GOONG_MAP_STYLE } from '@/constants'
+import MapLibreGL from '@maplibre/maplibre-react-native'
 
-// MapLibre không cần khởi tạo token
-export const GOONG_STYLE_URL = GOONG_MAP_STYLE
+// MapLibre không dùng access token như Mapbox
+MapLibreGL.setAccessToken(null)
+
+export { MapLibreGL }

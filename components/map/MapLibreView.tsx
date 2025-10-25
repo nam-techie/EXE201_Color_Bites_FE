@@ -21,7 +21,7 @@ export default function MapLibreView({
   routeCoordinates = []
 }: MapLibreViewProps) {
   const url = useMemo(() => styleURL, [styleURL])
-  const cameraRef = useRef<Camera>(null)
+  const cameraRef = useRef<any>(null)
 
   // Center map on user location or default center
   const centerCoordinate = userLocation 
@@ -32,7 +32,7 @@ export default function MapLibreView({
     <View style={{ flex: 1 }}>
       <MapView 
         style={{ flex: 1 }} 
-        styleURL={url} 
+        {...({ styleURL: url } as any)}
         compassEnabled 
         zoomEnabled
         logoEnabled={false}

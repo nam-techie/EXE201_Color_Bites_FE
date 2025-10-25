@@ -9,7 +9,7 @@ import RouteProfileSelector from '@/components/map/RouteProfileSelector'
 import { GOONG_API_KEY } from '@/constants'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
-import { getDefaultMapStyle, getMapStyleUrl, type MapStyle } from '@/services/GoongMapStyles'
+import { buildGoongStyleDataUrl, type GoongStyleId } from '@/services/goong-style'
 // Lazy load Mapbox to avoid module init errors before dev client is ready
 // and ensure the route always has a default export
 // We'll dynamically import '@/services/GoongMapConfig' inside the component
@@ -80,17 +80,15 @@ export default function MapScreen() {
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
-  const [goongStyleUrl, setGoongStyleUrl] = useState<string | null>(null)
+  const [styleURL, setStyleURL] = useState<string | undefined>()
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchResults, setSearchResults] = useState<Restaurant[]>([])
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
   const [currentAddress, setCurrentAddress] = useState<string | null>(null)
   const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([])
-  const [selectedPlace, setSelectedPlace] = useState<Restaurant | null>(null)
-  const [currentStyle, setCurrentStyle] = useState<MapStyle>(getDefaultMapStyle())
+  const [currentStyle, setCurrentStyle] = useState<GoongStyleId>('web')
 
   // Race condition protection for search
   const reqId = useRef(0)
@@ -233,19 +231,15 @@ export default function MapScreen() {
   }, [user])
 
   useEffect(() => {
-    // Initialize Goong style URL
-    const initializeStyle = () => {
-      if (GOONG_API_KEY) {
-        const styleUrl = getMapStyleUrl(currentStyle)
-        setGoongStyleUrl(styleUrl)
-        console.log('[MAP DEBUG] Goong style URL initialized:', currentStyle)
-      } else {
-        console.warn('[MAP DEBUG] GOONG_API_KEY not configured')
-      }
-    }
-    
-    initializeStyle()
+    // Load style URL when currentStyle changes
+    let mounted = true
+    buildGoongStyleDataUrl(currentStyle)
+      .then(url => mounted && setStyleURL(url))
+      .catch(e => console.warn('[MAP DEBUG] Load style error:', e))
+    return () => { mounted = false }
+  }, [currentStyle])
 
+  useEffect(() => {
     // Debug API keys
     console.log('[MAP DEBUG] API Keys Status:')
     console.log('[MAP DEBUG] GOONG_API_KEY:', GOONG_API_KEY ? 'configured' : 'missing')
@@ -264,7 +258,7 @@ export default function MapScreen() {
     }
     fetchInitialData()
     loadUserAvatar()
-  }, [loadUserAvatar, currentStyle])
+  }, [loadUserAvatar])
 
   useEffect(() => {
     if (routeStops.length > 0) {
@@ -322,39 +316,37 @@ export default function MapScreen() {
 
   // Handler functions for search bar và menu
   // Debounce chỉ phần gọi API; cập nhật text hiển thị ngay lập tức
-  const debouncedAutocomplete = useCallback(
-    debounce(async (query: string) => {
-      if (query.trim().length < 3) {
+  const autocompleteFunction = async (query: string) => {
+    if (query.trim().length < 3) {
+      setSuggestions([])
+      return
+    }
+
+    const thisReq = ++reqId.current
+    latestQueryRef.current = query
+
+    try {
+      const result = await GoongService.autocomplete(query)
+      
+      // CHỈ nhận kết quả của request MỚI NHẤT
+      if (thisReq === reqId.current && latestQueryRef.current === query) {
+        if (result.predictions) {
+          const mapped = result.predictions.map((pred) => ({
+            place_id: pred.place_id,
+            description: pred.description,
+          }))
+          setSuggestions(mapped)
+        }
+      }
+    } catch (e) {
+      if (thisReq === reqId.current) {
+        console.log('Autocomplete error', e)
         setSuggestions([])
-        setSearchResults([])
-        return
       }
+    }
+  }
 
-      const thisReq = ++reqId.current
-      latestQueryRef.current = query
-
-      try {
-        const result = await GoongService.autocomplete(query)
-        
-        // CHỈ nhận kết quả của request MỚI NHẤT
-        if (thisReq === reqId.current && latestQueryRef.current === query) {
-          if (result.predictions) {
-            const mapped = result.predictions.map((pred) => ({
-              place_id: pred.place_id,
-              description: pred.description,
-            }))
-            setSuggestions(mapped)
-          }
-        }
-      } catch (e) {
-        if (thisReq === reqId.current) {
-          console.log('Autocomplete error', e)
-          setSuggestions([])
-        }
-      }
-    }, 400),
-    []
-  )
+  const debouncedAutocomplete = debounce(autocompleteFunction, 400)
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query)
@@ -363,7 +355,6 @@ export default function MapScreen() {
 
   const handleClearSearch = () => {
     setSearchQuery('')
-    setSearchResults([])
     setSuggestions([])
   }
 
@@ -385,8 +376,8 @@ export default function MapScreen() {
           }
         }
         
-        setSelectedPlace(restaurant)
-        setSearchResults([restaurant])
+        // Add restaurant to map or handle selection
+        console.log('Selected place:', restaurant)
         
         // Move camera to selected place - handled by MapLibreView
       }
@@ -412,22 +403,18 @@ export default function MapScreen() {
   
   // Toggle map style
   const toggleMapStyle = () => {
-    const styles: MapStyle[] = ['web', 'light', 'dark', 'satellite', 'highlight']
+    const styles: GoongStyleId[] = ['web', 'light', 'dark', 'satellite', 'highlight']
     const currentIndex = styles.indexOf(currentStyle)
     const nextIndex = (currentIndex + 1) % styles.length
     const newStyle = styles[nextIndex]
     setCurrentStyle(newStyle)
-    
-    // Update style URL based on current style
-    const styleUrl = getMapStyleUrl(newStyle)
-    setGoongStyleUrl(styleUrl)
   }
 
   return (
     <View style={styles.container}>
-      {goongStyleUrl ? (
+      {styleURL ? (
         <MapLibreView 
-          styleURL={goongStyleUrl}
+          styleURL={styleURL}
           restaurants={restaurants}
           selectedRestaurant={selectedRestaurant}
           onMarkerPress={handleMarkerPress}
@@ -436,7 +423,7 @@ export default function MapScreen() {
         />
       ) : (
         <View style={styles.map}>
-          {/* Placeholder while MapLibre is not available */}
+          {/* Loading placeholder while style is being fetched */}
         </View>
       )}
 
