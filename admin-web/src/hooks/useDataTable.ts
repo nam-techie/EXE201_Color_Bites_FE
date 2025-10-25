@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useDebounce } from '../utils/debounce'
 
 export interface UseDataTableOptions<T> {
   fetchData: (page: number, size: number, filters?: any) => Promise<{
@@ -48,6 +49,11 @@ export const useDataTable = <T>({
     total: 0
   })
   const [filters, setFilters] = useState(initialFilters)
+  
+  // Debounced search to prevent excessive API calls
+  const debouncedSearch = useDebounce((searchValue: string) => {
+    setFilters(prev => ({ ...prev, search: searchValue }))
+  }, 300)
 
   const loadData = useCallback(async () => {
     try {
@@ -89,6 +95,9 @@ export const useDataTable = <T>({
     setPagination(prev => ({ ...prev, current: 1 }))
   }, [])
 
+  // Memoized data to prevent unnecessary re-renders
+  const memoizedData = useMemo(() => data, [data])
+
   // Auto fetch data when dependencies change
   useEffect(() => {
     if (autoFetch) {
@@ -97,7 +106,7 @@ export const useDataTable = <T>({
   }, [loadData, autoFetch])
 
   return {
-    data,
+    data: memoizedData,
     loading,
     error,
     pagination,

@@ -6,7 +6,6 @@ import {
     LogOut,
     Menu,
     MessageSquare,
-    Settings,
     Smile,
     Store,
     Tag,
@@ -68,11 +67,6 @@ const Sidebar = () => {
       title: 'Statistics',
       icon: BarChart3,
       path: '/statistics'
-    },
-    {
-      title: 'Settings',
-      icon: Settings,
-      path: '/settings'
     }
   ]
 
