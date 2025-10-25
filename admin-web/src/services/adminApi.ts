@@ -2,8 +2,8 @@ import axios, { AxiosInstance } from 'axios'
 import { AccountResponse, AuthApiResponse, LoginRequest } from '../types/auth'
 import { ApiResponse, ListAccountResponse } from '../types/user'
 
-// API Configuration - sử dụng cùng backend với mobile app
-const API_BASE_URL = 'http://localhost:8080' // Backend local development
+// API Configuration - sử dụng production backend
+const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
 
 class AdminApiService {
   private axiosInstance: AxiosInstance
