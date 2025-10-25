@@ -174,7 +174,7 @@ export async function getRouteAlternatives(
   return route ? [route] : null
 }
 
-// ---- Mapbox GeoJSON helpers ----
+// ---- GeoJSON helpers ----
 export function formatRouteToGeoJSONFromEncoded(encodedPolyline: string) {
   const coordinates = decodePolyline(encodedPolyline)
   return {

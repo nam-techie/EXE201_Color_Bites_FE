@@ -43,10 +43,7 @@
       "extra": {
         "eas": {
           "projectId": "c29c07da-27fc-4c9c-8d03-dc4b8f31de9e"
-        },
-        "API_BASE_URL": "https://mumii-be.namtechie.id.vn",
-        "GOONG_API_KEY": "60vuXQwfXJeCqjSp1On6EqqszwBN7q5c3tRSbgKd",
-        "GOONG_MAPTILES_KEY": "IUVEYS4RvLCnyRWb34A15Ckf3LSLF90McVmXlnk"
+        }
       },
     "owner": "namphw"
   }

@@ -12,22 +12,23 @@
 npm install
 ```
 
-### 2. Cấu hình API (Tạo file `.env`)
-```env
-# Backend API
-EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+### 2. Cấu hình API (EAS Secrets - Khuyến nghị)
 
-# Goong Maps API Keys (Bắt buộc)
-EXPO_PUBLIC_GOONG_API_KEY=your_goong_api_key_here
-EXPO_PUBLIC_GOONG_MAPTILES_KEY=your_goong_maptiles_key_here
+**Thay vì file `.env`, sử dụng EAS Secrets để bảo mật:**
+
+```bash
+# Set secrets cho development
+eas secret:create --name EXPO_PUBLIC_API_BASE_URL --value https://mumii-be.namtechie.id.vn --profile development
+eas secret:create --name EXPO_PUBLIC_GOONG_API_KEY --value your_goong_api_key_here --profile development
+eas secret:create --name EXPO_PUBLIC_GOONG_MAPTILES_KEY --value your_goong_maptiles_key_here --profile development
 ```
 
 ### 3. Lấy Goong Maps API Keys
 1. Vào: https://account.goong.io/
 2. Đăng ký tài khoản mới
 3. Tạo **API Key** và **Map Tiles Key**
-4. Copy keys và paste vào file `.env`
-5. Xem chi tiết tại: [docs/GOONG_SETUP.md](./GOONG_SETUP.md)
+4. Set secrets với EAS CLI (xem trên)
+5. Xem chi tiết tại: [docs/ENV_SETUP_GUIDE.md](./ENV_SETUP_GUIDE.md)
 
 ### 4. Chạy App với Dev Client
 ```bash

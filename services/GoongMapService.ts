@@ -371,8 +371,8 @@ export function getPriceRange(tags: any): string {
   return priceMap[priceLevel.toLowerCase()] || ''
 }
 
-// ---- Mapbox GeoJSON helpers ----
-// Format a list of restaurants to a GeoJSON FeatureCollection for Mapbox sources
+// ---- GeoJSON helpers ----
+// Format a list of restaurants to a GeoJSON FeatureCollection for map sources
 export function formatRestaurantsToGeoJSON(restaurants: Restaurant[]) {
   return {
     type: 'FeatureCollection',
@@ -380,7 +380,7 @@ export function formatRestaurantsToGeoJSON(restaurants: Restaurant[]) {
       type: 'Feature',
       geometry: {
         type: 'Point',
-        // Mapbox expects [lng, lat]
+        // GeoJSON expects [lng, lat]
         coordinates: [r.lon, r.lat],
       },
       properties: {

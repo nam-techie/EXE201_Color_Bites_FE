@@ -1,9 +1,4 @@
-import Constants from 'expo-constants'
-
-const getTilesKey = () =>
-  process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY ||
-  (Constants?.expoConfig as any)?.extra?.GOONG_MAPTILES_KEY ||
-  ''
+import { GOONG_MAPTILES_KEY } from '@/config/env'
 
 export type GoongStyleId = 'web' | 'light' | 'dark' | 'satellite' | 'highlight'
 
@@ -17,7 +12,7 @@ const STYLE_FILE: Record<GoongStyleId, string> = {
 
 /** Tải style JSON từ Goong và ép mọi URL (glyphs/sprite/tiles/url) có ?api_key= */
 export async function buildGoongStyleDataUrl(styleId: GoongStyleId): Promise<string> {
-  const key = getTilesKey()
+  const key = GOONG_MAPTILES_KEY
   if (!key) throw new Error('GOONG_MAPTILES_KEY is empty')
 
   const file = STYLE_FILE[styleId] ?? STYLE_FILE.web

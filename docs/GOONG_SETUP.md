@@ -67,33 +67,43 @@ Goong Maps là dịch vụ bản đồ tối ưu cho Việt Nam, cung cấp:
 
 ## ⚙️ BƯỚC 3: CẤU HÌNH PROJECT
 
-### 3.1 Tạo file `.env`
-```env
-# Goong Maps Configuration
-EXPO_PUBLIC_GOONG_API_KEY=your_api_key_here
-EXPO_PUBLIC_GOONG_MAPTILES_KEY=your_maptiles_key_here
+### 3.1 Setup EAS Secrets (Khuyến nghị)
 
-# Backend API
-EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+**Thay vì dùng file `.env`, sử dụng EAS Secrets để bảo mật:**
+
+```bash
+# Set secrets cho development
+eas secret:create --name EXPO_PUBLIC_GOONG_API_KEY --value your_api_key_here --profile development
+eas secret:create --name EXPO_PUBLIC_GOONG_MAPTILES_KEY --value your_maptiles_key_here --profile development
+eas secret:create --name EXPO_PUBLIC_API_BASE_URL --value https://mumii-be.namtechie.id.vn --profile development
+
+# Set secrets cho preview
+eas secret:create --name EXPO_PUBLIC_GOONG_API_KEY --value your_api_key_here --profile preview
+eas secret:create --name EXPO_PUBLIC_GOONG_MAPTILES_KEY --value your_maptiles_key_here --profile preview
+eas secret:create --name EXPO_PUBLIC_API_BASE_URL --value https://mumii-be.namtechie.id.vn --profile preview
 ```
 
-### 3.2 Cập nhật app.json (đã được thực hiện)
+**Xem chi tiết tại: [docs/ENV_SETUP_GUIDE.md](./ENV_SETUP_GUIDE.md)**
+
+### 3.2 Kiểm tra app.json (đã được cleanup)
 ```json
 {
   "expo": {
     "extra": {
-      "GOONG_API_KEY": "placeholder_will_use_env",
-      "GOONG_MAPTILES_KEY": "placeholder_will_use_env"
+      "eas": {
+        "projectId": "c29c07da-27fc-4c9c-8d03-dc4b8f31de9e"
+      }
     }
   }
 }
 ```
 
-### 3.3 Kiểm tra constants/index.ts (đã được thực hiện)
+### 3.3 Environment variables được quản lý tập trung
 ```typescript
+// config/env.ts - Tập trung tất cả env variables
 export const GOONG_API_KEY = process.env.EXPO_PUBLIC_GOONG_API_KEY || ''
 export const GOONG_MAPTILES_KEY = process.env.EXPO_PUBLIC_GOONG_MAPTILES_KEY || ''
-export const GOONG_MAP_STYLE = `https://tiles.goong.io/assets/goong_map_web.json?api_key=${GOONG_MAPTILES_KEY}`
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://mumii-be.namtechie.id.vn'
 ```
 
 ---

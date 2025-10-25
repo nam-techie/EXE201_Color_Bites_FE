@@ -10,9 +10,7 @@ import { GOONG_API_KEY } from '@/constants'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
 import { buildGoongStyleDataUrl, type GoongStyleId } from '@/services/goong-style'
-// Lazy load Mapbox to avoid module init errors before dev client is ready
-// and ensure the route always has a default export
-// We'll dynamically import '@/services/GoongMapConfig' inside the component
+// MapLibre configuration is handled in services/GoongMapConfig.ts
 import { GoongService, debounce } from '@/services/GoongService'
 import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
