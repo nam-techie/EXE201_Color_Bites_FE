@@ -1,8 +1,16 @@
 import {
+    BarChart3,
+    CreditCard,
+    FileText,
     LayoutDashboard,
     LogOut,
     Menu,
+    MessageSquare,
     Settings,
+    Smile,
+    Store,
+    Tag,
+    Trophy,
     Users
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
@@ -20,6 +28,46 @@ const Sidebar = () => {
       title: 'Users',
       icon: Users,
       path: '/users'
+    },
+    {
+      title: 'Posts',
+      icon: FileText,
+      path: '/posts'
+    },
+    {
+      title: 'Restaurants',
+      icon: Store,
+      path: '/restaurants'
+    },
+    {
+      title: 'Comments',
+      icon: MessageSquare,
+      path: '/comments'
+    },
+    {
+      title: 'Tags',
+      icon: Tag,
+      path: '/tags'
+    },
+    {
+      title: 'Transactions',
+      icon: CreditCard,
+      path: '/transactions'
+    },
+    {
+      title: 'Moods',
+      icon: Smile,
+      path: '/moods'
+    },
+    {
+      title: 'Challenges',
+      icon: Trophy,
+      path: '/challenges'
+    },
+    {
+      title: 'Statistics',
+      icon: BarChart3,
+      path: '/statistics'
     },
     {
       title: 'Settings',
@@ -66,44 +114,6 @@ const Sidebar = () => {
           })}
         </div>
 
-        <div className="px-2 mt-8">
-          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            COMPONENTS
-          </p>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Base</p>
-          </div>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Buttons</p>
-          </div>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Forms</p>
-          </div>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Charts</p>
-          </div>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Icons</p>
-          </div>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Notifications</p>
-          </div>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Widgets</p>
-          </div>
-        </div>
-
-        <div className="px-2 mt-8">
-          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-            EXTRAS
-          </p>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Pages</p>
-          </div>
-          <div className="px-4 py-2">
-            <p className="text-sm text-gray-600">Docs</p>
-          </div>
-        </div>
       </nav>
 
       {/* User Section */}

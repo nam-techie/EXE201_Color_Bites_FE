@@ -1,47 +1,98 @@
 import {
-    Activity,
-    ArrowDown,
-    ArrowUp,
-    DollarSign,
-    TrendingUp,
+    CreditCard,
+    FileText,
+    Store,
     Users
 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import LoadingState from '../components/common/LoadingState'
+import StatCard from '../components/common/StatCard'
+import { statisticsApi } from '../services/statisticsApi'
+import { formatNumber } from '../utils/formatters'
+
+interface SystemStats {
+  totalUsers: number
+  activeUsers: number
+  blockedUsers: number
+  totalPosts: number
+  deletedPosts: number
+  activePosts: number
+  totalRestaurants: number
+  deletedRestaurants: number
+  activeRestaurants: number
+  totalTransactions: number
+}
 
 const Dashboard = () => {
-  const stats = [
-    {
-      title: 'Users',
-      value: '26K',
-      change: '-12.4%',
-      changeType: 'decrease',
-      color: 'bg-primary-500',
-      icon: Users
-    },
-    {
-      title: 'Income',
-      value: '$6,200',
-      change: '+40.9%',
-      changeType: 'increase',
-      color: 'bg-blue-500',
-      icon: DollarSign
-    },
-    {
-      title: 'Conversion Rate',
-      value: '2.49%',
-      change: '+84.7%',
-      changeType: 'increase',
-      color: 'bg-yellow-500',
-      icon: Activity
-    },
-    {
-      title: 'Sessions',
-      value: '44K',
-      change: '-23.6%',
-      changeType: 'decrease',
-      color: 'bg-red-500',
-      icon: TrendingUp
+  const [stats, setStats] = useState<SystemStats | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch system statistics
+  useEffect(() => {
+    const fetchStatistics = async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const response = await statisticsApi.getSystemStatistics()
+        setStats(response.data)
+      } catch (err) {
+        console.error('Error fetching statistics:', err)
+        setError(err instanceof Error ? err.message : 'Không thể tải thống kê')
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
+
+    fetchStatistics()
+  }, [])
+
+  const statCards = stats ? [
+    {
+      title: 'Tổng người dùng',
+      value: formatNumber(stats.totalUsers),
+      icon: <Users className="w-6 h-6" />,
+      color: '#1890ff',
+      change: {
+        value: Math.round(((stats.activeUsers / stats.totalUsers) * 100) - 100),
+        type: 'increase' as const,
+        label: `${stats.activeUsers} hoạt động`
+      }
+    },
+    {
+      title: 'Tổng bài viết',
+      value: formatNumber(stats.totalPosts),
+      icon: <FileText className="w-6 h-6" />,
+      color: '#52c41a',
+      change: {
+        value: Math.round(((stats.activePosts / stats.totalPosts) * 100) - 100),
+        type: 'increase' as const,
+        label: `${stats.activePosts} hoạt động`
+      }
+    },
+    {
+      title: 'Tổng nhà hàng',
+      value: formatNumber(stats.totalRestaurants),
+      icon: <Store className="w-6 h-6" />,
+      color: '#faad14',
+      change: {
+        value: Math.round(((stats.activeRestaurants / stats.totalRestaurants) * 100) - 100),
+        type: 'increase' as const,
+        label: `${stats.activeRestaurants} hoạt động`
+      }
+    },
+    {
+      title: 'Tổng giao dịch',
+      value: formatNumber(stats.totalTransactions),
+      icon: <CreditCard className="w-6 h-6" />,
+      color: '#722ed1',
+      change: {
+        value: 0,
+        type: 'increase' as const,
+        label: 'Tổng số giao dịch'
+      }
+    }
+  ] : []
 
   const trafficData = [
     { label: 'Visits', value: '29.703 Users (40%)', color: 'bg-green-500' },
@@ -54,34 +105,25 @@ const Dashboard = () => {
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <div key={index} className="card p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                  <p className="text-sm text-gray-600">{stat.title}</p>
-                  <div className="flex items-center mt-2">
-                    {stat.changeType === 'increase' ? (
-                      <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
-                    ) : (
-                      <ArrowDown className="w-4 h-4 text-red-500 mr-1" />
-                    )}
-                    <span className={`text-sm ${stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'}`}>
-                      {stat.change}
-                    </span>
-                  </div>
-                </div>
-                <div className={`w-16 h-16 ${stat.color} rounded-lg flex items-center justify-center`}>
-                  <Icon className="w-8 h-8 text-white" />
-                </div>
-              </div>
-            </div>
-          )
-        })}
-      </div>
+      <LoadingState
+        loading={loading}
+        error={error}
+        empty={!loading && !stats}
+        emptyText="Không có dữ liệu thống kê"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {statCards.map((stat, index) => (
+            <StatCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              icon={stat.icon}
+              color={stat.color}
+              change={stat.change}
+            />
+          ))}
+        </div>
+      </LoadingState>
 
       {/* Traffic Chart */}
       <div className="card p-6">

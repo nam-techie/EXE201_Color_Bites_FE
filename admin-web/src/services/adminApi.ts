@@ -6,7 +6,7 @@ import { ApiResponse, ListAccountResponse } from '../types/user'
 const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
 
 class AdminApiService {
-  private axiosInstance: AxiosInstance
+  public axiosInstance: AxiosInstance
 
   constructor() {
     this.axiosInstance = axios.create({
