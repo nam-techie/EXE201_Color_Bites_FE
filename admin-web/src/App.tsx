@@ -9,11 +9,12 @@ import MoodsList from './pages/Moods/MoodsList'
 import PostsList from './pages/Posts/PostsList'
 import RestaurantsList from './pages/Restaurants/RestaurantsList'
 import StatisticsOverview from './pages/Statistics'
-import UserAnalytics from './pages/Statistics/UserAnalytics'
+import ChallengeStatistics from './pages/Statistics/ChallengeStatistics'
+import EngagementAnalytics from './pages/Statistics/EngagementAnalytics'
 import PostAnalytics from './pages/Statistics/PostAnalytics'
 import RestaurantAnalytics from './pages/Statistics/RestaurantAnalytics'
 import RevenueReports from './pages/Statistics/RevenueReports'
-import EngagementAnalytics from './pages/Statistics/EngagementAnalytics'
+import UserAnalytics from './pages/Statistics/UserAnalytics'
 import TagsList from './pages/Tags/TagsList'
 import TransactionsList from './pages/Transactions/TransactionsList'
 import Users from './pages/Users'
@@ -42,6 +43,7 @@ function App() {
         <Route path="statistics/restaurants" element={<RestaurantAnalytics />} />
         <Route path="statistics/revenue" element={<RevenueReports />} />
         <Route path="statistics/engagement" element={<EngagementAnalytics />} />
+        <Route path="statistics/challenges" element={<ChallengeStatistics />} />
       </Route>
     </Routes>
   )

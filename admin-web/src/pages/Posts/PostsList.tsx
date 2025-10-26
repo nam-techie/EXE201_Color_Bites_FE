@@ -14,7 +14,7 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { postsApi } from '../../services/postsApi'
 import type { PostResponse } from '../../types/post'
-import { formatDate, formatNumber, truncateText } from '../../utils/formatters'
+import { displayNumber, displayValue, formatDate, truncateText } from '../../utils/formatters'
 import PostDetail from './PostDetail'
 
 const PostsList: React.FC = () => {
@@ -26,6 +26,7 @@ const PostsList: React.FC = () => {
   const {
     data: posts,
     loading,
+    isRefreshing,
     error,
     pagination,
     filters,
@@ -58,7 +59,7 @@ const PostsList: React.FC = () => {
       render: (content: string) => (
         <div style={{ maxWidth: 300 }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>
-            {truncateText(content, 100)}
+            {displayValue(truncateText(content, 100))}
           </div>
         </div>
       )
@@ -68,9 +69,9 @@ const PostsList: React.FC = () => {
       title: 'Tác giả',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{record.accountName}</div>
+          <div style={{ fontWeight: 500 }}>{displayValue(record.accountName)}</div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.authorEmail}
+            {displayValue(record.authorEmail)}
           </div>
         </div>
       )
@@ -85,7 +86,7 @@ const PostsList: React.FC = () => {
           backgroundColor: '#f0f0f0',
           fontSize: '12px'
         }}>
-          {record.moodName}
+          {displayValue(record.moodName, 'Chưa có tâm trạng')}
         </span>
       )
     },
@@ -94,8 +95,8 @@ const PostsList: React.FC = () => {
       title: 'Thống kê',
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
-          <div>❤️ {formatNumber(record.reactionCount)}</div>
-          <div>💬 {formatNumber(record.commentCount)}</div>
+          <div>❤️ {displayNumber(record.reactionCount, '0')}</div>
+          <div>💬 {displayNumber(record.commentCount, '0')}</div>
         </div>
       )
     },
@@ -241,6 +242,7 @@ const PostsList: React.FC = () => {
       <Card>
         <LoadingState
           loading={loading}
+          isRefreshing={isRefreshing}
           error={error}
           empty={!loading && posts.length === 0}
           emptyText="Không có bài viết nào"

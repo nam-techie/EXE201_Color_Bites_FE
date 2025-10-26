@@ -4,6 +4,7 @@ import React from 'react'
 
 export interface LoadingStateProps {
   loading?: boolean
+  isRefreshing?: boolean // Trạng thái refresh riêng biệt
   error?: string | null
   empty?: boolean
   emptyText?: string
@@ -16,6 +17,7 @@ export interface LoadingStateProps {
 
 const LoadingState: React.FC<LoadingStateProps> = ({
   loading = false,
+  isRefreshing = false,
   error = null,
   empty = false,
   emptyText = 'Không có dữ liệu',
@@ -71,8 +73,24 @@ const LoadingState: React.FC<LoadingStateProps> = ({
     )
   }
 
-  // Show children content
-  return <>{children}</>
+  // Show children content with background refresh indicator
+  return (
+    <div className="relative">
+      {children}
+      {/* Background refresh indicator */}
+      {isRefreshing && (
+        <div className="absolute top-4 right-4 z-10">
+          <div className="bg-white rounded-full shadow-lg p-2 border">
+            <Spin 
+              size="small" 
+              tip="Đang cập nhật..."
+              indicator={<LoadingOutlined style={{ fontSize: 16 }} spin />}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default LoadingState

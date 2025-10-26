@@ -1,26 +1,35 @@
 import {
-    CreditCard,
-    FileText,
-    Store,
-    Users
+  CreditCard,
+  FileText,
+  Store,
+  Users
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import LoadingState from '../components/common/LoadingState'
 import StatCard from '../components/common/StatCard'
 import { statisticsApi } from '../services/statisticsApi'
-import { formatNumber } from '../utils/formatters'
+import { displayNumber } from '../utils/formatters'
 
 interface SystemStats {
   totalUsers: number
   activeUsers: number
-  blockedUsers: number
   totalPosts: number
-  deletedPosts: number
-  activePosts: number
   totalRestaurants: number
-  deletedRestaurants: number
-  activeRestaurants: number
   totalTransactions: number
+  totalComments?: number
+  totalTags?: number
+  totalChallenges?: number
+  totalRevenue?: number
+  monthlyRevenue?: number
+  dailyRevenue?: number
+  successfulTransactions?: number
+  failedTransactions?: number
+  pendingTransactions?: number
+  totalReactions?: number
+  totalFavorites?: number
+  averageRating?: number
+  totalMoodMaps?: number
+  totalQuizzes?: number
 }
 
 const Dashboard = () => {
@@ -35,7 +44,7 @@ const Dashboard = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getSystemStatistics()
-        setStats(response.data)
+        setStats(response)
       } catch (err) {
         console.error('Error fetching statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê')
@@ -50,40 +59,40 @@ const Dashboard = () => {
   const statCards = stats ? [
     {
       title: 'Tổng người dùng',
-      value: formatNumber(stats.totalUsers),
+      value: displayNumber(stats.totalUsers, '0'),
       icon: <Users className="w-6 h-6" />,
       color: '#1890ff',
       change: {
-        value: Math.round(((stats.activeUsers / stats.totalUsers) * 100) - 100),
+        value: Math.round((stats.activeUsers / stats.totalUsers) * 100),
         type: 'increase' as const,
-        label: `${stats.activeUsers} hoạt động`
+        label: `${displayNumber(stats.activeUsers, '0')} hoạt động`
       }
     },
     {
       title: 'Tổng bài viết',
-      value: formatNumber(stats.totalPosts),
+      value: displayNumber(stats.totalPosts, '0'),
       icon: <FileText className="w-6 h-6" />,
       color: '#52c41a',
       change: {
-        value: Math.round(((stats.activePosts / stats.totalPosts) * 100) - 100),
+        value: Math.round((stats.totalPosts / stats.totalPosts) * 100),
         type: 'increase' as const,
-        label: `${stats.activePosts} hoạt động`
+        label: `${displayNumber(stats.totalPosts, '0')} tổng số`
       }
     },
     {
       title: 'Tổng nhà hàng',
-      value: formatNumber(stats.totalRestaurants),
+      value: displayNumber(stats.totalRestaurants, '0'),
       icon: <Store className="w-6 h-6" />,
       color: '#faad14',
       change: {
-        value: Math.round(((stats.activeRestaurants / stats.totalRestaurants) * 100) - 100),
+        value: Math.round((stats.totalRestaurants / stats.totalRestaurants) * 100),
         type: 'increase' as const,
-        label: `${stats.activeRestaurants} hoạt động`
+        label: `${displayNumber(stats.totalRestaurants, '0')} tổng số`
       }
     },
     {
       title: 'Tổng giao dịch',
-      value: formatNumber(stats.totalTransactions),
+      value: displayNumber(stats.totalTransactions, '0'),
       icon: <CreditCard className="w-6 h-6" />,
       color: '#722ed1',
       change: {

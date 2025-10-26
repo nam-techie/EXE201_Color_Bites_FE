@@ -1,17 +1,16 @@
-import { CreditCard, DollarSign, TrendingUp, TrendingDown } from 'lucide-react'
 import { Card, Col, Row } from 'antd'
+import { CreditCard, DollarSign, TrendingUp } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import LoadingState from '../../components/common/LoadingState'
-import StatCard from '../../components/common/StatCard'
 import BarChart from '../../components/charts/BarChart'
 import LineChart from '../../components/charts/LineChart'
+import LoadingState from '../../components/common/LoadingState'
+import StatCard from '../../components/common/StatCard'
 import { statisticsApi } from '../../services/statisticsApi'
-import { formatCurrency, formatNumber } from '../../utils/formatters'
+import { displayCurrency, displayNumber, formatCurrency, formatNumber } from '../../utils/formatters'
 
 interface RevenueStats {
   totalRevenue: number
   monthlyRevenue: number
-  revenueGrowth: number
   totalTransactions: number
   successfulTransactions: number
   failedTransactions: number
@@ -30,7 +29,7 @@ const RevenueReports: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getRevenueStatistics()
-        setStats(response.data)
+        setStats(response)
       } catch (err) {
         console.error('Error fetching revenue statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê doanh thu')
@@ -71,18 +70,18 @@ const RevenueReports: React.FC = () => {
   const statCards = stats ? [
     {
       title: 'Tổng doanh thu',
-      value: formatCurrency(stats.totalRevenue),
+      value: displayCurrency(stats.totalRevenue, '0'),
       icon: <DollarSign className="w-6 h-6" />,
       color: '#52c41a',
       change: {
-        value: stats.revenueGrowth,
-        type: stats.revenueGrowth >= 0 ? 'increase' as const : 'decrease' as const,
-        label: `Tăng trưởng ${stats.revenueGrowth}%`
+        value: 0,
+        type: 'increase' as const,
+        label: 'Tổng doanh thu'
       }
     },
     {
       title: 'Doanh thu tháng này',
-      value: formatCurrency(stats.monthlyRevenue),
+      value: displayCurrency(stats.monthlyRevenue, '0'),
       icon: <TrendingUp className="w-6 h-6" />,
       color: '#1890ff',
       change: {
@@ -93,7 +92,7 @@ const RevenueReports: React.FC = () => {
     },
     {
       title: 'Tổng giao dịch',
-      value: formatNumber(stats.totalTransactions),
+      value: displayNumber(stats.totalTransactions, '0'),
       icon: <CreditCard className="w-6 h-6" />,
       color: '#faad14',
       change: {
@@ -213,13 +212,13 @@ const RevenueReports: React.FC = () => {
             <div className="space-y-6">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-600 mb-2">
-                  {stats ? formatCurrency(stats.totalRevenue) : '0 VND'}
+                  {displayCurrency(stats?.totalRevenue, '0 VND')}
                 </div>
                 <div className="text-sm text-gray-600">Tổng doanh thu</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600 mb-2">
-                  {stats ? formatCurrency(stats.monthlyRevenue) : '0 VND'}
+                  {displayCurrency(stats?.monthlyRevenue, '0 VND')}
                 </div>
                 <div className="text-sm text-gray-600">Doanh thu tháng này</div>
               </div>
@@ -239,7 +238,7 @@ const RevenueReports: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              {stats ? formatCurrency(stats.totalRevenue) : '0 VND'}
+              {displayCurrency(stats?.totalRevenue, '0 VND')}
             </div>
             <div className="text-sm text-gray-600">Tổng doanh thu</div>
           </Card>
@@ -247,7 +246,7 @@ const RevenueReports: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {stats ? formatNumber(stats.totalTransactions) : '0'}
+              {displayNumber(stats?.totalTransactions, '0')}
             </div>
             <div className="text-sm text-gray-600">Tổng giao dịch</div>
           </Card>
@@ -255,7 +254,7 @@ const RevenueReports: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-yellow-600 mb-2">
-              {stats ? formatNumber(stats.successfulTransactions) : '0'}
+              {displayNumber(stats?.successfulTransactions, '0')}
             </div>
             <div className="text-sm text-gray-600">Giao dịch thành công</div>
           </Card>
@@ -263,7 +262,7 @@ const RevenueReports: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-red-600 mb-2">
-              {stats ? formatNumber(stats.failedTransactions) : '0'}
+              {displayNumber(stats?.failedTransactions, '0')}
             </div>
             <div className="text-sm text-gray-600">Giao dịch thất bại</div>
           </Card>

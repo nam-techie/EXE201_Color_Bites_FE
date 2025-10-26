@@ -7,7 +7,7 @@ import BarChart from '../../components/charts/BarChart'
 import LineChart from '../../components/charts/LineChart'
 import PieChart from '../../components/charts/PieChart'
 import { statisticsApi } from '../../services/statisticsApi'
-import { formatNumber } from '../../utils/formatters'
+import { displayNumber, formatNumber } from '../../utils/formatters'
 
 interface RestaurantStats {
   totalRestaurants: number
@@ -29,7 +29,7 @@ const RestaurantAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getRestaurantStatistics()
-        setStats(response.data)
+        setStats(response)
       } catch (err) {
         console.error('Error fetching restaurant statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê nhà hàng')
@@ -74,7 +74,7 @@ const RestaurantAnalytics: React.FC = () => {
   const statCards = stats ? [
     {
       title: 'Tổng nhà hàng',
-      value: formatNumber(stats.totalRestaurants),
+      value: displayNumber(stats.totalRestaurants, '0'),
       icon: <Store className="w-6 h-6" />,
       color: '#1890ff',
       change: {
@@ -96,7 +96,7 @@ const RestaurantAnalytics: React.FC = () => {
     },
     {
       title: 'Nhà hàng tháng này',
-      value: formatNumber(stats.restaurantsThisMonth),
+      value: displayNumber(stats.restaurantsThisMonth, '0'),
       icon: <TrendingUp className="w-6 h-6" />,
       color: '#52c41a',
       change: {
@@ -216,7 +216,7 @@ const RestaurantAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {stats ? formatNumber(stats.totalRestaurants) : '0'}
+              {displayNumber(stats?.totalRestaurants, '0')}
             </div>
             <div className="text-sm text-gray-600">Tổng nhà hàng</div>
           </Card>
@@ -224,7 +224,7 @@ const RestaurantAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              {stats ? formatNumber(stats.activeRestaurants) : '0'}
+              {displayNumber(stats?.activeRestaurants, '0')}
             </div>
             <div className="text-sm text-gray-600">Nhà hàng hoạt động</div>
           </Card>

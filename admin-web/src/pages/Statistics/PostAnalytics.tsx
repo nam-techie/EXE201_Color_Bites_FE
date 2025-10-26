@@ -6,7 +6,7 @@ import StatCard from '../../components/common/StatCard'
 import BarChart from '../../components/charts/BarChart'
 import LineChart from '../../components/charts/LineChart'
 import { statisticsApi } from '../../services/statisticsApi'
-import { formatNumber } from '../../utils/formatters'
+import { displayNumber, formatNumber } from '../../utils/formatters'
 
 interface PostStats {
   totalPosts: number
@@ -28,7 +28,7 @@ const PostAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getPostStatistics()
-        setStats(response.data)
+        setStats(response)
       } catch (err) {
         console.error('Error fetching post statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê bài viết')
@@ -68,7 +68,7 @@ const PostAnalytics: React.FC = () => {
   const statCards = stats ? [
     {
       title: 'Tổng bài viết',
-      value: formatNumber(stats.totalPosts),
+      value: displayNumber(stats.totalPosts, '0'),
       icon: <FileText className="w-6 h-6" />,
       color: '#1890ff',
       change: {
@@ -79,7 +79,7 @@ const PostAnalytics: React.FC = () => {
     },
     {
       title: 'Bài viết tháng này',
-      value: formatNumber(stats.postsThisMonth),
+      value: displayNumber(stats.postsThisMonth, '0'),
       icon: <TrendingUp className="w-6 h-6" />,
       color: '#52c41a',
       change: {
@@ -90,7 +90,7 @@ const PostAnalytics: React.FC = () => {
     },
     {
       title: 'Trung bình/người dùng',
-      value: formatNumber(stats.avgPostsPerUser),
+      value: displayNumber(stats.avgPostsPerUser, '0'),
       icon: <Eye className="w-6 h-6" />,
       color: '#faad14',
       change: {
@@ -231,7 +231,7 @@ const PostAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {stats ? formatNumber(stats.totalPosts) : '0'}
+              {displayNumber(stats?.totalPosts, '0')}
             </div>
             <div className="text-sm text-gray-600">Tổng bài viết</div>
           </Card>
@@ -239,7 +239,7 @@ const PostAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              {stats ? formatNumber(stats.activePosts) : '0'}
+              {displayNumber(stats?.activePosts, '0')}
             </div>
             <div className="text-sm text-gray-600">Bài viết hoạt động</div>
           </Card>
@@ -247,7 +247,7 @@ const PostAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-red-600 mb-2">
-              {stats ? formatNumber(stats.deletedPosts) : '0'}
+              {displayNumber(stats?.deletedPosts, '0')}
             </div>
             <div className="text-sm text-gray-600">Bài viết đã xóa</div>
           </Card>
@@ -255,7 +255,7 @@ const PostAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-purple-600 mb-2">
-              {stats ? formatNumber(stats.avgPostsPerUser) : '0'}
+              {displayNumber(stats?.avgPostsPerUser, '0')}
             </div>
             <div className="text-sm text-gray-600">Trung bình/người dùng</div>
           </Card>

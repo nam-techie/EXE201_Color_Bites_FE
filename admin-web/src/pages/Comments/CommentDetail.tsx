@@ -1,6 +1,7 @@
 import { Button, Card, Descriptions, Space, Tag } from 'antd'
 import React from 'react'
 import type { Comment } from '../../types/comment'
+import { displayValue, formatDate } from '../../utils/formatters'
 
 interface CommentDetailProps {
   comment: Comment
@@ -13,23 +14,20 @@ const CommentDetail: React.FC<CommentDetailProps> = ({
   onClose, 
   onUpdate 
 }) => {
-  const getStatusConfig = (status: string) => {
-    const configs = {
-      active: { color: 'green', text: 'Hoạt động' },
-      hidden: { color: 'orange', text: 'Ẩn' },
-      reported: { color: 'red', text: 'Báo cáo' }
-    }
-    return configs[status as keyof typeof configs] || { color: 'default', text: status }
+  const getStatusConfig = (isDeleted: boolean) => {
+    return isDeleted 
+      ? { color: 'red', text: 'Đã xóa' }
+      : { color: 'green', text: 'Hoạt động' }
   }
 
-  const statusConfig = getStatusConfig(comment.status)
+  const statusConfig = getStatusConfig(comment.isDeleted)
 
   return (
     <div className="space-y-4">
       {/* Comment Content */}
       <Card title="Nội dung bình luận" size="small">
         <div className="whitespace-pre-wrap text-gray-800">
-          {comment.content}
+          {displayValue(comment.content)}
         </div>
       </Card>
 
@@ -37,28 +35,29 @@ const CommentDetail: React.FC<CommentDetailProps> = ({
       <Card title="Thông tin bình luận" size="small">
         <Descriptions column={1} size="small">
           <Descriptions.Item label="ID">
-            <code className="text-xs">{comment.id}</code>
+            <code className="text-xs">{displayValue(comment.id)}</code>
           </Descriptions.Item>
           <Descriptions.Item label="Trạng thái">
             <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Người dùng">
-            {comment.user?.name || 'N/A'}
+            {displayValue(comment.accountName)}
           </Descriptions.Item>
           <Descriptions.Item label="Email">
-            {comment.user?.email || comment.userId}
+            {displayValue(comment.authorEmail || comment.accountId)}
           </Descriptions.Item>
           <Descriptions.Item label="Bài viết">
-            {comment.post?.title || 'N/A'}
+            {displayValue(comment.postTitle)}
+          </Descriptions.Item>
+          <Descriptions.Item label="Số phản hồi">
+            {displayValue(comment.replyCount, '0')}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày tạo">
-            {new Date(comment.createdAt).toLocaleString('vi-VN')}
+            {formatDate(comment.createdAt, 'DD/MM/YYYY HH:mm')}
           </Descriptions.Item>
-          {comment.updatedAt && (
-            <Descriptions.Item label="Cập nhật lần cuối">
-              {new Date(comment.updatedAt).toLocaleString('vi-VN')}
-            </Descriptions.Item>
-          )}
+          <Descriptions.Item label="Cập nhật lần cuối">
+            {formatDate(comment.updatedAt, 'DD/MM/YYYY HH:mm')}
+          </Descriptions.Item>
         </Descriptions>
       </Card>
 

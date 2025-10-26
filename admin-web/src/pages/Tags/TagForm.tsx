@@ -1,9 +1,8 @@
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
-import { Button, ColorPicker, Form, Input, Modal, message } from 'antd'
+import { Button, Form, Input, Modal, message } from 'antd'
 import React, { useEffect } from 'react'
 import { tagsApi } from '../../services/tagsApi'
 import type { Tag, TagFormData } from '../../types/tag'
-import { TAG_COLORS } from '../../types/tag'
 
 interface TagFormProps {
   visible: boolean
@@ -28,7 +27,6 @@ const TagForm: React.FC<TagFormProps> = ({
     if (visible && tag && isEditing) {
       form.setFieldsValue({
         name: tag.name,
-        color: tag.color,
         description: tag.description
       })
     } else if (visible && !isEditing) {
@@ -40,10 +38,10 @@ const TagForm: React.FC<TagFormProps> = ({
     setLoading(true)
     try {
       if (isEditing && tag) {
-        await tagsApi.updateTag(tag.id, values)
+        await tagsApi.updateTag(tag.id, values.name, values.description)
         message.success('Cập nhật tag thành công')
       } else {
-        await tagsApi.createTag(values)
+        await tagsApi.createTag(values.name, values.description)
         message.success('Tạo tag thành công')
       }
       onSubmit()
@@ -57,18 +55,6 @@ const TagForm: React.FC<TagFormProps> = ({
   const handleCancel = () => {
     form.resetFields()
     onClose()
-  }
-
-  // Generate slug from name
-  const generateSlug = (name: string) => {
-    return name
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-      .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
-      .replace(/\s+/g, '-') // Replace spaces with hyphens
-      .replace(/-+/g, '-') // Replace multiple hyphens with single
-      .trim()
   }
 
   return (
@@ -96,75 +82,7 @@ const TagForm: React.FC<TagFormProps> = ({
             { max: 50, message: 'Tên tag không được quá 50 ký tự' }
           ]}
         >
-          <Input 
-            placeholder="Nhập tên tag"
-            onChange={(e) => {
-              const name = e.target.value
-              if (name) {
-                const slug = generateSlug(name)
-                form.setFieldsValue({ slug })
-              }
-            }}
-          />
-        </Form.Item>
-
-        {/* Auto-generated Slug */}
-        <Form.Item
-          name="slug"
-          label="Slug (tự động tạo)"
-        >
-          <Input disabled placeholder="Slug sẽ được tạo tự động" />
-        </Form.Item>
-
-        {/* Color Picker */}
-        <Form.Item
-          name="color"
-          label="Màu sắc"
-          rules={[{ required: true, message: 'Vui lòng chọn màu sắc' }]}
-        >
-          <div className="space-y-3">
-            <ColorPicker 
-              showText 
-              format="hex"
-              presets={[
-                {
-                  label: 'Màu đề xuất',
-                  colors: TAG_COLORS.slice(0, 10)
-                },
-                {
-                  label: 'Màu bổ sung',
-                  colors: TAG_COLORS.slice(10)
-                }
-              ]}
-            />
-            <div className="text-xs text-gray-500">
-              Chọn màu sắc để phân biệt tag
-            </div>
-          </div>
-        </Form.Item>
-
-        {/* Color Preview */}
-        <Form.Item shouldUpdate={(prev, curr) => prev.color !== curr.color}>
-          {({ getFieldValue }) => {
-            const color = getFieldValue('color')
-            const name = getFieldValue('name')
-            
-            if (!color || !name) return null
-
-            return (
-              <div className="p-3 bg-gray-50 rounded-lg">
-                <div className="text-sm text-gray-600 mb-2">Xem trước:</div>
-                <div className="flex items-center space-x-2">
-                  <span 
-                    className="px-3 py-1 rounded-full text-white text-sm font-medium"
-                    style={{ backgroundColor: color }}
-                  >
-                    {name}
-                  </span>
-                </div>
-              </div>
-            )
-          }}
+          <Input placeholder="Nhập tên tag" />
         </Form.Item>
 
         {/* Description */}

@@ -2,20 +2,19 @@ import {
     BulkDeleteCommentsRequest,
     Comment,
     CommentFilters,
-    CommentListResponse,
-    CommentUpdateStatusRequest
+    CommentListResponse
 } from '../types/comment'
 import { adminApi } from './adminApi'
 
-// Comments API service for admin dashboard
+// Comments API service for admin dashboard - Updated theo backend document
 export const commentsApi = {
   // Get paginated list of comments with filters
   async getComments(filters: CommentFilters = {}): Promise<CommentListResponse> {
     try {
       const params = new URLSearchParams()
       
-      if (filters.status) params.append('status', filters.status)
-      if (filters.userId) params.append('userId', filters.userId)
+      if (filters.isDeleted !== undefined) params.append('isDeleted', filters.isDeleted.toString())
+      if (filters.accountId) params.append('accountId', filters.accountId)
       if (filters.postId) params.append('postId', filters.postId)
       if (filters.search) params.append('search', filters.search)
       if (filters.page) params.append('page', filters.page.toString())
@@ -23,7 +22,7 @@ export const commentsApi = {
       if (filters.dateRange?.start) params.append('startDate', filters.dateRange.start)
       if (filters.dateRange?.end) params.append('endDate', filters.dateRange.end)
 
-      const response = await adminApi.get(`/comments?${params.toString()}`)
+      const response = await adminApi.get(`/api/admin/comments?${params.toString()}`)
       return response.data
     } catch (error) {
       console.error('Error fetching comments:', error)
@@ -34,7 +33,7 @@ export const commentsApi = {
   // Get single comment by ID
   async getCommentById(id: string): Promise<Comment> {
     try {
-      const response = await adminApi.get(`/comments/${id}`)
+      const response = await adminApi.get(`/api/admin/comments/${id}`)
       return response.data
     } catch (error) {
       console.error('Error fetching comment:', error)
@@ -42,23 +41,44 @@ export const commentsApi = {
     }
   },
 
-  // Update comment status
-  async updateCommentStatus(id: string, data: CommentUpdateStatusRequest): Promise<Comment> {
+  // Delete single comment (soft delete)
+  async deleteComment(id: string): Promise<void> {
     try {
-      const response = await adminApi.patch(`/comments/${id}/status`, data)
-      return response.data
+      await adminApi.delete(`/api/admin/comments/${id}`)
     } catch (error) {
-      console.error('Error updating comment status:', error)
+      console.error('Error deleting comment:', error)
       throw error
     }
   },
 
-  // Delete single comment
-  async deleteComment(id: string): Promise<void> {
+  // Restore deleted comment
+  async restoreComment(id: string): Promise<void> {
     try {
-      await adminApi.delete(`/comments/${id}`)
+      await adminApi.put(`/api/admin/comments/${id}/restore`)
     } catch (error) {
-      console.error('Error deleting comment:', error)
+      console.error('Error restoring comment:', error)
+      throw error
+    }
+  },
+
+  // Get comments by post
+  async getCommentsByPost(postId: string, page: number = 0, size: number = 10): Promise<CommentListResponse> {
+    try {
+      const response = await adminApi.get(`/api/admin/comments/post/${postId}?page=${page}&size=${size}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching comments by post:', error)
+      throw error
+    }
+  },
+
+  // Get comment statistics
+  async getCommentStatistics(): Promise<any> {
+    try {
+      const response = await adminApi.get('/api/admin/comments/statistics')
+      return response.data
+    } catch (error) {
+      console.error('Error fetching comment statistics:', error)
       throw error
     }
   },
@@ -66,7 +86,7 @@ export const commentsApi = {
   // Bulk delete comments
   async bulkDeleteComments(data: BulkDeleteCommentsRequest): Promise<void> {
     try {
-      await adminApi.post('/comments/bulk-delete', data)
+      await adminApi.post('/api/admin/comments/bulk-delete', data)
     } catch (error) {
       console.error('Error bulk deleting comments:', error)
       throw error

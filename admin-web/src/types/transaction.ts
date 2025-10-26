@@ -1,30 +1,30 @@
-// Transaction types for admin dashboard
+// Transaction types for admin dashboard - Updated theo backend document
 export interface Transaction {
   id: string
-  userId: string
+  accountId: string
+  accountName: string
+  accountEmail: string
   amount: number
-  type: TransactionType
-  status: TransactionStatus
-  description?: string
+  currency: string
+  type: string
+  status: 'SUCCESS' | 'PENDING' | 'FAILED' | 'CANCELED'
+  plan: string
+  gateway: string
+  orderCode: string
+  providerTxnId: string
+  metadata: Record<string, any>
+  rawPayload: Record<string, any>
   createdAt: string
   updatedAt: string
-  // Related data (populated by API)
-  user?: {
-    id: string
-    name: string
-    email: string
-    avatar?: string
-  }
+  // Admin fields
+  accountIsActive: boolean
+  accountRole: string
 }
 
-export type TransactionType = 'deposit' | 'withdraw' | 'reward' | 'refund'
-
-export type TransactionStatus = 'pending' | 'completed' | 'failed' | 'cancelled'
-
 export interface TransactionFilters {
-  status?: TransactionStatus
-  type?: TransactionType
-  userId?: string
+  status?: 'SUCCESS' | 'PENDING' | 'FAILED' | 'CANCELED'
+  type?: string
+  accountId?: string
   dateRange?: {
     start: string
     end: string
@@ -47,7 +47,7 @@ export interface TransactionListResponse {
 }
 
 export interface TransactionUpdateStatusRequest {
-  status: TransactionStatus
+  status: 'SUCCESS' | 'PENDING' | 'FAILED' | 'CANCELED'
 }
 
 export interface TransactionStats {
@@ -59,51 +59,27 @@ export interface TransactionStats {
   averageAmount: number
 }
 
-// Transaction type configuration for UI
-export const TRANSACTION_TYPE_CONFIG = {
-  deposit: {
-    label: 'Nạp tiền',
-    color: 'success',
-    icon: '💰'
-  },
-  withdraw: {
-    label: 'Rút tiền',
-    color: 'warning',
-    icon: '💸'
-  },
-  reward: {
-    label: 'Thưởng',
-    color: 'processing',
-    icon: '🎁'
-  },
-  refund: {
-    label: 'Hoàn tiền',
-    color: 'default',
-    icon: '↩️'
-  }
-} as const
-
 // Transaction status configuration for UI
 export const TRANSACTION_STATUS_CONFIG = {
-  pending: {
+  SUCCESS: {
+    label: 'Thành công',
+    color: 'success',
+    bgColor: '#f6ffed',
+    textColor: '#52c41a'
+  },
+  PENDING: {
     label: 'Chờ xử lý',
     color: 'warning',
     bgColor: '#fffbe6',
     textColor: '#faad14'
   },
-  completed: {
-    label: 'Hoàn thành',
-    color: 'success',
-    bgColor: '#f6ffed',
-    textColor: '#52c41a'
-  },
-  failed: {
+  FAILED: {
     label: 'Thất bại',
     color: 'error',
     bgColor: '#fff2f0',
     textColor: '#ff4d4f'
   },
-  cancelled: {
+  CANCELED: {
     label: 'Đã hủy',
     color: 'default',
     bgColor: '#f5f5f5',

@@ -1,133 +1,133 @@
+import {
+    ChallengeStatistics,
+    EngagementStatistics,
+    PostStatistics,
+    RestaurantStatistics,
+    RevenueStatistics,
+    StatisticsFilters,
+    StatisticsResponse,
+    UserStatistics
+} from '../types/statistics'
 import { adminApi } from './adminApi'
 
-// System statistics interface
-export interface SystemStatistics {
-  totalUsers: number
-  activeUsers: number
-  blockedUsers: number
-  totalPosts: number
-  deletedPosts: number
-  activePosts: number
-  totalRestaurants: number
-  deletedRestaurants: number
-  activeRestaurants: number
-  totalTransactions: number
-}
-
-// API response wrapper
-export interface ApiResponse<T> {
-  status: number
-  message: string
-  data: T
-}
-
-class StatisticsApiService {
-  // Lấy thống kê tổng quan hệ thống
-  async getSystemStatistics(): Promise<ApiResponse<SystemStatistics>> {
+// Statistics API service for admin dashboard
+export const statisticsApi = {
+  // Get system statistics overview
+  async getSystemStatistics(filters?: StatisticsFilters): Promise<StatisticsResponse> {
     try {
-      console.log('📡 Fetching system statistics')
+      const params = new URLSearchParams()
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<SystemStatistics>>(
-        '/api/admin/statistics'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ System statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê hệ thống')
+      if (filters?.dateRange?.start) params.append('startDate', filters.dateRange.start)
+      if (filters?.dateRange?.end) params.append('endDate', filters.dateRange.end)
+      if (filters?.period) params.append('period', filters.period)
+
+      const response = await adminApi.get(`/api/admin/statistics?${params.toString()}`)
+      return response.data
     } catch (error) {
-      console.error('❌ Error fetching system statistics:', error)
+      console.error('Error fetching system statistics:', error)
       throw error
     }
-  }
+  },
 
-  // Lấy thống kê users
-  async getUserStatistics(): Promise<ApiResponse<{ totalUsers: number; activeUsers: number }>> {
+  // Get user statistics
+  async getUserStatistics(filters?: StatisticsFilters): Promise<UserStatistics> {
     try {
-      console.log('📡 Fetching user statistics')
+      const params = new URLSearchParams()
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalUsers: number; activeUsers: number }>>(
-        '/api/admin/statistics/users'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ User statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê người dùng')
+      if (filters?.dateRange?.start) params.append('startDate', filters.dateRange.start)
+      if (filters?.dateRange?.end) params.append('endDate', filters.dateRange.end)
+      if (filters?.period) params.append('period', filters.period)
+
+      const response = await adminApi.get(`/api/admin/statistics/users?${params.toString()}`)
+      return response.data
     } catch (error) {
-      console.error('❌ Error fetching user statistics:', error)
+      console.error('Error fetching user statistics:', error)
       throw error
     }
-  }
+  },
 
-  // Lấy thống kê posts
-  async getPostStatistics(): Promise<ApiResponse<{ totalPosts: number; activePosts: number; deletedPosts: number }>> {
+  // Get post statistics
+  async getPostStatistics(filters?: StatisticsFilters): Promise<PostStatistics> {
     try {
-      console.log('📡 Fetching post statistics')
+      const params = new URLSearchParams()
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalPosts: number; activePosts: number; deletedPosts: number }>>(
-        '/api/admin/statistics/posts'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ Post statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê bài viết')
+      if (filters?.dateRange?.start) params.append('startDate', filters.dateRange.start)
+      if (filters?.dateRange?.end) params.append('endDate', filters.dateRange.end)
+      if (filters?.period) params.append('period', filters.period)
+
+      const response = await adminApi.get(`/api/admin/statistics/posts?${params.toString()}`)
+      return response.data
     } catch (error) {
-      console.error('❌ Error fetching post statistics:', error)
+      console.error('Error fetching post statistics:', error)
       throw error
     }
-  }
+  },
 
-  // Lấy thống kê restaurants
-  async getRestaurantStatistics(): Promise<ApiResponse<{ totalRestaurants: number; activeRestaurants: number; deletedRestaurants: number }>> {
+  // Get restaurant statistics
+  async getRestaurantStatistics(filters?: StatisticsFilters): Promise<RestaurantStatistics> {
     try {
-      console.log('📡 Fetching restaurant statistics')
+      const params = new URLSearchParams()
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalRestaurants: number; activeRestaurants: number; deletedRestaurants: number }>>(
-        '/api/admin/statistics/restaurants'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ Restaurant statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê nhà hàng')
+      if (filters?.dateRange?.start) params.append('startDate', filters.dateRange.start)
+      if (filters?.dateRange?.end) params.append('endDate', filters.dateRange.end)
+      if (filters?.period) params.append('period', filters.period)
+
+      const response = await adminApi.get(`/api/admin/statistics/restaurants?${params.toString()}`)
+      return response.data
     } catch (error) {
-      console.error('❌ Error fetching restaurant statistics:', error)
+      console.error('Error fetching restaurant statistics:', error)
       throw error
     }
-  }
+  },
 
-  // Lấy thống kê doanh thu
-  async getRevenueStatistics(): Promise<ApiResponse<{ totalTransactions: number; successfulTransactions: number; failedTransactions: number; pendingTransactions: number }>> {
+  // Get revenue statistics
+  async getRevenueStatistics(filters?: StatisticsFilters): Promise<RevenueStatistics> {
     try {
-      console.log('📡 Fetching revenue statistics')
+      const params = new URLSearchParams()
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalTransactions: number; successfulTransactions: number; failedTransactions: number; pendingTransactions: number }>>(
-        '/api/admin/statistics/revenue'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ Revenue statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê doanh thu')
+      if (filters?.dateRange?.start) params.append('startDate', filters.dateRange.start)
+      if (filters?.dateRange?.end) params.append('endDate', filters.dateRange.end)
+      if (filters?.period) params.append('period', filters.period)
+
+      const response = await adminApi.get(`/api/admin/statistics/revenue?${params.toString()}`)
+      return response.data
     } catch (error) {
-      console.error('❌ Error fetching revenue statistics:', error)
+      console.error('Error fetching revenue statistics:', error)
+      throw error
+    }
+  },
+
+  // Get engagement statistics
+  async getEngagementStatistics(filters?: StatisticsFilters): Promise<EngagementStatistics> {
+    try {
+      const params = new URLSearchParams()
+      
+      if (filters?.dateRange?.start) params.append('startDate', filters.dateRange.start)
+      if (filters?.dateRange?.end) params.append('endDate', filters.dateRange.end)
+      if (filters?.period) params.append('period', filters.period)
+
+      const response = await adminApi.get(`/api/admin/statistics/engagement?${params.toString()}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching engagement statistics:', error)
+      throw error
+    }
+  },
+
+  // Get challenge statistics
+  async getChallengeStatistics(filters?: StatisticsFilters): Promise<ChallengeStatistics> {
+    try {
+      const params = new URLSearchParams()
+      
+      if (filters?.dateRange?.start) params.append('startDate', filters.dateRange.start)
+      if (filters?.dateRange?.end) params.append('endDate', filters.dateRange.end)
+      if (filters?.period) params.append('period', filters.period)
+
+      const response = await adminApi.get(`/api/admin/statistics/challenges?${params.toString()}`)
+      return response.data
+    } catch (error) {
+      console.error('Error fetching challenge statistics:', error)
       throw error
     }
   }
 }
-
-// Export singleton instance
-export const statisticsApi = new StatisticsApiService()
-export default statisticsApi

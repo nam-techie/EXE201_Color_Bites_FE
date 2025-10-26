@@ -15,8 +15,8 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { transactionsApi } from '../../services/transactionsApi'
 import type { Transaction, TransactionStats } from '../../types/transaction'
-import { TRANSACTION_STATUS_CONFIG, TRANSACTION_TYPE_CONFIG } from '../../types/transaction'
-import { formatCurrency, formatDate, formatNumber } from '../../utils/formatters'
+import { TRANSACTION_STATUS_CONFIG } from '../../types/transaction'
+import { displayCurrency, displayNumber, displayValue, formatDate } from '../../utils/formatters'
 import TransactionDetail from './TransactionDetail'
 
 const TransactionsList: React.FC = () => {
@@ -94,10 +94,10 @@ const TransactionsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            {record.user?.name || 'N/A'}
+            {displayValue(record.accountName)}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.user?.email || record.userId}
+            {displayValue(record.accountEmail || record.accountId)}
           </div>
         </div>
       )
@@ -107,29 +107,26 @@ const TransactionsList: React.FC = () => {
       title: 'Số tiền',
       render: (_, record) => (
         <div className="text-right">
-          <div className={`font-bold text-lg ${
-            record.type === 'deposit' || record.type === 'reward' 
-              ? 'text-green-600' 
-              : 'text-red-600'
-          }`}>
-            {record.type === 'deposit' || record.type === 'reward' ? '+' : '-'}
-            {formatCurrency(record.amount)}
+          <div className="font-bold text-lg text-green-600">
+            {displayCurrency(record.amount)} {displayValue(record.currency)}
+          </div>
+          <div className="text-xs text-gray-500">
+            {displayValue(record.plan)}
           </div>
         </div>
       )
     },
     {
-      key: 'type',
-      title: 'Loại',
-      render: (_, record) => {
-        const config = TRANSACTION_TYPE_CONFIG[record.type]
-        return (
-          <div className="flex items-center space-x-2">
-            <span className="text-lg">{config.icon}</span>
-            <span className="font-medium">{config.label}</span>
+      key: 'gateway',
+      title: 'Cổng thanh toán',
+      render: (_, record) => (
+        <div>
+          <div className="font-medium">{displayValue(record.gateway)}</div>
+          <div className="text-xs text-gray-500">
+            {displayValue(record.orderCode)}
           </div>
-        )
-      }
+        </div>
+      )
     },
     {
       key: 'status',
@@ -151,12 +148,12 @@ const TransactionsList: React.FC = () => {
       }
     },
     {
-      key: 'description',
-      title: 'Mô tả',
-      dataIndex: 'description',
-      render: (description: string) => (
-        <span className="text-gray-600 text-sm">
-          {description || 'Không có mô tả'}
+      key: 'providerTxnId',
+      title: 'ID giao dịch',
+      dataIndex: 'providerTxnId',
+      render: (providerTxnId: string) => (
+        <span className="text-gray-600 text-sm font-mono">
+          {displayValue(providerTxnId ? providerTxnId.slice(0, 12) + '...' : null)}
         </span>
       )
     },
@@ -304,7 +301,7 @@ const TransactionsList: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Tổng doanh thu"
-            value={stats ? formatCurrency(stats.totalRevenue) : '0'}
+            value={displayCurrency(stats?.totalRevenue, '0')}
             icon="💰"
             color="#52c41a"
             loading={statsLoading}
@@ -313,7 +310,7 @@ const TransactionsList: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Số tiền chờ xử lý"
-            value={stats ? formatCurrency(stats.pendingAmount) : '0'}
+            value={displayCurrency(stats?.pendingAmount, '0')}
             icon="⏳"
             color="#faad14"
             loading={statsLoading}
@@ -322,7 +319,7 @@ const TransactionsList: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Giao dịch thất bại"
-            value={stats ? formatNumber(stats.failedCount) : '0'}
+            value={displayNumber(stats?.failedCount, '0')}
             icon="❌"
             color="#ff4d4f"
             loading={statsLoading}
@@ -331,7 +328,7 @@ const TransactionsList: React.FC = () => {
         <Col xs={24} sm={12} lg={6}>
           <StatCard
             title="Giao dịch hoàn thành"
-            value={stats ? formatNumber(stats.completedCount) : '0'}
+            value={displayNumber(stats?.completedCount, '0')}
             icon="✅"
             color="#52c41a"
             loading={statsLoading}

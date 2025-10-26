@@ -28,7 +28,7 @@ import ConfirmModal from '../../components/common/ConfirmModal'
 import { useConfirm } from '../../hooks/useConfirm'
 import { restaurantsApi } from '../../services/restaurantsApi'
 import type { RestaurantDetail as RestaurantDetailType, RestaurantResponse } from '../../types/restaurant'
-import { formatCurrency, formatDate, formatRelativeTime } from '../../utils/formatters'
+import { displayValue, displayCurrency, displayNumber, formatCurrency, formatDate, formatRelativeTime } from '../../utils/formatters'
 
 interface RestaurantDetailProps {
   restaurant: RestaurantResponse
@@ -122,7 +122,7 @@ const RestaurantDetail: React.FC<RestaurantDetailProps> = ({ restaurant, onClose
       <Card title="Thông tin cơ bản" loading={loading}>
         <div style={{ marginBottom: 16 }}>
           <h2 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>
-            {restaurant.name}
+            {displayValue(restaurant.name)}
             {restaurant.featured && (
               <StarOutlined style={{ color: '#faad14', marginLeft: 8 }} />
             )}
@@ -134,7 +134,7 @@ const RestaurantDetail: React.FC<RestaurantDetailProps> = ({ restaurant, onClose
             marginTop: '8px'
           }}>
             <EnvironmentOutlined style={{ marginRight: 8, color: '#666' }} />
-            {restaurant.address}
+            {displayValue(restaurant.address)}
           </div>
         </div>
         
@@ -150,7 +150,7 @@ const RestaurantDetail: React.FC<RestaurantDetailProps> = ({ restaurant, onClose
             margin: 0,
             whiteSpace: 'pre-wrap'
           }}>
-            {restaurant.description}
+            {displayValue(restaurant.description)}
           </p>
         </div>
       </Card>
@@ -161,22 +161,21 @@ const RestaurantDetail: React.FC<RestaurantDetailProps> = ({ restaurant, onClose
           <Col span={8}>
             <Statistic
               title="Đánh giá"
-              value={restaurant.rating}
+              value={displayValue(restaurant.rating?.toFixed(1), '0.0')}
               precision={1}
-              suffix={<StarOutlined style={{ color: getRatingColor(restaurant.rating) }} />}
+              suffix={<StarOutlined style={{ color: getRatingColor(restaurant.rating || 0) }} />}
             />
           </Col>
           <Col span={8}>
             <Statistic
               title="Giá trung bình"
-              value={restaurant.avgPrice}
-              formatter={(value) => formatCurrency(Number(value))}
+              value={displayCurrency(restaurant.avgPrice, '0')}
             />
           </Col>
           <Col span={8}>
             <Statistic
               title="Lượt yêu thích"
-              value={restaurant.favoriteCount}
+              value={displayNumber(restaurant.favoriteCount, '0')}
               prefix={<HeartOutlined style={{ color: '#ff4d4f' }} />}
             />
           </Col>
@@ -187,15 +186,15 @@ const RestaurantDetail: React.FC<RestaurantDetailProps> = ({ restaurant, onClose
       <Card title="Chi tiết nhà hàng">
         <Descriptions column={1} size="small">
           <Descriptions.Item label="Loại nhà hàng">
-            <Tag color="blue">{restaurant.type}</Tag>
+            <Tag color="blue">{displayValue(restaurant.type, 'Chưa phân loại')}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Khu vực">
-            {restaurant.region}
+            {displayValue(restaurant.region, 'Chưa có khu vực')}
           </Descriptions.Item>
           <Descriptions.Item label="Tọa độ">
             <div style={{ fontSize: '12px', color: '#666' }}>
-              <div>Kinh độ: {restaurant.longitude}</div>
-              <div>Vĩ độ: {restaurant.latitude}</div>
+              <div>Kinh độ: {displayValue(restaurant.longitude)}</div>
+              <div>Vĩ độ: {displayValue(restaurant.latitude)}</div>
             </div>
           </Descriptions.Item>
           <Descriptions.Item label="Trạng thái">
@@ -212,14 +211,14 @@ const RestaurantDetail: React.FC<RestaurantDetailProps> = ({ restaurant, onClose
           <Descriptions.Item label="Tên người tạo">
             <Space>
               <ShopOutlined />
-              {restaurant.createdByName}
+              {displayValue(restaurant.createdByName)}
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label="Email">
-            {restaurant.creatorEmail}
+            {displayValue(restaurant.creatorEmail)}
           </Descriptions.Item>
           <Descriptions.Item label="Vai trò">
-            <Tag color="blue">{restaurant.creatorRole}</Tag>
+            <Tag color="blue">{displayValue(restaurant.creatorRole)}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Trạng thái tài khoản">
             <Tag color={restaurant.creatorIsActive ? 'green' : 'red'}>

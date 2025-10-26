@@ -1,13 +1,13 @@
-import { Users, UserCheck, UserX, TrendingUp } from 'lucide-react'
 import { Card, Col, Row } from 'antd'
+import { TrendingUp, UserCheck, Users, UserX } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import LoadingState from '../../components/common/LoadingState'
-import StatCard from '../../components/common/StatCard'
 import BarChart from '../../components/charts/BarChart'
 import LineChart from '../../components/charts/LineChart'
 import PieChart from '../../components/charts/PieChart'
+import LoadingState from '../../components/common/LoadingState'
+import StatCard from '../../components/common/StatCard'
 import { statisticsApi } from '../../services/statisticsApi'
-import { formatNumber } from '../../utils/formatters'
+import { displayNumber, formatNumber } from '../../utils/formatters'
 
 interface UserStats {
   totalUsers: number
@@ -29,7 +29,7 @@ const UserAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getUserStatistics()
-        setStats(response.data)
+        setStats(response)
       } catch (err) {
         console.error('Error fetching user statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê người dùng')
@@ -69,7 +69,7 @@ const UserAnalytics: React.FC = () => {
   const statCards = stats ? [
     {
       title: 'Tổng người dùng',
-      value: formatNumber(stats.totalUsers),
+      value: displayNumber(stats.totalUsers, '0'),
       icon: <Users className="w-6 h-6" />,
       color: '#1890ff',
       change: {
@@ -80,7 +80,7 @@ const UserAnalytics: React.FC = () => {
     },
     {
       title: 'Người dùng hoạt động',
-      value: formatNumber(stats.activeUsers),
+      value: displayNumber(stats.activeUsers, '0'),
       icon: <UserCheck className="w-6 h-6" />,
       color: '#52c41a',
       change: {
@@ -91,7 +91,7 @@ const UserAnalytics: React.FC = () => {
     },
     {
       title: 'Người dùng bị chặn',
-      value: formatNumber(stats.blockedUsers),
+      value: displayNumber(stats.blockedUsers, '0'),
       icon: <UserX className="w-6 h-6" />,
       color: '#ff4d4f',
       change: {
@@ -102,7 +102,7 @@ const UserAnalytics: React.FC = () => {
     },
     {
       title: 'Người dùng mới tháng này',
-      value: formatNumber(stats.newUsersThisMonth),
+      value: displayNumber(stats.newUsersThisMonth, '0'),
       icon: <TrendingUp className="w-6 h-6" />,
       color: '#722ed1',
       change: {
@@ -218,7 +218,7 @@ const UserAnalytics: React.FC = () => {
         <Col xs={24} sm={8}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {stats ? formatNumber(stats.totalUsers) : '0'}
+              {displayNumber(stats?.totalUsers, '0')}
             </div>
             <div className="text-sm text-gray-600">Tổng người dùng</div>
           </Card>
@@ -226,7 +226,7 @@ const UserAnalytics: React.FC = () => {
         <Col xs={24} sm={8}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              {stats ? formatNumber(stats.activeUsers) : '0'}
+              {displayNumber(stats?.activeUsers, '0')}
             </div>
             <div className="text-sm text-gray-600">Người dùng hoạt động</div>
           </Card>
@@ -234,7 +234,7 @@ const UserAnalytics: React.FC = () => {
         <Col xs={24} sm={8}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-red-600 mb-2">
-              {stats ? formatNumber(stats.blockedUsers) : '0'}
+              {displayNumber(stats?.blockedUsers, '0')}
             </div>
             <div className="text-sm text-gray-600">Người dùng bị chặn</div>
           </Card>

@@ -17,7 +17,7 @@ import { useDataTable } from '../../hooks/useDataTable'
 import { restaurantsApi } from '../../services/restaurantsApi'
 import type { RestaurantResponse } from '../../types/restaurant'
 import { RESTAURANT_REGIONS, RESTAURANT_TYPES } from '../../types/restaurant'
-import { formatCurrency, formatDate, formatNumber, truncateText } from '../../utils/formatters'
+import { displayCurrency, displayNumber, displayValue, formatDate, truncateText } from '../../utils/formatters'
 import RestaurantDetail from './RestaurantDetail'
 
 const RestaurantsList: React.FC = () => {
@@ -29,6 +29,7 @@ const RestaurantsList: React.FC = () => {
   const {
     data: restaurants,
     loading,
+    isRefreshing,
     error,
     pagination,
     filters,
@@ -61,13 +62,13 @@ const RestaurantsList: React.FC = () => {
       render: (name: string, record) => (
         <div style={{ maxWidth: 200 }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>
-            {name}
+            {displayValue(name)}
             {record.featured && (
               <StarOutlined style={{ color: '#faad14', marginLeft: 8 }} />
             )}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            <EnvironmentOutlined /> {truncateText(record.address, 50)}
+            <EnvironmentOutlined /> {displayValue(truncateText(record.address, 50))}
           </div>
         </div>
       )
@@ -82,14 +83,14 @@ const RestaurantsList: React.FC = () => {
           backgroundColor: '#f0f0f0',
           fontSize: '12px'
         }}>
-          {record.type}
+          {displayValue(record.type, 'Chưa phân loại')}
         </span>
       )
     },
     {
       key: 'region',
       title: 'Khu vực',
-      render: (_, record) => record.region
+      render: (_, record) => displayValue(record.region, 'Chưa có khu vực')
     },
     {
       key: 'rating',
@@ -97,10 +98,10 @@ const RestaurantsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            ⭐ {record.rating.toFixed(1)}
+            ⭐ {displayValue(record.rating?.toFixed(1), '0.0')}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {formatCurrency(record.avgPrice)}/người
+            {displayCurrency(record.avgPrice, '0')}/người
           </div>
         </div>
       )
@@ -110,7 +111,7 @@ const RestaurantsList: React.FC = () => {
       title: 'Thống kê',
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
-          <div>❤️ {formatNumber(record.favoriteCount)}</div>
+          <div>❤️ {displayNumber(record.favoriteCount, '0')}</div>
         </div>
       )
     },
@@ -119,9 +120,9 @@ const RestaurantsList: React.FC = () => {
       title: 'Người tạo',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{record.createdByName}</div>
+          <div style={{ fontWeight: 500 }}>{displayValue(record.createdByName)}</div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.creatorEmail}
+            {displayValue(record.creatorEmail)}
           </div>
         </div>
       )
@@ -297,6 +298,7 @@ const RestaurantsList: React.FC = () => {
       <Card>
         <LoadingState
           loading={loading}
+          isRefreshing={isRefreshing}
           error={error}
           empty={!loading && restaurants.length === 0}
           emptyText="Không có nhà hàng nào"

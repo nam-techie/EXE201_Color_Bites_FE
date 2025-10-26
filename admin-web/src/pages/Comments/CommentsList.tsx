@@ -1,8 +1,8 @@
 import {
-  CommentOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-  UndoOutlined
+    CommentOutlined,
+    DeleteOutlined,
+    EyeOutlined,
+    UndoOutlined
 } from '@ant-design/icons'
 import { Card, Drawer, message } from 'antd'
 import React, { useState } from 'react'
@@ -14,7 +14,7 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { commentsApi } from '../../services/commentsApi'
 import type { Comment } from '../../types/comment'
-import { formatDate, truncateText } from '../../utils/formatters'
+import { displayValue, formatDate, truncateText } from '../../utils/formatters'
 import CommentDetail from './CommentDetail.tsx'
 
 
@@ -27,6 +27,7 @@ const CommentsList: React.FC = () => {
   const {
     data: comments,
     loading,
+    isRefreshing,
     error,
     pagination,
     filters,
@@ -50,7 +51,7 @@ const CommentsList: React.FC = () => {
     },
     initialFilters: {
       search: '',
-      status: undefined
+      isDeleted: undefined
     }
   })
 
@@ -74,7 +75,7 @@ const CommentsList: React.FC = () => {
       render: (content: string) => (
         <div style={{ maxWidth: 300 }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>
-            {truncateText(content, 100)}
+            {displayValue(truncateText(content, 100))}
           </div>
         </div>
       )
@@ -85,10 +86,10 @@ const CommentsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            {record.post?.title || 'N/A'}
+            {displayValue(record.postTitle)}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.postId}
+            {displayValue(record.postId)}
           </div>
         </div>
       )
@@ -99,10 +100,10 @@ const CommentsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            {record.user?.name || 'N/A'}
+            {displayValue(record.accountName)}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.user?.email || record.userId}
+            {displayValue(record.authorEmail || record.accountId)}
           </div>
         </div>
       )
@@ -111,23 +112,21 @@ const CommentsList: React.FC = () => {
       key: 'status',
       title: 'Trạng thái',
       render: (_, record) => {
-        const statusConfig = {
-          active: { color: '#52c41a', bg: '#f6ffed', text: 'Hoạt động' },
-          hidden: { color: '#faad14', bg: '#fffbe6', text: 'Ẩn' },
-          reported: { color: '#ff4d4f', bg: '#fff2f0', text: 'Báo cáo' }
-        }
-        const config = statusConfig[record.status]
+        const isDeleted = record.isDeleted
+        const statusConfig = isDeleted 
+          ? { color: '#ff4d4f', bg: '#fff2f0', text: 'Đã xóa' }
+          : { color: '#52c41a', bg: '#f6ffed', text: 'Hoạt động' }
         
         return (
           <span style={{
             padding: '2px 8px',
             borderRadius: '12px',
-            backgroundColor: config.bg,
-            color: config.color,
+            backgroundColor: statusConfig.bg,
+            color: statusConfig.color,
             fontSize: '12px',
             fontWeight: 500
           }}>
-            {config.text}
+            {statusConfig.text}
           </span>
         )
       }
@@ -152,59 +151,12 @@ const CommentsList: React.FC = () => {
       }
     },
     {
-      key: 'hide',
-      label: 'Ẩn',
-      icon: <UndoOutlined />,
-      type: 'link',
-      visible: (record) => record.status === 'active',
-      onClick: async (record) => {
-        const confirmed = await confirm({
-          title: 'Ẩn bình luận',
-          content: 'Bạn có chắc chắn muốn ẩn bình luận này?',
-          type: 'warning'
-        })
-        
-        if (confirmed) {
-          try {
-            await commentsApi.updateCommentStatus(record.id, { status: 'hidden' })
-            message.success('Ẩn bình luận thành công')
-            refresh()
-          } catch (error) {
-            message.error('Không thể ẩn bình luận')
-          }
-        }
-      }
-    },
-    {
-      key: 'show',
-      label: 'Hiện',
-      icon: <UndoOutlined />,
-      type: 'link',
-      visible: (record) => record.status === 'hidden',
-      onClick: async (record) => {
-        const confirmed = await confirm({
-          title: 'Hiện bình luận',
-          content: 'Bạn có chắc chắn muốn hiện bình luận này?',
-          type: 'info'
-        })
-        
-        if (confirmed) {
-          try {
-            await commentsApi.updateCommentStatus(record.id, { status: 'active' })
-            message.success('Hiện bình luận thành công')
-            refresh()
-          } catch (error) {
-            message.error('Không thể hiện bình luận')
-          }
-        }
-      }
-    },
-    {
       key: 'delete',
       label: 'Xóa',
       icon: <DeleteOutlined />,
       type: 'link',
       danger: true,
+      visible: (record) => !record.isDeleted,
       onClick: async (record) => {
         const confirmed = await confirm({
           title: 'Xóa bình luận',
@@ -222,23 +174,46 @@ const CommentsList: React.FC = () => {
           }
         }
       }
-    }
+    },
+    {
+      key: 'restore',
+      label: 'Khôi phục',
+      icon: <UndoOutlined />,
+      type: 'link',
+      visible: (record) => record.isDeleted,
+      onClick: async (record) => {
+        const confirmed = await confirm({
+          title: 'Khôi phục bình luận',
+          content: 'Bạn có chắc chắn muốn khôi phục bình luận này?',
+          type: 'info'
+        })
+        
+        if (confirmed) {
+          try {
+            await commentsApi.restoreComment(record.id)
+            message.success('Khôi phục bình luận thành công')
+            refresh()
+          } catch (error) {
+            message.error('Không thể khôi phục bình luận')
+          }
+        }
+      }
+    },
   ]
 
   // Filter options
   const filterOptions = [
     {
-      key: 'status',
+      key: 'isDeleted',
       label: 'Trạng thái',
       options: [
         { key: 'all', label: 'Tất cả', value: undefined },
-        { key: 'active', label: 'Hoạt động', value: 'active' },
-        { key: 'hidden', label: 'Ẩn', value: 'hidden' },
-        { key: 'reported', label: 'Báo cáo', value: 'reported' }
+        { key: 'active', label: 'Hoạt động', value: false },
+        { key: 'deleted', label: 'Đã xóa', value: true }
       ],
-      value: filters.status,
-      onChange: (value: string) => {
-        setFilters({ ...filters, status: value as any })
+      value: filters.isDeleted,
+      onChange: (value: boolean | undefined) => {
+        setFilters({ ...filters, isDeleted: value })
       }
     }
   ]
@@ -248,7 +223,7 @@ const CommentsList: React.FC = () => {
   }
 
   const handleReset = () => {
-    setFilters({ search: '', status: undefined })
+    setFilters({ search: '', isDeleted: undefined })
   }
 
   return (
@@ -283,6 +258,7 @@ const CommentsList: React.FC = () => {
       <Card>
         <LoadingState
           loading={loading}
+          isRefreshing={isRefreshing}
           error={error}
           empty={!loading && comments.length === 0}
           emptyText="Không có bình luận nào"

@@ -7,7 +7,7 @@ import BarChart from '../../components/charts/BarChart'
 import LineChart from '../../components/charts/LineChart'
 import PieChart from '../../components/charts/PieChart'
 import { statisticsApi } from '../../services/statisticsApi'
-import { formatNumber } from '../../utils/formatters'
+import { displayNumber, formatNumber } from '../../utils/formatters'
 
 interface EngagementStats {
   totalLikes: number
@@ -30,7 +30,7 @@ const EngagementAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getEngagementStatistics()
-        setStats(response.data)
+        setStats(response)
       } catch (err) {
         console.error('Error fetching engagement statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê tương tác')
@@ -79,7 +79,7 @@ const EngagementAnalytics: React.FC = () => {
   const statCards = stats ? [
     {
       title: 'Tổng lượt thích',
-      value: formatNumber(stats.totalLikes),
+      value: displayNumber(stats.totalLikes, '0'),
       icon: <Heart className="w-6 h-6" />,
       color: '#ff4d4f',
       change: {
@@ -90,7 +90,7 @@ const EngagementAnalytics: React.FC = () => {
     },
     {
       title: 'Tổng bình luận',
-      value: formatNumber(stats.totalComments),
+      value: displayNumber(stats.totalComments, '0'),
       icon: <MessageSquare className="w-6 h-6" />,
       color: '#1890ff',
       change: {
@@ -101,7 +101,7 @@ const EngagementAnalytics: React.FC = () => {
     },
     {
       title: 'Tổng chia sẻ',
-      value: formatNumber(stats.totalShares),
+      value: displayNumber(stats.totalShares, '0'),
       icon: <Share2 className="w-6 h-6" />,
       color: '#52c41a',
       change: {
@@ -230,7 +230,7 @@ const EngagementAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-red-600 mb-2">
-              {stats ? formatNumber(stats.totalLikes) : '0'}
+              {displayNumber(stats?.totalLikes, '0')}
             </div>
             <div className="text-sm text-gray-600">Tổng lượt thích</div>
           </Card>
@@ -238,7 +238,7 @@ const EngagementAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-blue-600 mb-2">
-              {stats ? formatNumber(stats.totalComments) : '0'}
+              {displayNumber(stats?.totalComments, '0')}
             </div>
             <div className="text-sm text-gray-600">Tổng bình luận</div>
           </Card>
@@ -246,7 +246,7 @@ const EngagementAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-green-600 mb-2">
-              {stats ? formatNumber(stats.totalShares) : '0'}
+              {displayNumber(stats?.totalShares, '0')}
             </div>
             <div className="text-sm text-gray-600">Tổng chia sẻ</div>
           </Card>

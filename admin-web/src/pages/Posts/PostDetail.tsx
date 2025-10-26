@@ -24,7 +24,7 @@ import ConfirmModal from '../../components/common/ConfirmModal'
 import { useConfirm } from '../../hooks/useConfirm'
 import { postsApi } from '../../services/postsApi'
 import type { PostDetail as PostDetailType, PostResponse } from '../../types/post'
-import { formatDate, formatRelativeTime } from '../../utils/formatters'
+import { displayValue, displayNumber, formatDate, formatRelativeTime } from '../../utils/formatters'
 
 interface PostDetailProps {
   post: PostResponse
@@ -117,7 +117,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onClose, onUpdate }) => {
             margin: 0,
             whiteSpace: 'pre-wrap'
           }}>
-            {post.content}
+            {displayValue(post.content)}
           </p>
         </div>
       </Card>
@@ -128,14 +128,14 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onClose, onUpdate }) => {
           <Col span={8}>
             <Statistic
               title="Lượt thích"
-              value={post.reactionCount}
+              value={displayNumber(post.reactionCount, '0')}
               prefix={<HeartOutlined style={{ color: '#ff4d4f' }} />}
             />
           </Col>
           <Col span={8}>
             <Statistic
               title="Bình luận"
-              value={post.commentCount}
+              value={displayNumber(post.commentCount, '0')}
               prefix={<MessageOutlined style={{ color: '#1890ff' }} />}
             />
           </Col>
@@ -155,14 +155,14 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onClose, onUpdate }) => {
           <Descriptions.Item label="Tên tác giả">
             <Space>
               <UserOutlined />
-              {post.accountName}
+              {displayValue(post.accountName)}
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label="Email">
-            {post.authorEmail}
+            {displayValue(post.authorEmail)}
           </Descriptions.Item>
           <Descriptions.Item label="Vai trò">
-            <Tag color="blue">{post.authorRole}</Tag>
+            <Tag color="blue">{displayValue(post.authorRole)}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Trạng thái tài khoản">
             <Tag color={post.authorIsActive ? 'green' : 'red'}>
@@ -176,7 +176,7 @@ const PostDetail: React.FC<PostDetailProps> = ({ post, onClose, onUpdate }) => {
       <Card title="Thông tin bài viết">
         <Descriptions column={1} size="small">
           <Descriptions.Item label="Tâm trạng">
-            <Tag color="purple">{post.moodName}</Tag>
+            <Tag color="purple">{displayValue(post.moodName, 'Chưa có tâm trạng')}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Ngày tạo">
             <Space>

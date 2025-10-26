@@ -186,3 +186,43 @@ export const formatStatus = (status: string): string => {
   
   return statusMap[status.toUpperCase()] || status
 }
+
+/**
+ * Display value with null/undefined handling
+ * @param value - Value to display
+ * @param defaultText - Default text for null/undefined values
+ * @returns Display string
+ */
+export const displayValue = (value: any, defaultText: string = 'Chưa có dữ liệu'): string => {
+  if (value === null || value === undefined || value === '' || value === 'N/A') {
+    return defaultText
+  }
+  return String(value)
+}
+
+/**
+ * Display number with null/undefined handling
+ * @param value - Number value to display
+ * @param defaultText - Default text for null/undefined values
+ * @returns Display string
+ */
+export const displayNumber = (value: number | null | undefined, defaultText: string = 'Chưa có dữ liệu'): string => {
+  if (value === null || value === undefined) {
+    return defaultText
+  }
+  return formatNumber(value)
+}
+
+/**
+ * Display currency with null/undefined handling
+ * @param value - Currency value to display
+ * @param defaultText - Default text for null/undefined values
+ * @param currency - Currency code (default: 'VND')
+ * @returns Display string
+ */
+export const displayCurrency = (value: number | null | undefined, defaultText: string = 'Chưa có dữ liệu', currency: string = 'VND'): string => {
+  if (value === null || value === undefined) {
+    return defaultText
+  }
+  return formatCurrency(value, currency)
+}

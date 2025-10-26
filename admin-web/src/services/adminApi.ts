@@ -3,7 +3,8 @@ import { AccountResponse, AuthApiResponse, LoginRequest } from '../types/auth'
 import { ApiResponse, ListAccountResponse } from '../types/user'
 
 // API Configuration - sử dụng production backend
-const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
+// const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
+const API_BASE_URL = 'http://localhost:8080'
 
 class AdminApiService {
   public axiosInstance: AxiosInstance
@@ -215,6 +216,62 @@ class AdminApiService {
     } finally {
       // Always clear local storage
       this.clearAuthToken()
+    }
+  }
+
+  // Generic CRUD methods for other API services
+  async get<T>(url: string): Promise<ApiResponse<T>> {
+    try {
+      console.log('📡 GET request:', url)
+      const response = await this.axiosInstance.get<ApiResponse<T>>(url)
+      return response.data
+    } catch (error) {
+      console.error('❌ GET request error:', error)
+      throw error
+    }
+  }
+
+  async post<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+    try {
+      console.log('📤 POST request:', url, data)
+      const response = await this.axiosInstance.post<ApiResponse<T>>(url, data)
+      return response.data
+    } catch (error) {
+      console.error('❌ POST request error:', error)
+      throw error
+    }
+  }
+
+  async put<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+    try {
+      console.log('📤 PUT request:', url, data)
+      const response = await this.axiosInstance.put<ApiResponse<T>>(url, data)
+      return response.data
+    } catch (error) {
+      console.error('❌ PUT request error:', error)
+      throw error
+    }
+  }
+
+  async delete<T>(url: string): Promise<ApiResponse<T>> {
+    try {
+      console.log('🗑️ DELETE request:', url)
+      const response = await this.axiosInstance.delete<ApiResponse<T>>(url)
+      return response.data
+    } catch (error) {
+      console.error('❌ DELETE request error:', error)
+      throw error
+    }
+  }
+
+  async patch<T>(url: string, data?: any): Promise<ApiResponse<T>> {
+    try {
+      console.log('📤 PATCH request:', url, data)
+      const response = await this.axiosInstance.patch<ApiResponse<T>>(url, data)
+      return response.data
+    } catch (error) {
+      console.error('❌ PATCH request error:', error)
+      throw error
     }
   }
 }

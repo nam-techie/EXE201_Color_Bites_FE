@@ -2,7 +2,8 @@ import {
     DeleteOutlined,
     EditOutlined,
     PlusOutlined,
-    TagOutlined
+    TagOutlined,
+    UndoOutlined
 } from '@ant-design/icons'
 import { Button, Card, message } from 'antd'
 import React, { useState } from 'react'
@@ -14,7 +15,7 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { tagsApi } from '../../services/tagsApi'
 import type { Tag } from '../../types/tag'
-import { formatDate, formatNumber } from '../../utils/formatters'
+import { displayNumber, displayValue, formatDate } from '../../utils/formatters'
 import TagForm from './TagForm'
 
 const TagsList: React.FC = () => {
@@ -50,6 +51,7 @@ const TagsList: React.FC = () => {
     },
     initialFilters: {
       search: '',
+      isDeleted: undefined,
       sortBy: 'name',
       order: 'asc'
     }
@@ -74,37 +76,20 @@ const TagsList: React.FC = () => {
       dataIndex: 'name',
       render: (name: string, record: Tag) => (
         <div className="flex items-center space-x-2">
-          <div 
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: record.color }}
-          />
-          <span className="font-medium">{name}</span>
+          <span className="font-medium">{displayValue(name)}</span>
+          {record.isDeleted && (
+            <span style={{
+              padding: '2px 6px',
+              borderRadius: '8px',
+              backgroundColor: '#ff4d4f',
+              color: 'white',
+              fontSize: '10px',
+              fontWeight: 500
+            }}>
+              Đã xóa
+            </span>
+          )}
         </div>
-      )
-    },
-    {
-      key: 'color',
-      title: 'Màu sắc',
-      render: (_, record) => (
-        <div className="flex items-center space-x-2">
-          <div 
-            className="w-6 h-6 rounded border"
-            style={{ backgroundColor: record.color }}
-          />
-          <span className="text-xs text-gray-500 font-mono">
-            {record.color}
-          </span>
-        </div>
-      )
-    },
-    {
-      key: 'usageCount',
-      title: 'Số lần sử dụng',
-      dataIndex: 'usageCount',
-      render: (count: number) => (
-        <span className="font-medium text-blue-600">
-          {formatNumber(count)}
-        </span>
       )
     },
     {
@@ -113,8 +98,28 @@ const TagsList: React.FC = () => {
       dataIndex: 'description',
       render: (description: string) => (
         <span className="text-gray-600 text-sm">
-          {description || 'Không có mô tả'}
+          {displayValue(description, 'Không có mô tả')}
         </span>
+      )
+    },
+    {
+      key: 'usageCount',
+      title: 'Số lần sử dụng',
+      dataIndex: 'usageCount',
+      render: (count: number) => (
+        <span className="font-medium text-blue-600">
+          {displayNumber(count, '0')}
+        </span>
+      )
+    },
+    {
+      key: 'stats',
+      title: 'Thống kê',
+      render: (_, record) => (
+        <div style={{ fontSize: '12px' }}>
+          <div>📝 {displayNumber(record.postCount, '0')} bài viết</div>
+          <div>🍽️ {displayNumber(record.restaurantCount, '0')} nhà hàng</div>
+        </div>
       )
     },
     {
@@ -131,6 +136,7 @@ const TagsList: React.FC = () => {
       label: 'Chỉnh sửa',
       icon: <EditOutlined />,
       type: 'link',
+      visible: (record) => !record.isDeleted,
       onClick: (record) => {
         setSelectedTag(record)
         setIsEditing(true)
@@ -143,6 +149,7 @@ const TagsList: React.FC = () => {
       icon: <DeleteOutlined />,
       type: 'link',
       danger: true,
+      visible: (record) => !record.isDeleted,
       onClick: async (record) => {
         const confirmed = await confirm({
           title: 'Xóa tag',
@@ -160,11 +167,48 @@ const TagsList: React.FC = () => {
           }
         }
       }
+    },
+    {
+      key: 'restore',
+      label: 'Khôi phục',
+      icon: <UndoOutlined />,
+      type: 'link',
+      visible: (record) => record.isDeleted,
+      onClick: async (record) => {
+        const confirmed = await confirm({
+          title: 'Khôi phục tag',
+          content: `Bạn có chắc chắn muốn khôi phục tag "${record.name}"?`,
+          type: 'info'
+        })
+        
+        if (confirmed) {
+          try {
+            await tagsApi.restoreTag(record.id)
+            message.success('Khôi phục tag thành công')
+            refresh()
+          } catch (error) {
+            message.error('Không thể khôi phục tag')
+          }
+        }
+      }
     }
   ]
 
   // Filter options
   const filterOptions = [
+    {
+      key: 'isDeleted',
+      label: 'Trạng thái',
+      options: [
+        { key: 'all', label: 'Tất cả', value: undefined },
+        { key: 'active', label: 'Hoạt động', value: false },
+        { key: 'deleted', label: 'Đã xóa', value: true }
+      ],
+      value: filters.isDeleted,
+      onChange: (value: boolean | undefined) => {
+        setFilters({ ...filters, isDeleted: value })
+      }
+    },
     {
       key: 'sortBy',
       label: 'Sắp xếp theo',
@@ -197,7 +241,7 @@ const TagsList: React.FC = () => {
   }
 
   const handleReset = () => {
-    setFilters({ search: '', sortBy: 'name', order: 'asc' })
+    setFilters({ search: '', isDeleted: undefined, sortBy: 'name', order: 'asc' })
   }
 
   const handleCreateTag = () => {

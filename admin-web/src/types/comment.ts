@@ -1,31 +1,28 @@
-// Comment types for admin dashboard
+// Comment types for admin dashboard - Updated theo backend document
 export interface Comment {
   id: string
   postId: string
-  userId: string
+  postTitle: string
   content: string
+  accountId: string
+  accountName: string
+  parentCommentId: string | null
+  replyCount: number
+  isDeleted: boolean  // ← Thay đổi từ status
   createdAt: string
   updatedAt: string
-  status: CommentStatus
-  // Related data (populated by API)
-  post?: {
-    id: string
-    title: string
-    slug: string
-  }
-  user?: {
-    id: string
-    name: string
-    email: string
-    avatar?: string
-  }
+  // Admin fields
+  authorEmail: string
+  authorIsActive: boolean
+  authorRole: string
+  postAuthorName: string
+  postAuthorEmail: string
 }
 
-export type CommentStatus = 'active' | 'hidden' | 'reported'
-
+// Comment filters - Updated cho isDeleted
 export interface CommentFilters {
-  status?: CommentStatus
-  userId?: string
+  isDeleted?: boolean
+  accountId?: string
   postId?: string
   dateRange?: {
     start: string
@@ -44,8 +41,9 @@ export interface CommentListResponse {
   totalPages: number
 }
 
-export interface CommentUpdateStatusRequest {
-  status: CommentStatus
+// Comment restore request
+export interface CommentRestoreRequest {
+  // No body needed for restore endpoint
 }
 
 export interface BulkDeleteCommentsRequest {
