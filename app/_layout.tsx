@@ -5,6 +5,8 @@ import { StatusBar } from 'expo-status-bar'
 import { useEffect } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import Toast from 'react-native-toast-message'
+import ChatButton from '@/components/common/ChatButton'
+
 import '../global.css'
 
 function RootLayoutNav() {
@@ -35,6 +37,7 @@ function RootLayoutNav() {
          <Stack.Screen name="profile" />
          <Stack.Screen name="profile-images" />
          <Stack.Screen name="profile-posts" />
+         <Stack.Screen name="chat"/>
       </Stack>
    )
 }
@@ -46,6 +49,7 @@ export default function RootLayout() {
             <AuthProvider>
                <StatusBar style="auto" />
                <RootLayoutNav />
+               <ChatButton/>
                <Toast />
             </AuthProvider>
          </ThemeProvider>
