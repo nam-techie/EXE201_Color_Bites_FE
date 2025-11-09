@@ -84,7 +84,7 @@ const TransactionsList: React.FC = () => {
       width: 80,
       render: (id: string) => (
         <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-          {id.slice(0, 8)}...
+          {id ? id.slice(0, 8) + '...' : 'N/A'}
         </span>
       )
     },
@@ -113,7 +113,7 @@ const TransactionsList: React.FC = () => {
               : 'text-red-600'
           }`}>
             {record.type === 'deposit' || record.type === 'reward' ? '+' : '-'}
-            {formatCurrency(record.amount)}
+            {formatCurrency(record.amount || 0)}
           </div>
         </div>
       )
@@ -122,7 +122,7 @@ const TransactionsList: React.FC = () => {
       key: 'type',
       title: 'Loại',
       render: (_, record) => {
-        const config = TRANSACTION_TYPE_CONFIG[record.type]
+        const config = TRANSACTION_TYPE_CONFIG[record.type] || { icon: '💰', label: record.type || 'N/A', color: 'default' }
         return (
           <div className="flex items-center space-x-2">
             <span className="text-lg">{config.icon}</span>
@@ -135,7 +135,12 @@ const TransactionsList: React.FC = () => {
       key: 'status',
       title: 'Trạng thái',
       render: (_, record) => {
-        const config = TRANSACTION_STATUS_CONFIG[record.status]
+        const config = TRANSACTION_STATUS_CONFIG[record.status] || { 
+          label: record.status || 'N/A', 
+          color: 'default', 
+          bgColor: '#f5f5f5', 
+          textColor: '#8c8c8c' 
+        }
         return (
           <span style={{
             padding: '4px 12px',

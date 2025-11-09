@@ -2,8 +2,9 @@ import axios, { AxiosInstance } from 'axios'
 import { AccountResponse, AuthApiResponse, LoginRequest } from '../types/auth'
 import { ApiResponse, ListAccountResponse } from '../types/user'
 
-// API Configuration - sử dụng production backend
-const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
+// API Configuration - sử dụng local backend cho development
+const API_BASE_URL = 'http://localhost:8080' // Local backend for development
+// const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
 
 class AdminApiService {
   public axiosInstance: AxiosInstance
@@ -22,18 +23,19 @@ class AdminApiService {
       async (config) => {
         try {
           const token = localStorage.getItem('adminAuthToken')
-          console.log('🔑 Admin Auth Token Check:', token ? 'Token found' : 'No token found')
+          console.log('🔑 Admin Auth Token Check:', token ? `Token found (${token.substring(0, 20)}...)` : 'No token found')
           
           if (token) {
             config.headers.Authorization = `Bearer ${token}`
             console.log('✅ Admin Authorization header added')
+            console.log('📤 Full Authorization header:', config.headers.Authorization)
           } else {
             console.warn('⚠️ No admin auth token found - API call may fail if auth required')
           }
           
-          console.log('📤 Admin Request Headers:', config.headers)
           console.log('📤 Admin Request URL:', config.url)
-          console.log('📤 Admin Request Method:', config.method)
+          console.log('📤 Admin Request Method:', config.method?.toUpperCase())
+          console.log('📤 Admin Full URL:', `${config.baseURL}${config.url}`)
         } catch (error) {
           console.error('❌ Error getting admin auth token:', error)
         }
@@ -60,6 +62,20 @@ class AdminApiService {
           console.log('Admin token expired, redirected to login')
         }
 
+        // Handle 403 - Forbidden (không có quyền truy cập)
+        if (error.response?.status === 403) {
+          const serverMessage = error.response?.data?.message || 'Bạn không có quyền truy cập tài nguyên này'
+          console.error('❌ 403 Forbidden:', serverMessage)
+          console.error('❌ Request URL:', error.config?.url)
+          console.error('❌ Request Method:', error.config?.method)
+          console.error('❌ Response data:', error.response?.data)
+          // Giữ nguyên error object để giữ thông tin response
+          const customError: any = new Error(serverMessage)
+          customError.response = error.response
+          customError.status = 403
+          throw customError
+        }
+
         // Handle network errors
         if (!error.response) {
           console.error('Network error:', error.message)
@@ -68,7 +84,11 @@ class AdminApiService {
 
         // Handle server errors
         const serverMessage = error.response?.data?.message || 'Đã xảy ra lỗi từ server'
-        throw new Error(serverMessage)
+        // Giữ nguyên error object để giữ thông tin response
+        const customError: any = new Error(serverMessage)
+        customError.response = error.response
+        customError.status = error.response.status
+        throw customError
       },
     )
   }

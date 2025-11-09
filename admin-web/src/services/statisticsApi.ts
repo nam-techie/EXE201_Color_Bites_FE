@@ -1,28 +1,37 @@
 import { adminApi } from './adminApi'
+import type { ApiResponse } from '../types/user'
 
-// System statistics interface
+// Statistics response types
 export interface SystemStatistics {
-  totalUsers: number
-  activeUsers: number
-  blockedUsers: number
-  totalPosts: number
-  deletedPosts: number
-  activePosts: number
-  totalRestaurants: number
-  deletedRestaurants: number
-  activeRestaurants: number
-  totalTransactions: number
+  [key: string]: any
 }
 
-// API response wrapper
-export interface ApiResponse<T> {
-  status: number
-  message: string
-  data: T
+export interface UserStatisticsResponse {
+  [key: string]: any
+}
+
+export interface PostStatisticsResponse {
+  [key: string]: any
+}
+
+export interface RestaurantStatisticsResponse {
+  [key: string]: any
+}
+
+export interface RevenueStatisticsResponse {
+  [key: string]: any
+}
+
+export interface EngagementStatisticsResponse {
+  [key: string]: any
+}
+
+export interface ChallengeStatisticsResponse {
+  [key: string]: any
 }
 
 class StatisticsApiService {
-  // Lấy thống kê tổng quan hệ thống
+  // GET /api/admin/statistics - Lấy thống kê tổng quan hệ thống
   async getSystemStatistics(): Promise<ApiResponse<SystemStatistics>> {
     try {
       console.log('📡 Fetching system statistics')
@@ -43,12 +52,12 @@ class StatisticsApiService {
     }
   }
 
-  // Lấy thống kê users
-  async getUserStatistics(): Promise<ApiResponse<{ totalUsers: number; activeUsers: number }>> {
+  // GET /api/admin/statistics/users - Lấy thống kê users
+  async getUserStatistics(): Promise<ApiResponse<UserStatisticsResponse>> {
     try {
       console.log('📡 Fetching user statistics')
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalUsers: number; activeUsers: number }>>(
+      const response = await adminApi.axiosInstance.get<ApiResponse<UserStatisticsResponse>>(
         '/api/admin/statistics/users'
       )
       
@@ -64,12 +73,12 @@ class StatisticsApiService {
     }
   }
 
-  // Lấy thống kê posts
-  async getPostStatistics(): Promise<ApiResponse<{ totalPosts: number; activePosts: number; deletedPosts: number }>> {
+  // GET /api/admin/statistics/posts - Lấy thống kê posts
+  async getPostStatistics(): Promise<ApiResponse<PostStatisticsResponse>> {
     try {
       console.log('📡 Fetching post statistics')
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalPosts: number; activePosts: number; deletedPosts: number }>>(
+      const response = await adminApi.axiosInstance.get<ApiResponse<PostStatisticsResponse>>(
         '/api/admin/statistics/posts'
       )
       
@@ -85,12 +94,12 @@ class StatisticsApiService {
     }
   }
 
-  // Lấy thống kê restaurants
-  async getRestaurantStatistics(): Promise<ApiResponse<{ totalRestaurants: number; activeRestaurants: number; deletedRestaurants: number }>> {
+  // GET /api/admin/statistics/restaurants - Lấy thống kê restaurants
+  async getRestaurantStatistics(): Promise<ApiResponse<RestaurantStatisticsResponse>> {
     try {
       console.log('📡 Fetching restaurant statistics')
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalRestaurants: number; activeRestaurants: number; deletedRestaurants: number }>>(
+      const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantStatisticsResponse>>(
         '/api/admin/statistics/restaurants'
       )
       
@@ -106,12 +115,12 @@ class StatisticsApiService {
     }
   }
 
-  // Lấy thống kê doanh thu
-  async getRevenueStatistics(): Promise<ApiResponse<{ totalTransactions: number; successfulTransactions: number; failedTransactions: number; pendingTransactions: number }>> {
+  // GET /api/admin/statistics/revenue - Lấy thống kê doanh thu
+  async getRevenueStatistics(): Promise<ApiResponse<RevenueStatisticsResponse>> {
     try {
       console.log('📡 Fetching revenue statistics')
       
-      const response = await adminApi.axiosInstance.get<ApiResponse<{ totalTransactions: number; successfulTransactions: number; failedTransactions: number; pendingTransactions: number }>>(
+      const response = await adminApi.axiosInstance.get<ApiResponse<RevenueStatisticsResponse>>(
         '/api/admin/statistics/revenue'
       )
       
@@ -123,6 +132,48 @@ class StatisticsApiService {
       throw new Error(response.data.message || 'Không thể tải thống kê doanh thu')
     } catch (error) {
       console.error('❌ Error fetching revenue statistics:', error)
+      throw error
+    }
+  }
+
+  // GET /api/admin/statistics/engagement - Lấy thống kê tương tác
+  async getEngagementStatistics(): Promise<ApiResponse<EngagementStatisticsResponse>> {
+    try {
+      console.log('📡 Fetching engagement statistics')
+      
+      const response = await adminApi.axiosInstance.get<ApiResponse<EngagementStatisticsResponse>>(
+        '/api/admin/statistics/engagement'
+      )
+      
+      if (response.data.status === 200) {
+        console.log('✅ Engagement statistics fetched successfully')
+        return response.data
+      }
+      
+      throw new Error(response.data.message || 'Không thể tải thống kê tương tác')
+    } catch (error) {
+      console.error('❌ Error fetching engagement statistics:', error)
+      throw error
+    }
+  }
+
+  // GET /api/admin/statistics/challenges - Lấy thống kê challenges
+  async getChallengeStatistics(): Promise<ApiResponse<ChallengeStatisticsResponse>> {
+    try {
+      console.log('📡 Fetching challenge statistics')
+      
+      const response = await adminApi.axiosInstance.get<ApiResponse<ChallengeStatisticsResponse>>(
+        '/api/admin/statistics/challenges'
+      )
+      
+      if (response.data.status === 200) {
+        console.log('✅ Challenge statistics fetched successfully')
+        return response.data
+      }
+      
+      throw new Error(response.data.message || 'Không thể tải thống kê challenges')
+    } catch (error) {
+      console.error('❌ Error fetching challenge statistics:', error)
       throw error
     }
   }

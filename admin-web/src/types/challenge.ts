@@ -1,20 +1,26 @@
-// Challenge type definitions
+// Challenge type definitions - khớp với ChallengeDefinitionResponse từ backend
 export interface Challenge {
   id: string
   title: string
   description: string
-  type: 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE'
-  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'CANCELLED'
-  restaurantId?: string
-  restaurantName?: string
+  challengeType: string // Backend trả về challengeType (ví dụ: "PARTNER_LOCATION")
+  type: 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE' // Mapped từ challengeType
+  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'CANCELLED' // Mapped từ isActive
+  restaurantId?: string | null
+  restaurantName?: string | null
+  typeObjId?: string | null
+  typeObjName?: string | null
+  images?: string[] | null
+  targetCount: number
   startDate: string
   endDate: string
-  reward?: string
-  participantCount: number
-  completionCount: number
+  rewardDescription?: string | null // Backend trả về rewardDescription
+  reward?: string // Alias cho rewardDescription
+  createdBy?: string
   createdAt: string
-  updatedAt: string
-  isDeleted: boolean
+  isActive: boolean // Backend trả về isActive
+  participantCount: number
+  completionCount?: number // Có thể không có trong response
 }
 
 export interface ChallengeEntry {

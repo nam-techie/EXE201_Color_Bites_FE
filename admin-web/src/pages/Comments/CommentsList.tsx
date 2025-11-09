@@ -63,7 +63,7 @@ const CommentsList: React.FC = () => {
       width: 80,
       render: (id: string) => (
         <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-          {id.slice(0, 8)}...
+          {id ? id.slice(0, 8) + '...' : 'N/A'}
         </span>
       )
     },
@@ -74,7 +74,7 @@ const CommentsList: React.FC = () => {
       render: (content: string) => (
         <div style={{ maxWidth: 300 }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>
-            {truncateText(content, 100)}
+            {truncateText(content || 'N/A', 100)}
           </div>
         </div>
       )
@@ -84,12 +84,14 @@ const CommentsList: React.FC = () => {
       title: 'Bài viết',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 500 }}>
-            {record.post?.title || 'N/A'}
+          <div style={{ fontWeight: 500, maxWidth: 200 }}>
+            {record.postTitle || record.post?.title || 'N/A'}
           </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.postId}
-          </div>
+          {record.postId && (
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              ID: {record.postId.slice(0, 8)}...
+            </div>
+          )}
         </div>
       )
     },
@@ -99,11 +101,13 @@ const CommentsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            {record.user?.name || 'N/A'}
+            {record.postAuthorName || record.user?.name || record.accountName || 'N/A'}
           </div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.user?.email || record.userId}
-          </div>
+          {(record.authorEmail || record.user?.email) && (
+            <div style={{ fontSize: '12px', color: '#666' }}>
+              {record.authorEmail || record.user?.email}
+            </div>
+          )}
         </div>
       )
     },
@@ -111,12 +115,24 @@ const CommentsList: React.FC = () => {
       key: 'status',
       title: 'Trạng thái',
       render: (_, record) => {
-        const statusConfig = {
-          active: { color: '#52c41a', bg: '#f6ffed', text: 'Hoạt động' },
+        // Map isDeleted sang status: false = Public, true = Đã xóa
+        const statusConfig: Record<string, { color: string; bg: string; text: string }> = {
+          active: { color: '#52c41a', bg: '#f6ffed', text: 'Public' },
           hidden: { color: '#faad14', bg: '#fffbe6', text: 'Ẩn' },
-          reported: { color: '#ff4d4f', bg: '#fff2f0', text: 'Báo cáo' }
+          reported: { color: '#ff4d4f', bg: '#fff2f0', text: 'Báo cáo' },
+          deleted: { color: '#8c8c8c', bg: '#f5f5f5', text: 'Đã xóa' }
         }
-        const config = statusConfig[record.status]
+        
+        let config
+        if (record.isDeleted === true) {
+          config = statusConfig.deleted
+        } else if (record.isDeleted === false) {
+          config = statusConfig.active
+        } else if (record.status) {
+          config = statusConfig[record.status] || { color: '#666', bg: '#f5f5f5', text: record.status || 'N/A' }
+        } else {
+          config = statusConfig.active // Default to public
+        }
         
         return (
           <span style={{

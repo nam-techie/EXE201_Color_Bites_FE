@@ -1,83 +1,205 @@
 import {
-    BulkDeleteTagsRequest,
     Tag,
     TagFilters,
     TagFormData,
     TagListResponse
 } from '../types/tag'
 import { adminApi } from './adminApi'
+import type { ApiResponse } from '../types/user'
 
 // Tags API service for admin dashboard
-export const tagsApi = {
-  // Get paginated list of tags with filters
+class TagsApiService {
+  private baseURL = '/api/admin/tags'
+
+  // GET /api/admin/tags - Lấy danh sách tags với pagination (tương thích với TagsList)
   async getTags(filters: TagFilters = {}): Promise<TagListResponse> {
     try {
-      const params = new URLSearchParams()
+      console.log('📡 Fetching tags:', filters)
       
-      if (filters.search) params.append('search', filters.search)
-      if (filters.sortBy) params.append('sortBy', filters.sortBy)
-      if (filters.order) params.append('order', filters.order)
-      if (filters.page) params.append('page', filters.page.toString())
-      if (filters.limit) params.append('limit', filters.limit.toString())
-
-      const response = await adminApi.get(`/tags?${params.toString()}`)
-      return response.data
+      const page = filters.page || 0
+      const limit = filters.limit || 10
+      
+      const response = await adminApi.axiosInstance.get<ApiResponse<any>>(
+        `${this.baseURL}?page=${page}&size=${limit}`
+      )
+      
+      if (response.data.status === 200) {
+        // Convert từ Page format sang TagListResponse format
+        const pageData = response.data.data
+        return {
+          data: pageData.content || [],
+          total: pageData.totalElements || 0,
+          page: pageData.number || 0,
+          limit: pageData.size || limit,
+          totalPages: pageData.totalPages || 0
+        }
+      }
+      
+      throw new Error(response.data.message || 'Không thể tải danh sách tag')
     } catch (error) {
-      console.error('Error fetching tags:', error)
+      console.error('❌ Error fetching tags:', error)
       throw error
     }
-  },
+  }
 
-  // Get single tag by ID
-  async getTagById(id: string): Promise<Tag> {
+  // Alias cho getAllTags
+  async getAllTags(
+    page: number = 0,
+    size: number = 10
+  ): Promise<ApiResponse<TagListResponse>> {
+    const result = await this.getTags({ page, limit: size })
+    return {
+      status: 200,
+      message: 'Success',
+      data: result as any
+    }
+  }
+
+  // GET /api/admin/tags/{id} - Lấy chi tiết tag
+  async getTagById(id: string): Promise<ApiResponse<Tag>> {
     try {
-      const response = await adminApi.get(`/tags/${id}`)
-      return response.data
+      console.log('📡 Fetching tag by id:', id)
+      
+      const response = await adminApi.axiosInstance.get<ApiResponse<Tag>>(
+        `${this.baseURL}/${id}`
+      )
+      
+      if (response.data.status === 200) {
+        console.log('✅ Tag detail fetched successfully')
+        return response.data
+      }
+      
+      throw new Error(response.data.message || 'Không thể tải chi tiết tag')
     } catch (error) {
-      console.error('Error fetching tag:', error)
+      console.error('❌ Error fetching tag:', error)
       throw error
     }
-  },
+  }
 
-  // Create new tag
+  // POST /api/admin/tags - Tạo tag mới (tương thích với TagForm)
   async createTag(data: TagFormData): Promise<Tag> {
     try {
-      const response = await adminApi.post('/tags', data)
-      return response.data
+      console.log('📤 Creating tag:', data)
+      
+      const params = new URLSearchParams()
+      params.append('name', data.name)
+      if (data.description) {
+        params.append('description', data.description)
+      }
+      
+      const response = await adminApi.axiosInstance.post<ApiResponse<Tag>>(
+        `${this.baseURL}?${params.toString()}`
+      )
+      
+      if (response.data.status === 201) {
+        console.log('✅ Tag created successfully')
+        return response.data.data
+      }
+      
+      throw new Error(response.data.message || 'Không thể tạo tag')
     } catch (error) {
-      console.error('Error creating tag:', error)
+      console.error('❌ Error creating tag:', error)
       throw error
     }
-  },
+  }
 
-  // Update existing tag
+  // Overload cho createTag với name và description (tương thích với backend)
+  async createTagWithParams(
+    name: string,
+    description?: string
+  ): Promise<ApiResponse<Tag>> {
+    const tag = await this.createTag({ name, description, color: '#4299e1' })
+    return {
+      status: 201,
+      message: 'Success',
+      data: tag
+    }
+  }
+
+  // PUT /api/admin/tags/{id} - Cập nhật tag (tương thích với TagForm)
   async updateTag(id: string, data: TagFormData): Promise<Tag> {
     try {
-      const response = await adminApi.put(`/tags/${id}`, data)
-      return response.data
+      console.log('📤 Updating tag:', { id, data })
+      
+      const params = new URLSearchParams()
+      params.append('name', data.name)
+      if (data.description) {
+        params.append('description', data.description)
+      }
+      
+      const response = await adminApi.axiosInstance.put<ApiResponse<Tag>>(
+        `${this.baseURL}/${id}?${params.toString()}`
+      )
+      
+      if (response.data.status === 200) {
+        console.log('✅ Tag updated successfully')
+        return response.data.data
+      }
+      
+      throw new Error(response.data.message || 'Không thể cập nhật tag')
     } catch (error) {
-      console.error('Error updating tag:', error)
+      console.error('❌ Error updating tag:', error)
       throw error
     }
-  },
+  }
 
-  // Delete single tag
+  // Overload cho updateTag với name và description (tương thích với backend)
+  async updateTagWithParams(
+    id: string,
+    name: string,
+    description?: string
+  ): Promise<ApiResponse<Tag>> {
+    const tag = await this.updateTag(id, { name, description, color: '#4299e1' })
+    return {
+      status: 200,
+      message: 'Success',
+      data: tag
+    }
+  }
+
+  // DELETE /api/admin/tags/{id} - Xóa tag (tương thích với TagsList)
   async deleteTag(id: string): Promise<void> {
     try {
-      await adminApi.delete(`/tags/${id}`)
+      console.log('📤 Deleting tag:', id)
+      
+      const response = await adminApi.axiosInstance.delete<ApiResponse<void>>(
+        `${this.baseURL}/${id}`
+      )
+      
+      if (response.data.status === 200) {
+        console.log('✅ Tag deleted successfully')
+        return
+      }
+      
+      throw new Error(response.data.message || 'Không thể xóa tag')
     } catch (error) {
-      console.error('Error deleting tag:', error)
+      console.error('❌ Error deleting tag:', error)
       throw error
     }
-  },
+  }
 
-  // Bulk delete tags
-  async bulkDeleteTags(data: BulkDeleteTagsRequest): Promise<void> {
+  // GET /api/admin/tags/statistics - Lấy thống kê tags
+  async getTagStatistics(): Promise<ApiResponse<{ [key: string]: any }>> {
     try {
-      await adminApi.post('/tags/bulk-delete', data)
+      console.log('📡 Fetching tag statistics')
+      
+      const response = await adminApi.axiosInstance.get<ApiResponse<{ [key: string]: any }>>(
+        `${this.baseURL}/statistics`
+      )
+      
+      if (response.data.status === 200) {
+        console.log('✅ Tag statistics fetched successfully')
+        return response.data
+      }
+      
+      throw new Error(response.data.message || 'Không thể tải thống kê tag')
     } catch (error) {
-      console.error('Error bulk deleting tags:', error)
+      console.error('❌ Error fetching tag statistics:', error)
       throw error
     }
   }
 }
+
+// Export singleton instance
+export const tagsApi = new TagsApiService()
+export default tagsApi

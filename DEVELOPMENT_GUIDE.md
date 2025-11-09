@@ -1,4 +1,4 @@
-# 🚀 Hướng dẫn chạy dự án Color Bites
+# 🚀 Hướng dẫn chạy dự án Mummi
 
 ## 📱 Phương pháp 1: Sử dụng Expo Go (Khuyến nghị cho beginners)
 

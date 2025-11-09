@@ -61,13 +61,13 @@ const RestaurantsList: React.FC = () => {
       render: (name: string, record) => (
         <div style={{ maxWidth: 200 }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>
-            {name}
+            {name || 'N/A'}
             {record.featured && (
               <StarOutlined style={{ color: '#faad14', marginLeft: 8 }} />
             )}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            <EnvironmentOutlined /> {truncateText(record.address, 50)}
+            <EnvironmentOutlined /> {truncateText(record.address || 'N/A', 50)}
           </div>
         </div>
       )
@@ -82,14 +82,14 @@ const RestaurantsList: React.FC = () => {
           backgroundColor: '#f0f0f0',
           fontSize: '12px'
         }}>
-          {record.type}
+          {record.type || 'N/A'}
         </span>
       )
     },
     {
       key: 'region',
       title: 'Khu vực',
-      render: (_, record) => record.region
+      render: (_, record) => record.region || 'N/A'
     },
     {
       key: 'rating',
@@ -97,10 +97,10 @@ const RestaurantsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            ⭐ {record.rating.toFixed(1)}
+            ⭐ {record.rating != null ? record.rating.toFixed(1) : 'N/A'}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {formatCurrency(record.avgPrice)}/người
+            {formatCurrency(record.avgPrice || 0)}/người
           </div>
         </div>
       )
@@ -110,7 +110,7 @@ const RestaurantsList: React.FC = () => {
       title: 'Thống kê',
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
-          <div>❤️ {formatNumber(record.favoriteCount)}</div>
+          <div>❤️ {formatNumber(record.favoriteCount || 0)}</div>
         </div>
       )
     },
@@ -119,9 +119,9 @@ const RestaurantsList: React.FC = () => {
       title: 'Người tạo',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{record.createdByName}</div>
+          <div style={{ fontWeight: 500 }}>{record.createdByName || 'N/A'}</div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.creatorEmail}
+            {record.creatorEmail || 'N/A'}
           </div>
         </div>
       )

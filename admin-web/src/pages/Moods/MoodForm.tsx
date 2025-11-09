@@ -27,7 +27,7 @@ const MoodForm: React.FC<MoodFormProps> = ({
       if (isEditing && mood) {
         form.setFieldsValue({
           name: mood.name,
-          description: mood.description
+          emoji: mood.emoji
         })
       } else {
         form.resetFields()
@@ -43,7 +43,7 @@ const MoodForm: React.FC<MoodFormProps> = ({
         // Update existing mood
         const updateData: UpdateMoodDto = {
           name: values.name,
-          description: values.description
+          emoji: values.emoji
         }
         await moodsApi.updateMood(mood.id, updateData)
         message.success('Cập nhật mood thành công')
@@ -83,6 +83,33 @@ const MoodForm: React.FC<MoodFormProps> = ({
         className="mt-4"
       >
         <Form.Item
+          name="emoji"
+          label="Emoji"
+          rules={[
+            { required: true, message: 'Vui lòng nhập emoji' },
+            { 
+              validator: (_, value) => {
+                if (!value || value.trim() === '') {
+                  return Promise.reject(new Error('Vui lòng nhập emoji'))
+                }
+                // Kiểm tra xem có phải emoji không (có thể là 1 ký tự hoặc nhiều ký tự emoji)
+                if (value.length > 10) {
+                  return Promise.reject(new Error('Emoji không được quá 10 ký tự'))
+                }
+                return Promise.resolve()
+              }
+            }
+          ]}
+        >
+          <Input 
+            placeholder="Nhập emoji (ví dụ: 😊, ❤️, 😔, 😡...)"
+            size="large"
+            maxLength={10}
+            style={{ fontSize: '20px' }}
+          />
+        </Form.Item>
+
+        <Form.Item
           name="name"
           label="Tên mood"
           rules={[
@@ -92,28 +119,8 @@ const MoodForm: React.FC<MoodFormProps> = ({
           ]}
         >
           <Input 
-            placeholder="Nhập tên mood (ví dụ: Happy, Excited, Sad...)"
+            placeholder="Nhập tên mood (ví dụ: Hạnh phúc, Yêu thích, Buồn...)"
             size="large"
-          />
-        </Form.Item>
-
-        <Form.Item
-          name="description"
-          label={
-            <span>
-              Mô tả
-              <span className="text-gray-400 text-sm font-normal"> (Tùy chọn)</span>
-            </span>
-          }
-          rules={[
-            { max: 200, message: 'Mô tả không được quá 200 ký tự' }
-          ]}
-        >
-          <Input.TextArea
-            placeholder="Nhập mô tả cho mood này..."
-            rows={4}
-            showCount
-            maxLength={200}
           />
         </Form.Item>
 

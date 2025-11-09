@@ -60,7 +60,7 @@ const Login = () => {
           <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
             <Lock className="w-8 h-8 text-primary-600" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Color Bites Admin</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Mumii Admin</h1>
           <p className="text-primary-100">Đăng nhập để quản lý hệ thống</p>
         </div>
 
@@ -148,7 +148,7 @@ const Login = () => {
         {/* Footer */}
         <div className="text-center mt-8">
           <p className="text-primary-100 text-sm">
-            © 2024 Color Bites. All rights reserved.
+            © 2024 Mummi. All rights reserved.
           </p>
         </div>
       </div>

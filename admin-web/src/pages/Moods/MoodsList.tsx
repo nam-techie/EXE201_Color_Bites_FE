@@ -69,24 +69,25 @@ const MoodsList: React.FC = () => {
       )
     },
     {
+      key: 'emoji',
+      title: 'Emoji',
+      width: 100,
+      render: (_, record) => (
+        <div className="text-center">
+          <span className="text-3xl" role="img" aria-label={record.name}>
+            {record.emoji || '😊'}
+          </span>
+        </div>
+      )
+    },
+    {
       key: 'name',
       title: 'Tên mood',
       dataIndex: 'name',
       render: (name: string) => (
         <div className="flex items-center space-x-2">
-          <SmileOutlined className="w-4 h-4 text-yellow-500" />
           <span className="font-medium">{name}</span>
         </div>
-      )
-    },
-    {
-      key: 'description',
-      title: 'Mô tả',
-      dataIndex: 'description',
-      render: (description: string) => (
-        <span className="text-gray-600 text-sm">
-          {description || 'Không có mô tả'}
-        </span>
       )
     },
     {

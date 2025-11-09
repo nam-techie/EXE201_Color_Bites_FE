@@ -2,75 +2,79 @@ import type {
     ApiResponse,
     RestaurantDetail,
     RestaurantFilters,
-    RestaurantsPageResponse,
-    RestaurantStatistics
+    RestaurantsPageResponse
 } from '../types/restaurant'
 import { adminApi } from './adminApi'
 
 class RestaurantsApiService {
   private baseURL = '/api/admin/restaurants'
 
-  // Lấy danh sách restaurants với pagination và filters
+  // GET /api/admin/restaurants - Lấy danh sách restaurants với pagination (tương thích với RestaurantsList)
   async getRestaurants(
     page: number = 0, 
-    size: number = 20, 
+    size: number = 10,
     filters?: RestaurantFilters
   ): Promise<ApiResponse<RestaurantsPageResponse>> {
     try {
       console.log('📡 Fetching restaurants:', { page, size, filters })
       
-      const params = new URLSearchParams({
-        page: page.toString(),
-        size: size.toString()
-      })
-
-      // Add filters to params
-      if (filters?.search) {
-        params.append('search', filters.search)
-      }
-      if (filters?.status && filters.status !== 'all') {
-        params.append('status', filters.status)
-      }
-      if (filters?.type) {
-        params.append('type', filters.type)
-      }
-      if (filters?.region) {
-        params.append('region', filters.region)
-      }
-      if (filters?.minPrice !== undefined) {
-        params.append('minPrice', filters.minPrice.toString())
-      }
-      if (filters?.maxPrice !== undefined) {
-        params.append('maxPrice', filters.maxPrice.toString())
-      }
-      if (filters?.minRating !== undefined) {
-        params.append('minRating', filters.minRating.toString())
-      }
-      if (filters?.dateRange) {
-        params.append('startDate', filters.dateRange.start)
-        params.append('endDate', filters.dateRange.end)
-      }
-
       const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantsPageResponse>>(
-        `${this.baseURL}?${params.toString()}`
+        `${this.baseURL}?page=${page}&size=${size}`
       )
       
       if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data.content.length} restaurants`)
-        return response.data
+        // Ensure data structure is correct
+        const pageData = response.data.data
+        if (pageData && pageData.content) {
+          console.log(`✅ Fetched ${pageData.content.length} restaurants`)
+          return response.data
+        } else {
+          // Return empty page if structure is wrong
+          console.warn('⚠️ Invalid response structure, returning empty page')
+          return {
+            status: 200,
+            message: 'Success',
+            data: {
+              content: [],
+              totalElements: 0,
+              totalPages: 0,
+              size: size,
+              number: page
+            }
+          }
+        }
       }
       
       throw new Error(response.data.message || 'Không thể tải danh sách nhà hàng')
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error fetching restaurants:', error)
-      throw error
+      // Return empty response instead of throwing to prevent page crash
+      return {
+        status: 200,
+        message: 'Success',
+        data: {
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: size,
+          number: page
+        }
+      }
     }
   }
 
-  // Lấy chi tiết restaurant
+  // Alias cho getAllRestaurants
+  async getAllRestaurants(
+    page: number = 0, 
+    size: number = 10
+  ): Promise<ApiResponse<RestaurantsPageResponse>> {
+    return this.getRestaurants(page, size)
+  }
+
+  // GET /api/admin/restaurants/{id} - Lấy chi tiết restaurant (tương thích với RestaurantDetail)
   async getRestaurantDetail(restaurantId: string): Promise<ApiResponse<RestaurantDetail>> {
     try {
-      console.log('📡 Fetching restaurant detail:', restaurantId)
+      console.log('📡 Fetching restaurant by id:', restaurantId)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantDetail>>(
         `${this.baseURL}/${restaurantId}`
@@ -88,7 +92,12 @@ class RestaurantsApiService {
     }
   }
 
-  // Xóa restaurant (soft delete)
+  // Alias cho getRestaurantDetail
+  async getRestaurantById(restaurantId: string): Promise<ApiResponse<RestaurantDetail>> {
+    return this.getRestaurantDetail(restaurantId)
+  }
+
+  // DELETE /api/admin/restaurants/{id} - Xóa restaurant
   async deleteRestaurant(restaurantId: string): Promise<ApiResponse<void>> {
     try {
       console.log('📤 Deleting restaurant:', restaurantId)
@@ -109,7 +118,7 @@ class RestaurantsApiService {
     }
   }
 
-  // Khôi phục restaurant đã xóa
+  // PUT /api/admin/restaurants/{id}/restore - Khôi phục restaurant đã xóa
   async restoreRestaurant(restaurantId: string): Promise<ApiResponse<void>> {
     try {
       console.log('📤 Restoring restaurant:', restaurantId)
@@ -126,126 +135,6 @@ class RestaurantsApiService {
       throw new Error(response.data.message || 'Không thể khôi phục nhà hàng')
     } catch (error) {
       console.error('❌ Error restoring restaurant:', error)
-      throw error
-    }
-  }
-
-  // Lấy thống kê restaurants
-  async getRestaurantStatistics(): Promise<ApiResponse<RestaurantStatistics>> {
-    try {
-      console.log('📡 Fetching restaurant statistics')
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantStatistics>>(
-        '/api/admin/statistics/restaurants'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ Restaurant statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê nhà hàng')
-    } catch (error) {
-      console.error('❌ Error fetching restaurant statistics:', error)
-      throw error
-    }
-  }
-
-  // Lấy restaurants theo type
-  async getRestaurantsByType(
-    type: string, 
-    page: number = 0, 
-    size: number = 20
-  ): Promise<ApiResponse<RestaurantsPageResponse>> {
-    try {
-      console.log('📡 Fetching restaurants by type:', type)
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantsPageResponse>>(
-        `${this.baseURL}/type/${type}?page=${page}&size=${size}`
-      )
-      
-      if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data.content.length} restaurants by type`)
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải nhà hàng theo loại')
-    } catch (error) {
-      console.error('❌ Error fetching restaurants by type:', error)
-      throw error
-    }
-  }
-
-  // Lấy restaurants theo region
-  async getRestaurantsByRegion(
-    region: string, 
-    page: number = 0, 
-    size: number = 20
-  ): Promise<ApiResponse<RestaurantsPageResponse>> {
-    try {
-      console.log('📡 Fetching restaurants by region:', region)
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantsPageResponse>>(
-        `${this.baseURL}/region/${region}?page=${page}&size=${size}`
-      )
-      
-      if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data.content.length} restaurants by region`)
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải nhà hàng theo khu vực')
-    } catch (error) {
-      console.error('❌ Error fetching restaurants by region:', error)
-      throw error
-    }
-  }
-
-  // Tìm kiếm restaurants
-  async searchRestaurants(
-    query: string, 
-    page: number = 0, 
-    size: number = 20
-  ): Promise<ApiResponse<RestaurantsPageResponse>> {
-    try {
-      console.log('📡 Searching restaurants:', query)
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantsPageResponse>>(
-        `${this.baseURL}/search?q=${encodeURIComponent(query)}&page=${page}&size=${size}`
-      )
-      
-      if (response.data.status === 200) {
-        console.log(`✅ Found ${response.data.data.content.length} restaurants`)
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tìm kiếm nhà hàng')
-    } catch (error) {
-      console.error('❌ Error searching restaurants:', error)
-      throw error
-    }
-  }
-
-  // Lấy featured restaurants
-  async getFeaturedRestaurants(
-    page: number = 0, 
-    size: number = 20
-  ): Promise<ApiResponse<RestaurantsPageResponse>> {
-    try {
-      console.log('📡 Fetching featured restaurants')
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantsPageResponse>>(
-        `${this.baseURL}/featured?page=${page}&size=${size}`
-      )
-      
-      if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data.content.length} featured restaurants`)
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải nhà hàng nổi bật')
-    } catch (error) {
-      console.error('❌ Error fetching featured restaurants:', error)
       throw error
     }
   }

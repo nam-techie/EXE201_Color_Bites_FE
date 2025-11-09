@@ -82,7 +82,7 @@ export default function LoginScreen() {
                      </LinearGradient>
                   </View>
 
-                  <Text style={styles.title}>Color Bites</Text>
+                  <Text style={styles.title}>Mumii</Text>
                   <Text style={styles.subtitle}>Vui lòng nhập thông tin để tiếp tục</Text>
 
                   {/* Form */}
