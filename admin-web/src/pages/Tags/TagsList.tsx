@@ -1,11 +1,11 @@
 import {
     DeleteOutlined,
-    DownloadOutlined,
     EditOutlined,
     PlusOutlined,
     TagOutlined,
     UndoOutlined
 } from '@ant-design/icons'
+import { Download } from 'lucide-react'
 import { Button, Card, message } from 'antd'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
@@ -292,13 +292,14 @@ const TagsList: React.FC = () => {
           </div>
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
-          <Button
-            icon={<DownloadOutlined />}
+          <button
             onClick={handleExport}
-            loading={exportLoading}
+            disabled={exportLoading}
+            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            Xuất Excel
-          </Button>
+            <Download className="w-4 h-4" />
+            <span>{exportLoading ? 'Đang xuất...' : 'Xuất Excel'}</span>
+          </button>
           <Button
             type="primary"
             icon={<PlusOutlined />}

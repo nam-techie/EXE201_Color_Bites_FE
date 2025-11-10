@@ -1,11 +1,11 @@
 import {
     DeleteOutlined,
-    DownloadOutlined,
     EyeOutlined,
     FileTextOutlined,
     UndoOutlined
 } from '@ant-design/icons'
-import { Button, Card, Drawer, message } from 'antd'
+import { Download } from 'lucide-react'
+import { Card, Drawer, message } from 'antd'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import DataTable, { DataTableAction, DataTableColumn } from '../../components/common/DataTable'
@@ -240,13 +240,14 @@ const PostsList: React.FC = () => {
             <p className="text-gray-600">Quản lý tất cả bài viết trong hệ thống</p>
           </div>
         </div>
-        <Button
-          icon={<DownloadOutlined />}
+        <button
           onClick={handleExport}
-          loading={exportLoading}
+          disabled={exportLoading}
+          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          Xuất Excel
-        </Button>
+          <Download className="w-4 h-4" />
+          <span>{exportLoading ? 'Đang xuất...' : 'Xuất Excel'}</span>
+        </button>
       </div>
 
       {/* Filter Bar */}
