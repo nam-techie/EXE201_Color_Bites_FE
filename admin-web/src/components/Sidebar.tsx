@@ -1,16 +1,16 @@
 import {
-    BarChart3,
-    CreditCard,
-    FileText,
-    LayoutDashboard,
-    LogOut,
-    Menu,
-    MessageSquare,
-    Smile,
-    Store,
-    Tag,
-    Trophy,
-    Users
+  BarChart3,
+  CreditCard,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  MessageSquare,
+  Smile,
+  Store,
+  Tag,
+  Trophy,
+  Users
 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import { adminApi } from '../services/adminApi'
@@ -79,7 +79,7 @@ const Sidebar = () => {
             <Menu className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Color Bites</h1>
+            <h1 className="text-xl font-bold text-gray-900">Mummi</h1>
           </div>
         </div>
       </div>

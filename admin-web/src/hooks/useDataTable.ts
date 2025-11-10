@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react'
 
 export interface UseDataTableOptions<T> {
   fetchData: (page: number, size: number, filters?: any) => Promise<{
@@ -52,6 +52,35 @@ export const useDataTable = <T>({
   const [filters, setFilters] = useState(initialFilters)
 
   const loadData = useCallback(async (isRefresh = false) => {
+  
+  // Use ref to store fetchData to prevent unnecessary re-renders
+  const fetchDataRef = useRef(fetchData)
+  useEffect(() => {
+    fetchDataRef.current = fetchData
+  }, [fetchData])
+  
+  // Use refs to store current values to avoid closure issues
+  const filtersRef = useRef(filters)
+  const paginationRef = useRef(pagination)
+  
+  useEffect(() => {
+    filtersRef.current = filters
+  }, [filters])
+  
+  useEffect(() => {
+    paginationRef.current = pagination
+  }, [pagination])
+  
+  // Use ref to track previous filters to prevent unnecessary fetches
+  const prevFiltersRef = useRef<any>(null)
+  const prevPaginationRef = useRef({ current: initialPage, pageSize: initialSize })
+  
+  // Debounced search to prevent excessive API calls
+  const debouncedSearch = useDebounce((searchValue: string) => {
+    setFilters(prev => ({ ...prev, search: searchValue }))
+  }, 300)
+
+  const loadData = useCallback(async () => {
     try {
       // Nếu là refresh và có data cũ, chỉ set isRefreshing
       if (isRefresh && preserveDataOnRefresh && data.length > 0) {
@@ -61,7 +90,15 @@ export const useDataTable = <T>({
       }
       setError(null)
       
-      const result = await fetchData(pagination.current, pagination.pageSize, filters)
+      // Use refs to get current values instead of closure
+      const currentPagination = paginationRef.current
+      const currentFilters = filtersRef.current
+      
+      const result = await fetchDataRef.current(
+        currentPagination.current, 
+        currentPagination.pageSize, 
+        currentFilters
+      )
       
       // So sánh data cũ vs mới để quyết định có update không
       const hasDataChanged = JSON.stringify(data) !== JSON.stringify(result.data)
@@ -89,6 +126,7 @@ export const useDataTable = <T>({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchData, filters, preserveDataOnRefresh])
+  }, []) // No dependencies - uses refs instead
 
   const refresh = useCallback(async () => {
     await loadData(true) // Truyền isRefresh = true
@@ -111,6 +149,24 @@ export const useDataTable = <T>({
   const memoizedData = useMemo(() => data, [data])
 
   // Load data once on mount
+  // Auto fetch data when dependencies change, but only if they actually changed
+  useEffect(() => {
+    if (!autoFetch) return
+    
+    const paginationChanged = 
+      prevPaginationRef.current.current !== pagination.current ||
+      prevPaginationRef.current.pageSize !== pagination.pageSize
+    
+    const filtersChanged = !deepEqual(prevFiltersRef.current, filters)
+    
+    if (paginationChanged || filtersChanged) {
+      prevPaginationRef.current = { ...pagination }
+      prevFiltersRef.current = filters
+      loadData()
+    }
+  }, [pagination.current, pagination.pageSize, filters, autoFetch, loadData])
+
+  // Initial fetch on mount
   useEffect(() => {
     // Load data once when component mounts
     const loadInitialData = async () => {
@@ -138,6 +194,13 @@ export const useDataTable = <T>({
     loadInitialData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Only load once on mount
+    if (autoFetch) {
+      prevPaginationRef.current = { ...pagination }
+      prevFiltersRef.current = filters
+      loadData()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run on mount
 
   return {
     data: memoizedData,

@@ -39,16 +39,24 @@ const ChallengesList: React.FC = () => {
     setFilters
   } = useDataTable<Challenge>({
     fetchData: async (page, size, filters) => {
-      const response = await challengesApi.getChallenges({
-        ...filters,
-        page: page - 1,
-        size: size
-      })
-      return {
-        data: response.data.content,
-        total: response.data.totalElements,
-        page: response.data.number + 1,
-        size: response.data.size
+      try {
+        const response = await challengesApi.getChallenges({
+          ...filters,
+          page: page - 1,
+          size: size
+        })
+        return {
+          data: response.data.content,
+          total: response.data.totalElements,
+          page: response.data.number + 1,
+          size: response.data.size
+        }
+      } catch (error: any) {
+        // Nếu là lỗi 403, hiển thị message rõ ràng
+        if (error.response?.status === 403) {
+          message.error('Bạn không có quyền truy cập danh sách challenges. Vui lòng kiểm tra quyền của tài khoản.')
+        }
+        throw error
       }
     },
     initialFilters: {
@@ -90,7 +98,7 @@ const ChallengesList: React.FC = () => {
       key: 'type',
       title: 'Loại',
       render: (_, record) => {
-        const config = CHALLENGE_TYPE_CONFIG[record.type]
+        const config = CHALLENGE_TYPE_CONFIG[record.type] || { icon: '📋', label: record.challengeType || 'N/A', color: '#666' }
         return (
           <div className="flex items-center space-x-2">
             <span className="text-lg">{config.icon}</span>
@@ -103,7 +111,7 @@ const ChallengesList: React.FC = () => {
       key: 'status',
       title: 'Trạng thái',
       render: (_, record) => {
-        const config = CHALLENGE_STATUS_CONFIG[record.status]
+        const config = CHALLENGE_STATUS_CONFIG[record.status] || { label: record.isActive ? 'Hoạt động' : 'Không hoạt động', color: '#666', bgColor: '#f5f5f5' }
         return (
           <Tag color={config.color} style={{ backgroundColor: config.bgColor }}>
             {config.label}
@@ -117,11 +125,36 @@ const ChallengesList: React.FC = () => {
       render: (_, record) => (
         <div className="text-center">
           <div className="font-medium text-blue-600">
-            {formatNumber(record.participantCount)}
+            {formatNumber(record.participantCount || 0)}
           </div>
           <div className="text-xs text-gray-500">
-            {formatNumber(record.completionCount)} hoàn thành
+            {formatNumber(record.completionCount || 0)} hoàn thành
           </div>
+          {record.targetCount && (
+            <div className="text-xs text-gray-400">
+              Mục tiêu: {formatNumber(record.targetCount)}
+            </div>
+          )}
+        </div>
+      )
+    },
+    {
+      key: 'restaurant',
+      title: 'Nhà hàng',
+      render: (_, record) => (
+        <div>
+          {record.restaurantName ? (
+            <div className="text-sm">
+              <div className="font-medium text-gray-900">{record.restaurantName}</div>
+              {record.restaurantId && (
+                <div className="text-xs text-gray-500 mt-1">
+                  ID: {record.restaurantId.slice(0, 8)}...
+                </div>
+              )}
+            </div>
+          ) : (
+            <span className="text-gray-400 text-sm">N/A</span>
+          )}
         </div>
       )
     },

@@ -2,48 +2,24 @@ import type {
     ApiResponse,
     PostDetail,
     PostFilters,
-    PostsPageResponse,
-    PostStatistics
+    PostsPageResponse
 } from '../types/post'
 import { adminApi } from './adminApi'
 
 class PostsApiService {
   private baseURL = '/api/admin/posts'
 
-  // Lấy danh sách posts với pagination và filters
+  // GET /api/admin/posts - Lấy danh sách posts với pagination (tương thích với PostsList)
   async getPosts(
     page: number = 0, 
-    size: number = 20, 
+    size: number = 10,
     filters?: PostFilters
   ): Promise<ApiResponse<PostsPageResponse>> {
     try {
       console.log('📡 Fetching posts:', { page, size, filters })
       
-      const params = new URLSearchParams({
-        page: page.toString(),
-        size: size.toString()
-      })
-
-      // Add filters to params
-      if (filters?.search) {
-        params.append('search', filters.search)
-      }
-      if (filters?.status && filters.status !== 'all') {
-        params.append('status', filters.status)
-      }
-      if (filters?.moodId) {
-        params.append('moodId', filters.moodId)
-      }
-      if (filters?.authorId) {
-        params.append('authorId', filters.authorId)
-      }
-      if (filters?.dateRange) {
-        params.append('startDate', filters.dateRange.start)
-        params.append('endDate', filters.dateRange.end)
-      }
-
       const response = await adminApi.axiosInstance.get<ApiResponse<PostsPageResponse>>(
-        `${this.baseURL}?${params.toString()}`
+        `${this.baseURL}?page=${page}&size=${size}`
       )
       
       if (response.data.status === 200) {
@@ -58,10 +34,18 @@ class PostsApiService {
     }
   }
 
-  // Lấy chi tiết post
+  // Alias cho getAllPosts
+  async getAllPosts(
+    page: number = 0, 
+    size: number = 10
+  ): Promise<ApiResponse<PostsPageResponse>> {
+    return this.getPosts(page, size)
+  }
+
+  // GET /api/admin/posts/{id} - Lấy chi tiết post (tương thích với PostDetail)
   async getPostDetail(postId: string): Promise<ApiResponse<PostDetail>> {
     try {
-      console.log('📡 Fetching post detail:', postId)
+      console.log('📡 Fetching post by id:', postId)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<PostDetail>>(
         `${this.baseURL}/${postId}`
@@ -79,7 +63,12 @@ class PostsApiService {
     }
   }
 
-  // Xóa post (soft delete)
+  // Alias cho getPostDetail
+  async getPostById(postId: string): Promise<ApiResponse<PostDetail>> {
+    return this.getPostDetail(postId)
+  }
+
+  // DELETE /api/admin/posts/{id} - Xóa post
   async deletePost(postId: string): Promise<ApiResponse<void>> {
     try {
       console.log('📤 Deleting post:', postId)
@@ -100,7 +89,7 @@ class PostsApiService {
     }
   }
 
-  // Khôi phục post đã xóa
+  // PUT /api/admin/posts/{id}/restore - Khôi phục post đã xóa
   async restorePost(postId: string): Promise<ApiResponse<void>> {
     try {
       console.log('📤 Restoring post:', postId)
@@ -117,102 +106,6 @@ class PostsApiService {
       throw new Error(response.data.message || 'Không thể khôi phục bài viết')
     } catch (error) {
       console.error('❌ Error restoring post:', error)
-      throw error
-    }
-  }
-
-  // Lấy thống kê posts
-  async getPostStatistics(): Promise<ApiResponse<PostStatistics>> {
-    try {
-      console.log('📡 Fetching post statistics')
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<PostStatistics>>(
-        '/api/admin/statistics/posts'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ Post statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê bài viết')
-    } catch (error) {
-      console.error('❌ Error fetching post statistics:', error)
-      throw error
-    }
-  }
-
-  // Lấy posts theo author
-  async getPostsByAuthor(
-    authorId: string, 
-    page: number = 0, 
-    size: number = 20
-  ): Promise<ApiResponse<PostsPageResponse>> {
-    try {
-      console.log('📡 Fetching posts by author:', authorId)
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<PostsPageResponse>>(
-        `${this.baseURL}/author/${authorId}?page=${page}&size=${size}`
-      )
-      
-      if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data.content.length} posts by author`)
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải bài viết của tác giả')
-    } catch (error) {
-      console.error('❌ Error fetching posts by author:', error)
-      throw error
-    }
-  }
-
-  // Lấy posts theo mood
-  async getPostsByMood(
-    moodId: string, 
-    page: number = 0, 
-    size: number = 20
-  ): Promise<ApiResponse<PostsPageResponse>> {
-    try {
-      console.log('📡 Fetching posts by mood:', moodId)
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<PostsPageResponse>>(
-        `${this.baseURL}/mood/${moodId}?page=${page}&size=${size}`
-      )
-      
-      if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data.content.length} posts by mood`)
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải bài viết theo tâm trạng')
-    } catch (error) {
-      console.error('❌ Error fetching posts by mood:', error)
-      throw error
-    }
-  }
-
-  // Tìm kiếm posts
-  async searchPosts(
-    query: string, 
-    page: number = 0, 
-    size: number = 20
-  ): Promise<ApiResponse<PostsPageResponse>> {
-    try {
-      console.log('📡 Searching posts:', query)
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<PostsPageResponse>>(
-        `${this.baseURL}/search?q=${encodeURIComponent(query)}&page=${page}&size=${size}`
-      )
-      
-      if (response.data.status === 200) {
-        console.log(`✅ Found ${response.data.data.content.length} posts`)
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tìm kiếm bài viết')
-    } catch (error) {
-      console.error('❌ Error searching posts:', error)
       throw error
     }
   }

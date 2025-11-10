@@ -1,12 +1,12 @@
-# 🍎 Color Bites - Frontend Application
+# 🍎 Mummi - Frontend Application
 
-![Color Bites Logo](./assets/images/icon.png)
+![Mummi Logo](./assets/images/icon.png)
 
-**Color Bites** là một ứng dụng di động được phát triển bằng React Native và Expo, tập trung vào trải nghiệm người dùng với giao diện hiện đại và hỗ trợ đa nền tảng.
+**Mummi** là một ứng dụng di động được phát triển bằng React Native và Expo, tập trung vào trải nghiệm người dùng với giao diện hiện đại và hỗ trợ đa nền tảng.
 
 ## 📱 Tổng quan dự án
 
-- **Tên dự án**: Color Bites (color-bite)
+- **Tên dự án**: Mummi (color-bite)
 - **Phiên bản**: 1.0.0
 - **Framework**: Expo SDK 53 với React Native 0.79.5
 - **Ngôn ngữ**: TypeScript
@@ -302,7 +302,7 @@ Dự án này là private và thuộc về team phát triển EXE201_Color_Bites
 
 ## 👥 Team
 
-**EXE201 - Color Bites Development Team**
+**EXE201 - Mummi Development Team**
 
 ---
 

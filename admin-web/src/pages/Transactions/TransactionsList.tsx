@@ -84,7 +84,7 @@ const TransactionsList: React.FC = () => {
       width: 80,
       render: (id: string) => (
         <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-          {id.slice(0, 8)}...
+          {id ? id.slice(0, 8) + '...' : 'N/A'}
         </span>
       )
     },
@@ -111,7 +111,7 @@ const TransactionsList: React.FC = () => {
             {displayCurrency(record.amount)} {displayValue(record.currency)}
           </div>
           <div className="text-xs text-gray-500">
-            {displayValue(record.plan)}
+            {displayValue(record.plan || 0)}
           </div>
         </div>
       )
@@ -132,7 +132,12 @@ const TransactionsList: React.FC = () => {
       key: 'status',
       title: 'Trạng thái',
       render: (_, record) => {
-        const config = TRANSACTION_STATUS_CONFIG[record.status]
+        const config = TRANSACTION_STATUS_CONFIG[record.status] || { 
+          label: record.status || 'N/A', 
+          color: 'default', 
+          bgColor: '#f5f5f5', 
+          textColor: '#8c8c8c' 
+        }
         return (
           <span style={{
             padding: '4px 12px',

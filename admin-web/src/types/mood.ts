@@ -1,23 +1,23 @@
-// Mood type definitions
+// Mood type definitions - khớp với AdminMoodResponse từ backend
 export interface Mood {
   id: string
   name: string
-  description: string
-  usageCount: number
+  emoji: string // Backend trả về emoji character
   createdAt: string
-  updatedAt: string
-  isDeleted: boolean
+  updatedAt?: string
+  isDeleted?: boolean
+  usageCount?: number // Có thể không có trong response
 }
 
 // API request/response types
 export interface CreateMoodDto {
   name: string
-  description: string
+  emoji: string
 }
 
 export interface UpdateMoodDto {
   name?: string
-  description?: string
+  emoji?: string
 }
 
 export interface MoodListParams {

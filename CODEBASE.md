@@ -1,4 +1,4 @@
-# 📚 Color Bites - Codebase Documentation
+# 📚 Mummi - Codebase Documentation
 
 ## 🏗️ Architecture Overview
 

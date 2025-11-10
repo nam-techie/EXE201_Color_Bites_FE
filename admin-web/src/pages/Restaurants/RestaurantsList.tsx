@@ -62,13 +62,13 @@ const RestaurantsList: React.FC = () => {
       render: (name: string, record) => (
         <div style={{ maxWidth: 200 }}>
           <div style={{ fontWeight: 500, marginBottom: 4 }}>
-            {displayValue(name)}
+            {displayValue(name || 'N/A')}
             {record.featured && (
               <StarOutlined style={{ color: '#faad14', marginLeft: 8 }} />
             )}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            <EnvironmentOutlined /> {displayValue(truncateText(record.address, 50))}
+            <EnvironmentOutlined /> {displayValue(truncateText(record.address || 'N/A', 50))}
           </div>
         </div>
       )
@@ -83,14 +83,14 @@ const RestaurantsList: React.FC = () => {
           backgroundColor: '#f0f0f0',
           fontSize: '12px'
         }}>
-          {displayValue(record.type, 'Chưa phân loại')}
+          {displayValue(record.type || 'N/A', 'Chưa phân loại')}
         </span>
       )
     },
     {
       key: 'region',
       title: 'Khu vực',
-      render: (_, record) => displayValue(record.region, 'Chưa có khu vực')
+      render: (_, record) => displayValue(record.region || 'N/A', 'Chưa có khu vực')
     },
     {
       key: 'rating',
@@ -98,10 +98,10 @@ const RestaurantsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            ⭐ {displayValue(record.rating?.toFixed(1), '0.0')}
+            ⭐ {record.rating != null ? displayValue(record.rating?.toFixed(1) : 'N/A', '0.0')}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {displayCurrency(record.avgPrice, '0')}/người
+            {displayCurrency(record.avgPrice || 0, '0')}/người
           </div>
         </div>
       )
@@ -111,7 +111,7 @@ const RestaurantsList: React.FC = () => {
       title: 'Thống kê',
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
-          <div>❤️ {displayNumber(record.favoriteCount, '0')}</div>
+          <div>❤️ {displayNumber(record.favoriteCount || 0, '0')}</div>
         </div>
       )
     },
@@ -120,9 +120,9 @@ const RestaurantsList: React.FC = () => {
       title: 'Người tạo',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 500 }}>{displayValue(record.createdByName)}</div>
+          <div style={{ fontWeight: 500 }}>{displayValue(record.createdByName || 'N/A')}</div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {displayValue(record.creatorEmail)}
+            {displayValue(record.creatorEmail || 'N/A')}
           </div>
         </div>
       )

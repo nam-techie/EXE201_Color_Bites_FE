@@ -1,4 +1,3 @@
-import { AxiosInstance } from 'axios'
 import type {
     Challenge,
     ChallengeEntry,
@@ -11,42 +10,238 @@ import type { ApiResponse, PagedResponse } from '../types/user'
 import { adminApi } from './adminApi'
 
 class ChallengesApiService {
-  constructor(private axiosInstance: AxiosInstance) {}
+  private baseURL = '/api/admin/challenges'
 
-  // Lấy danh sách challenges với pagination
+  // GET /api/admin/challenges - Lấy toàn bộ challenges (tương thích với ChallengesList)
   async getChallenges(params: ChallengeListParams = {}): Promise<ApiResponse<PagedResponse<Challenge>>> {
     try {
-      console.log('📡 Fetching challenges list:', params)
+      console.log('📡 Fetching all challenges:', params)
       
-      const response = await this.axiosInstance.get<ApiResponse<PagedResponse<Challenge>>>(
-        '/api/challenges',
-        { params }
+      // Gọi API giống như postsApi - interceptor sẽ tự động thêm token
+      const response = await adminApi.axiosInstance.get<ApiResponse<any[]>>(
+        this.baseURL
       )
       
       if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data?.content?.length || 0} challenges`)
-        return response.data
+        // Backend trả về List<ChallengeDefinitionResponse>, map sang Challenge interface
+        const rawChallenges = response.data.data || []
+        
+        // Map từ ChallengeDefinitionResponse sang Challenge
+        const challenges: Challenge[] = rawChallenges.map((raw: any) => {
+          // Map challengeType sang type (nếu cần)
+          let mappedType: 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE' = 'FOOD_CHALLENGE'
+          if (raw.challengeType) {
+            // Map các challengeType từ backend sang type trong frontend
+            const typeMap: Record<string, 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE'> = {
+              'FOOD_CHALLENGE': 'FOOD_CHALLENGE',
+              'PHOTO_CHALLENGE': 'PHOTO_CHALLENGE',
+              'REVIEW_CHALLENGE': 'REVIEW_CHALLENGE',
+              'SOCIAL_CHALLENGE': 'SOCIAL_CHALLENGE',
+              'PARTNER_LOCATION': 'FOOD_CHALLENGE' // Default mapping
+            }
+            mappedType = typeMap[raw.challengeType] || 'FOOD_CHALLENGE'
+          }
+          
+          // Map isActive sang status
+          let mappedStatus: 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'CANCELLED' = 'INACTIVE'
+          if (raw.isActive === true) {
+            // Check if challenge is completed based on dates
+            const now = new Date()
+            const endDate = new Date(raw.endDate)
+            if (endDate < now) {
+              mappedStatus = 'COMPLETED'
+            } else {
+              mappedStatus = 'ACTIVE'
+            }
+          } else {
+            mappedStatus = 'INACTIVE'
+          }
+          
+          return {
+            id: raw.id || '',
+            title: raw.title || '',
+            description: raw.description || '',
+            challengeType: raw.challengeType || '',
+            type: mappedType,
+            status: mappedStatus,
+            restaurantId: raw.restaurantId || null,
+            restaurantName: raw.restaurantName || null,
+            typeObjId: raw.typeObjId || null,
+            typeObjName: raw.typeObjName || null,
+            images: raw.images || null,
+            targetCount: raw.targetCount || 0,
+            startDate: raw.startDate || '',
+            endDate: raw.endDate || '',
+            rewardDescription: raw.rewardDescription || null,
+            reward: raw.rewardDescription || null, // Alias
+            createdBy: raw.createdBy || '',
+            createdAt: raw.createdAt || '',
+            isActive: raw.isActive ?? false,
+            participantCount: raw.participantCount || 0,
+            completionCount: raw.completionCount || 0
+          } as Challenge
+        })
+        
+        // Apply client-side filtering if needed
+        let filteredChallenges = challenges
+        
+        if (params.search) {
+          const searchLower = params.search.toLowerCase()
+          filteredChallenges = filteredChallenges.filter(c => 
+            c.title?.toLowerCase().includes(searchLower) ||
+            c.description?.toLowerCase().includes(searchLower) ||
+            c.restaurantName?.toLowerCase().includes(searchLower)
+          )
+        }
+        if (params.type) {
+          filteredChallenges = filteredChallenges.filter(c => c.type === params.type)
+        }
+        if (params.status) {
+          filteredChallenges = filteredChallenges.filter(c => c.status === params.status)
+        }
+        
+        // Client-side sorting
+        if (params.sortBy) {
+          filteredChallenges.sort((a, b) => {
+            let aVal: any = a[params.sortBy as keyof Challenge]
+            let bVal: any = b[params.sortBy as keyof Challenge]
+            
+            if (aVal == null) aVal = ''
+            if (bVal == null) bVal = ''
+            
+            if (typeof aVal === 'string') {
+              aVal = aVal.toLowerCase()
+              bVal = bVal.toLowerCase()
+            }
+            
+            const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+            return params.order === 'desc' ? -comparison : comparison
+          })
+        }
+        
+        // Client-side pagination
+        const page = params.page || 0
+        const size = params.size || 10
+        const startIndex = page * size
+        const endIndex = startIndex + size
+        const paginatedData = filteredChallenges.slice(startIndex, endIndex)
+        
+        const pagedResponse: PagedResponse<Challenge> = {
+          content: paginatedData,
+          totalElements: filteredChallenges.length,
+          totalPages: Math.ceil(filteredChallenges.length / size),
+          size: size,
+          number: page
+        }
+        
+        console.log(`✅ Fetched ${paginatedData.length} challenges (${filteredChallenges.length} total)`)
+        return {
+          status: 200,
+          message: 'Success',
+          data: pagedResponse
+        }
       }
       
       throw new Error(response.data.message || 'Không thể tải danh sách challenges')
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Error fetching challenges:', error)
-      throw error
+      console.error('❌ Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        statusText: error.response?.statusText
+      })
+      
+      // Nếu là lỗi 403, throw error để hiển thị message cho user
+      if (error.response?.status === 403) {
+        throw error
+      }
+      
+      // Return empty response instead of throwing to prevent page crash
+      return {
+        status: 200,
+        message: 'Success',
+        data: {
+          content: [],
+          totalElements: 0,
+          totalPages: 0,
+          size: params.size || 10,
+          number: params.page || 0
+        }
+      }
     }
   }
 
-  // Lấy chi tiết challenge
+  // GET /api/admin/challenges/{id} - Lấy chi tiết challenge
   async getChallengeById(id: string): Promise<ApiResponse<Challenge>> {
     try {
       console.log('📡 Fetching challenge details:', id)
       
-      const response = await this.axiosInstance.get<ApiResponse<Challenge>>(
-        `/api/challenges/${id}`
+      const response = await adminApi.axiosInstance.get<ApiResponse<any>>(
+        `${this.baseURL}/${id}`
       )
       
       if (response.data.status === 200) {
+        // Map từ ChallengeDefinitionResponse sang Challenge
+        const raw = response.data.data
+        
+        // Map challengeType sang type
+        let mappedType: 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE' = 'FOOD_CHALLENGE'
+        if (raw.challengeType) {
+          const typeMap: Record<string, 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE'> = {
+            'FOOD_CHALLENGE': 'FOOD_CHALLENGE',
+            'PHOTO_CHALLENGE': 'PHOTO_CHALLENGE',
+            'REVIEW_CHALLENGE': 'REVIEW_CHALLENGE',
+            'SOCIAL_CHALLENGE': 'SOCIAL_CHALLENGE',
+            'PARTNER_LOCATION': 'FOOD_CHALLENGE'
+          }
+          mappedType = typeMap[raw.challengeType] || 'FOOD_CHALLENGE'
+        }
+        
+        // Map isActive sang status
+        let mappedStatus: 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'CANCELLED' = 'INACTIVE'
+        if (raw.isActive === true) {
+          const now = new Date()
+          const endDate = new Date(raw.endDate)
+          if (endDate < now) {
+            mappedStatus = 'COMPLETED'
+          } else {
+            mappedStatus = 'ACTIVE'
+          }
+        } else {
+          mappedStatus = 'INACTIVE'
+        }
+        
+        const challenge: Challenge = {
+          id: raw.id || '',
+          title: raw.title || '',
+          description: raw.description || '',
+          challengeType: raw.challengeType || '',
+          type: mappedType,
+          status: mappedStatus,
+          restaurantId: raw.restaurantId || null,
+          restaurantName: raw.restaurantName || null,
+          typeObjId: raw.typeObjId || null,
+          typeObjName: raw.typeObjName || null,
+          images: raw.images || null,
+          targetCount: raw.targetCount || 0,
+          startDate: raw.startDate || '',
+          endDate: raw.endDate || '',
+          rewardDescription: raw.rewardDescription || null,
+          reward: raw.rewardDescription || null,
+          createdBy: raw.createdBy || '',
+          createdAt: raw.createdAt || '',
+          isActive: raw.isActive ?? false,
+          participantCount: raw.participantCount || 0,
+          completionCount: raw.completionCount || 0
+        }
+        
         console.log('✅ Fetched challenge details successfully')
-        return response.data
+        return {
+          status: 200,
+          message: 'Success',
+          data: challenge
+        }
       }
       
       throw new Error(response.data.message || 'Không thể tải chi tiết challenge')
@@ -61,7 +256,7 @@ class ChallengesApiService {
     try {
       console.log('📤 Creating new challenge:', data)
       
-      const response = await this.axiosInstance.post<ApiResponse<Challenge>>(
+      const response = await adminApi.axiosInstance.post<ApiResponse<Challenge>>(
         '/api/challenges',
         data
       )
@@ -83,7 +278,7 @@ class ChallengesApiService {
     try {
       console.log('📤 Updating challenge:', id, data)
       
-      const response = await this.axiosInstance.put<ApiResponse<Challenge>>(
+      const response = await adminApi.axiosInstance.put<ApiResponse<Challenge>>(
         `/api/challenges/${id}`,
         data
       )
@@ -105,7 +300,7 @@ class ChallengesApiService {
     try {
       console.log('📤 Deleting challenge:', id)
       
-      const response = await this.axiosInstance.delete<ApiResponse<void>>(
+      const response = await adminApi.axiosInstance.delete<ApiResponse<void>>(
         `/api/challenges/${id}`
       )
       
@@ -126,7 +321,7 @@ class ChallengesApiService {
     try {
       console.log('📤 Activating challenge:', id)
       
-      const response = await this.axiosInstance.put<ApiResponse<void>>(
+      const response = await adminApi.axiosInstance.put<ApiResponse<void>>(
         `/api/challenges/${id}/activate`
       )
       
@@ -147,7 +342,7 @@ class ChallengesApiService {
     try {
       console.log('📤 Deactivating challenge:', id)
       
-      const response = await this.axiosInstance.put<ApiResponse<void>>(
+      const response = await adminApi.axiosInstance.put<ApiResponse<void>>(
         `/api/challenges/${id}/deactivate`
       )
       
@@ -168,7 +363,7 @@ class ChallengesApiService {
     try {
       console.log('📡 Fetching challenge entries:', challengeId, params)
       
-      const response = await this.axiosInstance.get<ApiResponse<PagedResponse<ChallengeEntry>>>(
+      const response = await adminApi.axiosInstance.get<ApiResponse<PagedResponse<ChallengeEntry>>>(
         `/api/challenges/${challengeId}/entries`,
         { params }
       )
@@ -190,7 +385,7 @@ class ChallengesApiService {
     try {
       console.log('📤 Approving entry:', entryId)
       
-      const response = await this.axiosInstance.put<ApiResponse<void>>(
+      const response = await adminApi.axiosInstance.put<ApiResponse<void>>(
         `/api/challenges/entries/${entryId}/approve`
       )
       
@@ -211,7 +406,7 @@ class ChallengesApiService {
     try {
       console.log('📤 Rejecting entry:', entryId)
       
-      const response = await this.axiosInstance.put<ApiResponse<void>>(
+      const response = await adminApi.axiosInstance.put<ApiResponse<void>>(
         `/api/challenges/entries/${entryId}/reject`
       )
       
@@ -232,7 +427,7 @@ class ChallengesApiService {
     try {
       console.log('📡 Fetching challenge statistics')
       
-      const response = await this.axiosInstance.get<ApiResponse<ChallengeStats>>(
+      const response = await adminApi.axiosInstance.get<ApiResponse<ChallengeStats>>(
         '/api/admin/statistics/challenges'
       )
       
@@ -250,5 +445,5 @@ class ChallengesApiService {
 }
 
 // Export singleton instance
-export const challengesApi = new ChallengesApiService(adminApi.axiosInstance)
+export const challengesApi = new ChallengesApiService()
 export default challengesApi

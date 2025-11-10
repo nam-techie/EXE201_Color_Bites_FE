@@ -1,6 +1,6 @@
-# Color Bites Admin Dashboard
+# Mummi Admin Dashboard
 
-Admin dashboard cho hệ thống Color Bites - ứng dụng chia sẻ ẩm thực và trải nghiệm ăn uống.
+Admin dashboard cho hệ thống Mummi - ứng dụng chia sẻ ẩm thực và trải nghiệm ăn uống.
 
 ## 🚀 Tính năng chính
 
@@ -71,7 +71,7 @@ cp .env.example .env
 Chỉnh sửa file `.env`:
 ```env
 VITE_API_BASE_URL=https://mumii-be.namtechie.id.vn
-VITE_APP_NAME=Color Bites Admin
+VITE_APP_NAME=Mummi Admin
 ```
 
 ### 4. Chạy development server
@@ -421,7 +421,7 @@ npm run build
 ### Environment Variables
 ```env
 VITE_API_BASE_URL=https://your-api-url.com
-VITE_APP_NAME=Color Bites Admin
+VITE_APP_NAME=Mummi Admin
 VITE_APP_VERSION=1.0.0
 ```
 
@@ -457,4 +457,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**Color Bites Admin Dashboard** - Quản lý hệ thống ẩm thực một cách thông minh và hiệu quả! 🍽️✨
+**Mummi Admin Dashboard** - Quản lý hệ thống ẩm thực một cách thông minh và hiệu quả! 🍽️✨
