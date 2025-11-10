@@ -14,7 +14,7 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { commentsApi } from '../../services/commentsApi'
 import type { Comment } from '../../types/comment'
-import { displayValue, formatDate, truncateText } from '../../utils/formatters'
+import { formatDate, truncateText } from '../../utils/formatters'
 import CommentDetail from './CommentDetail.tsx'
 
 
@@ -50,8 +50,7 @@ const CommentsList: React.FC = () => {
       }
     },
     initialFilters: {
-      search: '',
-      isDeleted: undefined
+      search: ''
     }
   })
 
@@ -86,7 +85,7 @@ const CommentsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500, maxWidth: 200 }}>
-            {record.postTitle || record.post?.title || 'N/A'}
+            {record.post?.title || record.postId || 'N/A'}
           </div>
           {record.postId && (
             <div style={{ fontSize: '12px', color: '#666' }}>
@@ -102,11 +101,11 @@ const CommentsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            {record.postAuthorName || record.user?.name || record.accountName || 'N/A'}
+            {record.user?.name || record.userId || 'N/A'}
           </div>
-          {(record.authorEmail || record.user?.email) && (
+          {record.user?.email && (
             <div style={{ fontSize: '12px', color: '#666' }}>
-              {record.authorEmail || record.user?.email}
+              {record.user.email}
             </div>
           )}
         </div>
@@ -116,35 +115,24 @@ const CommentsList: React.FC = () => {
       key: 'status',
       title: 'Trạng thái',
       render: (_, record) => {
-        // Map isDeleted sang status: false = Public, true = Đã xóa
         const statusConfig: Record<string, { color: string; bg: string; text: string }> = {
-          active: { color: '#52c41a', bg: '#f6ffed', text: 'Public' },
+          active: { color: '#52c41a', bg: '#f6ffed', text: 'Hoạt động' },
           hidden: { color: '#faad14', bg: '#fffbe6', text: 'Ẩn' },
-          reported: { color: '#ff4d4f', bg: '#fff2f0', text: 'Báo cáo' },
-          deleted: { color: '#8c8c8c', bg: '#f5f5f5', text: 'Đã xóa' }
+          reported: { color: '#ff4d4f', bg: '#fff2f0', text: 'Báo cáo' }
         }
         
-        let config
-        if (record.isDeleted === true) {
-          config = statusConfig.deleted
-        } else if (record.isDeleted === false) {
-          config = statusConfig.active
-        } else if (record.status) {
-          config = statusConfig[record.status] || { color: '#666', bg: '#f5f5f5', text: record.status || 'N/A' }
-        } else {
-          config = statusConfig.active // Default to public
-        }
+        const config = statusConfig[record.status] || { color: '#666', bg: '#f5f5f5', text: record.status || 'N/A' }
         
         return (
           <span style={{
             padding: '2px 8px',
             borderRadius: '12px',
-            backgroundColor: statusConfig.bg,
-            color: statusConfig.color,
+            backgroundColor: config.bg,
+            color: config.color,
             fontSize: '12px',
             fontWeight: 500
           }}>
-            {statusConfig.text}
+            {config.text}
           </span>
         )
       }
@@ -174,7 +162,7 @@ const CommentsList: React.FC = () => {
       icon: <DeleteOutlined />,
       type: 'link',
       danger: true,
-      visible: (record) => !record.isDeleted,
+      visible: (record) => record.status !== 'hidden',
       onClick: async (record) => {
         const confirmed = await confirm({
           title: 'Xóa bình luận',
@@ -198,7 +186,7 @@ const CommentsList: React.FC = () => {
       label: 'Khôi phục',
       icon: <UndoOutlined />,
       type: 'link',
-      visible: (record) => record.isDeleted,
+      visible: (record) => record.status === 'hidden',
       onClick: async (record) => {
         const confirmed = await confirm({
           title: 'Khôi phục bình luận',
@@ -219,29 +207,12 @@ const CommentsList: React.FC = () => {
     },
   ]
 
-  // Filter options
-  const filterOptions = [
-    {
-      key: 'isDeleted',
-      label: 'Trạng thái',
-      options: [
-        { key: 'all', label: 'Tất cả', value: undefined },
-        { key: 'active', label: 'Hoạt động', value: false },
-        { key: 'deleted', label: 'Đã xóa', value: true }
-      ],
-      value: filters.isDeleted,
-      onChange: (value: boolean | undefined) => {
-        setFilters({ ...filters, isDeleted: value })
-      }
-    }
-  ]
-
   const handleSearch = (value: string) => {
     setFilters({ ...filters, search: value })
   }
 
   const handleReset = () => {
-    setFilters({ search: '', isDeleted: undefined })
+    setFilters({ search: '' })
   }
 
   return (
@@ -264,7 +235,6 @@ const CommentsList: React.FC = () => {
         searchPlaceholder="Tìm kiếm theo nội dung, người dùng..."
         searchValue={filters.search}
         onSearch={handleSearch}
-        filters={filterOptions}
         onReset={handleReset}
         showExport={true}
         onExport={() => {

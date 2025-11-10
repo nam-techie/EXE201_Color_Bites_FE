@@ -29,7 +29,7 @@ const RestaurantAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getRestaurantStatistics()
-        setStats(response)
+        setStats(response.data)
       } catch (err) {
         console.error('Error fetching restaurant statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê nhà hàng')

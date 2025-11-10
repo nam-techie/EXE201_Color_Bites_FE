@@ -38,10 +38,10 @@ const TagForm: React.FC<TagFormProps> = ({
     setLoading(true)
     try {
       if (isEditing && tag) {
-        await tagsApi.updateTag(tag.id, values.name, values.description)
+        await tagsApi.updateTag(tag.id, { name: values.name, description: values.description })
         message.success('Cập nhật tag thành công')
       } else {
-        await tagsApi.createTag(values.name, values.description)
+        await tagsApi.createTag({ name: values.name, description: values.description })
         message.success('Tạo tag thành công')
       }
       onSubmit()

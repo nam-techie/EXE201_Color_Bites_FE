@@ -29,7 +29,7 @@ const UserAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getUserStatistics()
-        setStats(response)
+        setStats(response.data)
       } catch (err) {
         console.error('Error fetching user statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê người dùng')

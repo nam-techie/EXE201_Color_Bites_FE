@@ -3,7 +3,6 @@ import {
     CreditCard,
     FileText,
     Store,
-    TrendingUp,
     Users
 } from 'lucide-react'
 import { Card, Col, Row } from 'antd'

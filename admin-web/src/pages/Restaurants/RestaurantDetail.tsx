@@ -28,7 +28,7 @@ import ConfirmModal from '../../components/common/ConfirmModal'
 import { useConfirm } from '../../hooks/useConfirm'
 import { restaurantsApi } from '../../services/restaurantsApi'
 import type { RestaurantDetail as RestaurantDetailType, RestaurantResponse } from '../../types/restaurant'
-import { displayValue, displayCurrency, displayNumber, formatCurrency, formatDate, formatRelativeTime } from '../../utils/formatters'
+import { displayValue, displayCurrency, displayNumber, formatDate, formatRelativeTime } from '../../utils/formatters'
 
 interface RestaurantDetailProps {
   restaurant: RestaurantResponse

@@ -30,7 +30,7 @@ const EngagementAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getEngagementStatistics()
-        setStats(response)
+        setStats(response.data)
       } catch (err) {
         console.error('Error fetching engagement statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê tương tác')

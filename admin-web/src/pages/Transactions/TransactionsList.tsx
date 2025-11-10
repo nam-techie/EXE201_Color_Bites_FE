@@ -186,7 +186,7 @@ const TransactionsList: React.FC = () => {
       label: 'Duyệt',
       icon: <ReloadOutlined />,
       type: 'link',
-      visible: (record) => record.status === 'pending',
+      visible: (record) => record.status === 'PENDING',
       onClick: async (record) => {
         const confirmed = await confirm({
           title: 'Duyệt giao dịch',
@@ -196,7 +196,7 @@ const TransactionsList: React.FC = () => {
         
         if (confirmed) {
           try {
-            await transactionsApi.updateTransactionStatus(record.id, { status: 'completed' })
+            await transactionsApi.updateTransactionStatus(record.id, { status: 'SUCCESS' })
             message.success('Duyệt giao dịch thành công')
             refresh()
             loadStats() // Refresh stats
@@ -212,7 +212,7 @@ const TransactionsList: React.FC = () => {
       icon: <ReloadOutlined />,
       type: 'link',
       danger: true,
-      visible: (record) => record.status === 'pending',
+      visible: (record) => record.status === 'PENDING',
       onClick: async (record) => {
         const confirmed = await confirm({
           title: 'Từ chối giao dịch',
@@ -222,7 +222,7 @@ const TransactionsList: React.FC = () => {
         
         if (confirmed) {
           try {
-            await transactionsApi.updateTransactionStatus(record.id, { status: 'failed' })
+            await transactionsApi.updateTransactionStatus(record.id, { status: 'FAILED' })
             message.success('Từ chối giao dịch thành công')
             refresh()
             loadStats() // Refresh stats

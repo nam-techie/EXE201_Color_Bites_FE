@@ -29,7 +29,7 @@ const RevenueReports: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getRevenueStatistics()
-        setStats(response)
+        setStats(response.data)
       } catch (err) {
         console.error('Error fetching revenue statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê doanh thu')

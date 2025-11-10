@@ -38,8 +38,10 @@ class TransactionsApiService {
           const searchLower = filters.search.toLowerCase()
           filteredTransactions = filteredTransactions.filter(t => 
             t.id?.toLowerCase().includes(searchLower) ||
-            t.userId?.toLowerCase().includes(searchLower) ||
-            t.description?.toLowerCase().includes(searchLower)
+            t.accountId?.toLowerCase().includes(searchLower) ||
+            t.accountName?.toLowerCase().includes(searchLower) ||
+            t.accountEmail?.toLowerCase().includes(searchLower) ||
+            t.orderCode?.toLowerCase().includes(searchLower)
           )
         }
         

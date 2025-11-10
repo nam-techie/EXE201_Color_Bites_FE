@@ -2,17 +2,14 @@ import { DeleteOutlined, DownloadOutlined, MoreOutlined } from '@ant-design/icon
 import { Button, Dropdown, Menu, Modal, Progress, message } from 'antd'
 import React, { useState } from 'react'
 
-interface BulkActionsProps<T> {
+interface BulkActionsProps<T extends Record<string, any>> {
   selectedItems: T[]
   onBulkDelete?: (items: T[]) => Promise<void>
   onBulkExport?: (items: T[]) => Promise<void>
-  onBulkUpdate?: (items: T[], updates: any) => Promise<void>
-  getItemKey: (item: T) => string
-  getItemName: (item: T) => string
   disabled?: boolean
 }
 
-interface BulkOperation {
+interface BulkOperation<T> {
   key: string
   label: string
   icon: React.ReactNode
@@ -21,20 +18,17 @@ interface BulkOperation {
   onConfirm: (items: T[]) => Promise<void>
 }
 
-const BulkActions = <T,>({
+const BulkActions = <T extends Record<string, any>>({
   selectedItems,
   onBulkDelete,
   onBulkExport,
-  onBulkUpdate,
-  getItemKey,
-  getItemName,
   disabled = false
 }: BulkActionsProps<T>) => {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [currentOperation, setCurrentOperation] = useState<string | null>(null)
 
-  const handleBulkOperation = async (operation: BulkOperation) => {
+  const handleBulkOperation = async (operation: BulkOperation<T>) => {
     if (selectedItems.length === 0) {
       message.warning('Vui lòng chọn ít nhất một mục')
       return
@@ -55,7 +49,7 @@ const BulkActions = <T,>({
     }
   }
 
-  const executeBulkOperation = async (operation: BulkOperation) => {
+  const executeBulkOperation = async (operation: BulkOperation<T>) => {
     try {
       setLoading(true)
       setCurrentOperation(operation.key)
@@ -82,7 +76,7 @@ const BulkActions = <T,>({
     }
   }
 
-  const bulkOperations: BulkOperation[] = [
+  const bulkOperations: BulkOperation<T>[] = [
     {
       key: 'delete',
       label: 'Xóa',

@@ -1,6 +1,7 @@
 import { SearchOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons'
 import { Button, Input, Select, DatePicker, Space, Card, Collapse } from 'antd'
 import React, { useState } from 'react'
+import dayjs, { Dayjs } from 'dayjs'
 import { useDebounce } from '../../utils/debounce'
 
 const { RangePicker } = DatePicker
@@ -90,7 +91,6 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
               prefix={<SearchOutlined />}
               value={filters.search || ''}
               onChange={(e) => handleSearch(e.target.value)}
-              loading={loading}
               size="large"
             />
           </div>
@@ -128,14 +128,14 @@ const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
                     <RangePicker
                       placeholder={field.placeholder}
                       value={filters[field.key] ? [
-                        filters[field.key][0] ? new Date(filters[field.key][0]) : null,
-                        filters[field.key][1] ? new Date(filters[field.key][1]) : null
+                        filters[field.key][0] ? dayjs(filters[field.key][0]) : null,
+                        filters[field.key][1] ? dayjs(filters[field.key][1]) : null
                       ] : null}
                       onChange={(dates) => {
-                        if (dates) {
+                        if (dates && dates[0] && dates[1]) {
                           handleFilterChange(field.key, [
-                            dates[0]?.toISOString(),
-                            dates[1]?.toISOString()
+                            dates[0].toISOString(),
+                            dates[1].toISOString()
                           ])
                         } else {
                           handleFilterChange(field.key, null)

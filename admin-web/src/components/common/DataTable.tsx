@@ -26,7 +26,7 @@ export interface DataTableAction<T = any> {
   visible?: (record: T) => boolean
 }
 
-export interface DataTableProps<T = any> {
+export interface DataTableProps<T extends Record<string, any> = Record<string, any>> {
   data: T[]
   columns: DataTableColumn<T>[]
   actions?: DataTableAction<T>[]

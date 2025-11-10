@@ -15,6 +15,14 @@ export interface ApiResponse<T> {
   data: T
 }
 
+export interface PagedResponse<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  size: number
+  number: number
+}
+
 export interface UserTableProps {
   users: ListAccountResponse[]
   onBlockUser: (id: string) => void

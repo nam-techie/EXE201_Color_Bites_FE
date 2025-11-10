@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react'
-import { Checkbox, Table } from 'antd'
+import { Checkbox } from 'antd'
 import DataTable, { DataTableColumn, DataTableAction } from './DataTable'
 import BulkActions from './BulkActions'
 
-interface DataTableWithBulkActionsProps<T> {
+interface DataTableWithBulkActionsProps<T extends Record<string, any>> {
   data: T[]
   columns: DataTableColumn<T>[]
   actions: DataTableAction<T>[]
@@ -17,7 +17,7 @@ interface DataTableWithBulkActionsProps<T> {
   getItemName?: (item: T) => string
 }
 
-const DataTableWithBulkActions = <T,>({
+const DataTableWithBulkActions = <T extends Record<string, any>>({
   data,
   columns,
   actions,
@@ -37,22 +37,7 @@ const DataTableWithBulkActions = <T,>({
   const columnsWithSelection = useMemo(() => {
     const selectionColumn: DataTableColumn<T> = {
       key: 'selection',
-      title: (
-        <Checkbox
-          indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < data.length}
-          checked={selectedRowKeys.length === data.length && data.length > 0}
-          onChange={(e) => {
-            if (e.target.checked) {
-              const allKeys = data.map((item: any) => item[rowKey])
-              setSelectedRowKeys(allKeys)
-              setSelectedItems(data)
-            } else {
-              setSelectedRowKeys([])
-              setSelectedItems([])
-            }
-          }}
-        />
-      ),
+      title: 'Chọn',
       width: 50,
       render: (_, record: any) => (
         <Checkbox
@@ -106,9 +91,6 @@ const DataTableWithBulkActions = <T,>({
           selectedItems={selectedItems}
           onBulkDelete={handleBulkDelete}
           onBulkExport={handleBulkExport}
-          onBulkUpdate={handleBulkUpdate}
-          getItemKey={(item: any) => item[rowKey]}
-          getItemName={getItemName}
         />
       )}
 

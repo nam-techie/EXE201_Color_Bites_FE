@@ -40,7 +40,7 @@ const ChallengeEntries: React.FC<ChallengeEntriesProps> = ({
     setPageSize,
     setFilters
   } = useDataTable<ChallengeEntry>({
-    fetchData: async (page, size, filters) => {
+    fetchData: async (page, size) => {
       const response = await challengesApi.getChallengeEntries(challengeId, {
         page: page - 1,
         size: size
@@ -168,7 +168,7 @@ const ChallengeEntries: React.FC<ChallengeEntriesProps> = ({
       label: 'Xem chi tiết',
       icon: <EyeOutlined />,
       type: 'link',
-      onClick: (record) => {
+      onClick: () => {
         // TODO: Implement view details modal
         message.info('Tính năng xem chi tiết sẽ được triển khai')
       }

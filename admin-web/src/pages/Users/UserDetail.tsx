@@ -18,7 +18,7 @@ interface UserDetailProps {
   onUpdate: () => void
 }
 
-const UserDetail: React.FC<UserDetailProps> = ({ user, onClose, onUpdate }) => {
+const UserDetail: React.FC<UserDetailProps> = ({ user }) => {
   const [userInfo, setUserInfo] = useState<UserInformationResponse | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -179,14 +179,10 @@ const UserDetail: React.FC<UserDetailProps> = ({ user, onClose, onUpdate }) => {
              />
            </Col>
            <Col span={8}>
-             <Statistic
-               title="Trạng thái"
-               value={
-                 <Tag color={getSubscriptionStatusColor(userInfo?.subscriptionStatus || '')}>
-                   {userInfo?.subscriptionStatus ? getSubscriptionStatusText(userInfo.subscriptionStatus) : 'Chưa có dữ liệu'}
-                 </Tag>
-               }
-             />
+            <Statistic
+              title="Trạng thái"
+              value={userInfo?.subscriptionStatus ? getSubscriptionStatusText(userInfo.subscriptionStatus) : 'Chưa có dữ liệu'}
+            />
            </Col>
           {userInfo?.subscriptionRemainingDays !== undefined && userInfo?.subscriptionRemainingDays !== null && (
             <Col span={8}>
@@ -231,24 +227,20 @@ const UserDetail: React.FC<UserDetailProps> = ({ user, onClose, onUpdate }) => {
           <Col span={12}>
             <Statistic
               title="Trạng thái tài khoản"
-              value={
-                <Tag color={user.active ? 'success' : 'error'}>
-                  {user.active ? 'Hoạt động' : 'Bị chặn'}
-                </Tag>
-              }
+              value={user.active ? 'Hoạt động' : 'Bị chặn'}
             />
           </Col>
           <Col span={12}>
             <Statistic
               title="Vai trò"
-              value={<Tag color="blue">{user.role}</Tag>}
+              value={user.role}
             />
           </Col>
         </Row>
 
          <div style={{ marginTop: 24 }}>
            <Descriptions column={1} bordered size="small">
-             <Descriptions.Item label="Ngày tạo tài khoản" icon={<CalendarOutlined />}>
+             <Descriptions.Item label="Ngày tạo tài khoản">
                {userInfo?.createdAt
                  ? formatDate(userInfo.createdAt, 'DD/MM/YYYY HH:mm')
                  : user.created ? formatDate(user.created, 'DD/MM/YYYY HH:mm') : 'Chưa có dữ liệu'}
@@ -263,7 +255,7 @@ const UserDetail: React.FC<UserDetailProps> = ({ user, onClose, onUpdate }) => {
                  </div>
                )}
              </Descriptions.Item>
-             <Descriptions.Item label="Cập nhật lần cuối" icon={<CalendarOutlined />}>
+             <Descriptions.Item label="Cập nhật lần cuối">
                {userInfo?.updatedAt
                  ? formatDate(userInfo.updatedAt, 'DD/MM/YYYY HH:mm')
                  : user.updated ? formatDate(user.updated, 'DD/MM/YYYY HH:mm') : 'Chưa có dữ liệu'}

@@ -12,7 +12,6 @@ import {
 
 interface LineChartProps {
   data: any[]
-  dataKey: string
   xAxisKey: string
   lines: Array<{
     dataKey: string
@@ -28,7 +27,6 @@ interface LineChartProps {
 
 const LineChart: React.FC<LineChartProps> = ({
   data,
-  dataKey,
   xAxisKey,
   lines,
   height = 300,

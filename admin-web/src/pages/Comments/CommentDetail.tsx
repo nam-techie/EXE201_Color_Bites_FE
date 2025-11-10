@@ -11,16 +11,18 @@ interface CommentDetailProps {
 
 const CommentDetail: React.FC<CommentDetailProps> = ({ 
   comment, 
-  onClose, 
-  onUpdate 
+  onClose
 }) => {
-  const getStatusConfig = (isDeleted: boolean) => {
-    return isDeleted 
-      ? { color: 'red', text: 'Đã xóa' }
-      : { color: 'green', text: 'Hoạt động' }
+  const getStatusConfig = (status: string) => {
+    const statusMap: Record<string, { color: string; text: string }> = {
+      active: { color: 'green', text: 'Hoạt động' },
+      hidden: { color: 'orange', text: 'Ẩn' },
+      reported: { color: 'red', text: 'Báo cáo' }
+    }
+    return statusMap[status] || { color: 'default', text: status || 'N/A' }
   }
 
-  const statusConfig = getStatusConfig(comment.isDeleted)
+  const statusConfig = getStatusConfig(comment.status)
 
   return (
     <div className="space-y-4">
@@ -41,16 +43,13 @@ const CommentDetail: React.FC<CommentDetailProps> = ({
             <Tag color={statusConfig.color}>{statusConfig.text}</Tag>
           </Descriptions.Item>
           <Descriptions.Item label="Người dùng">
-            {displayValue(comment.accountName)}
+            {displayValue(comment.user?.name || comment.userId)}
           </Descriptions.Item>
           <Descriptions.Item label="Email">
-            {displayValue(comment.authorEmail || comment.accountId)}
+            {displayValue(comment.user?.email || comment.userId)}
           </Descriptions.Item>
           <Descriptions.Item label="Bài viết">
-            {displayValue(comment.postTitle)}
-          </Descriptions.Item>
-          <Descriptions.Item label="Số phản hồi">
-            {displayValue(comment.replyCount, '0')}
+            {displayValue(comment.post?.title || comment.postId)}
           </Descriptions.Item>
           <Descriptions.Item label="Ngày tạo">
             {formatDate(comment.createdAt, 'DD/MM/YYYY HH:mm')}

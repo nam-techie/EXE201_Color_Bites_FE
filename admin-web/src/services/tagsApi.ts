@@ -1,6 +1,7 @@
 import {
     Tag,
     TagFilters,
+    TagFormData,
     TagListResponse
 } from '../types/tag'
 import type { ApiResponse } from '../types/user'
@@ -148,7 +149,7 @@ class TagsApiService {
     name: string,
     description?: string
   ): Promise<ApiResponse<Tag>> {
-    const tag = await this.updateTag(id, { name, description, color: '#4299e1' })
+    const tag = await this.updateTag(id, { name, description })
     return {
       status: 200,
       message: 'Success',

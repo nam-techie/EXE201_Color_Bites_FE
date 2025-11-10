@@ -28,7 +28,7 @@ const PostAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getPostStatistics()
-        setStats(response)
+        setStats(response.data)
       } catch (err) {
         console.error('Error fetching post statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê bài viết')
@@ -58,11 +58,6 @@ const PostAnalytics: React.FC = () => {
     { day: 'T6', posts: 45, likes: 270, comments: 50 },
     { day: 'T7', posts: 50, likes: 300, comments: 55 },
     { day: 'CN', posts: 55, likes: 330, comments: 60 }
-  ]
-
-  const postStatusData = [
-    { name: 'Hoạt động', value: stats?.activePosts || 0, color: '#52c41a' },
-    { name: 'Đã xóa', value: stats?.deletedPosts || 0, color: '#ff4d4f' }
   ]
 
   const statCards = stats ? [
