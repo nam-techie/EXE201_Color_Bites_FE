@@ -1,5 +1,6 @@
 import {
     DeleteOutlined,
+    DownloadOutlined,
     EditOutlined,
     PlusOutlined,
     TagOutlined,
@@ -15,6 +16,7 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { tagsApi } from '../../services/tagsApi'
 import type { Tag } from '../../types/tag'
+import { exportTagsToExcel } from '../../utils/export'
 import { displayNumber, displayValue, formatDate } from '../../utils/formatters'
 import TagForm from './TagForm'
 
@@ -22,6 +24,7 @@ const TagsList: React.FC = () => {
   const [selectedTag, setSelectedTag] = useState<Tag | null>(null)
   const [formVisible, setFormVisible] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const { confirm, modalProps } = useConfirm()
 
   // Data table hook
@@ -261,6 +264,20 @@ const TagsList: React.FC = () => {
     refresh()
   }
 
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      const response = await tagsApi.getTags({ page: 0, limit: 10000 })
+      await exportTagsToExcel(response.data)
+      message.success(`Đã xuất ${response.data.length} tag ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting tags:', error)
+      message.error('Có lỗi xảy ra khi xuất file Excel')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -274,13 +291,22 @@ const TagsList: React.FC = () => {
             <p className="text-gray-600">Quản lý tất cả tag trong hệ thống</p>
           </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreateTag}
-        >
-          Thêm tag mới
-        </Button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            loading={exportLoading}
+          >
+            Xuất Excel
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreateTag}
+          >
+            Thêm tag mới
+          </Button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -290,10 +316,7 @@ const TagsList: React.FC = () => {
         onSearch={handleSearch}
         filters={filterOptions}
         onReset={handleReset}
-        showExport={true}
-        onExport={() => {
-          message.info('Tính năng xuất Excel sẽ được triển khai')
-        }}
+        showExport={false}
       />
 
       {/* Data Table */}

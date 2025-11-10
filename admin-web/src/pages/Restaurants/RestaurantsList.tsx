@@ -1,12 +1,13 @@
 import {
     DeleteOutlined,
+    DownloadOutlined,
     EnvironmentOutlined,
     EyeOutlined,
     ShopOutlined,
     StarOutlined,
     UndoOutlined
 } from '@ant-design/icons'
-import { Card, Drawer, message } from 'antd'
+import { Button, Card, Drawer, message } from 'antd'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import DataTable, { DataTableAction, DataTableColumn } from '../../components/common/DataTable'
@@ -17,12 +18,14 @@ import { useDataTable } from '../../hooks/useDataTable'
 import { restaurantsApi } from '../../services/restaurantsApi'
 import type { RestaurantResponse } from '../../types/restaurant'
 import { RESTAURANT_REGIONS, RESTAURANT_TYPES } from '../../types/restaurant'
+import { exportRestaurantsToExcel } from '../../utils/export'
 import { displayCurrency, displayNumber, displayValue, formatDate, truncateText } from '../../utils/formatters'
 import RestaurantDetail from './RestaurantDetail'
 
 const RestaurantsList: React.FC = () => {
   const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantResponse | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const { confirm, modalProps } = useConfirm()
 
   // Data table hook
@@ -266,6 +269,20 @@ const RestaurantsList: React.FC = () => {
     setFilters({ search: '', status: 'all', type: '', region: '' })
   }
 
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      const response = await restaurantsApi.getRestaurants(0, 10000)
+      await exportRestaurantsToExcel(response.data.data.content)
+      message.success(`Đã xuất ${response.data.data.content.length} nhà hàng ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting restaurants:', error)
+      message.error('Có lỗi xảy ra khi xuất file Excel')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -279,6 +296,13 @@ const RestaurantsList: React.FC = () => {
             <p className="text-gray-600">Quản lý tất cả nhà hàng trong hệ thống</p>
           </div>
         </div>
+        <Button
+          icon={<DownloadOutlined />}
+          onClick={handleExport}
+          loading={exportLoading}
+        >
+          Xuất Excel
+        </Button>
       </div>
 
       {/* Filter Bar */}
@@ -288,10 +312,7 @@ const RestaurantsList: React.FC = () => {
         onSearch={handleSearch}
         filters={filterOptions}
         onReset={handleReset}
-        showExport={true}
-        onExport={() => {
-          message.info('Tính năng xuất Excel sẽ được triển khai')
-        }}
+        showExport={false}
       />
 
       {/* Data Table */}

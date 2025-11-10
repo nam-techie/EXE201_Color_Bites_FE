@@ -1,8 +1,9 @@
-import { Drawer } from 'antd'
-import { Ban, CheckCircle, Eye, MoreHorizontal, Search, Users as UsersIcon } from 'lucide-react'
+import { Drawer, message } from 'antd'
+import { Ban, CheckCircle, Download, Eye, MoreHorizontal, Search, Users as UsersIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { adminApi } from '../services/adminApi'
 import { ListAccountResponse } from '../types/user'
+import { exportUsersToExcel } from '../utils/export'
 import UserDetail from './Users/UserDetail'
 
 const Users = () => {
@@ -11,6 +12,7 @@ const Users = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'blocked'>('all')
+  const [exportLoading, setExportLoading] = useState(false)
   
   // Detail drawer state
   const [selectedUser, setSelectedUser] = useState<ListAccountResponse | null>(null)
@@ -82,6 +84,21 @@ const Users = () => {
     setSelectedUser(null)
   }
 
+  // Export users to Excel
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      const response = await adminApi.getAllUsers()
+      await exportUsersToExcel(response.data)
+      message.success(`Đã xuất ${response.data.length} người dùng ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting users:', error)
+      message.error('Có lỗi xảy ra khi xuất file Excel')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   // Filter users
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.username.toLowerCase().includes(searchTerm.toLowerCase())
@@ -122,6 +139,14 @@ const Users = () => {
             <p className="text-gray-600">Quản lý tất cả người dùng trong hệ thống</p>
           </div>
         </div>
+        <button
+          onClick={handleExport}
+          disabled={exportLoading}
+          className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <Download className="w-4 h-4" />
+          <span>{exportLoading ? 'Đang xuất...' : 'Xuất Excel'}</span>
+        </button>
       </div>
 
        {/* Error Message */}

@@ -418,8 +418,7 @@ const TransactionsList: React.FC = () => {
         onSearch={handleSearch}
         filters={filterOptions}
         onReset={handleReset}
-        showExport={true}
-        onExport={handleExport}
+        showExport={false}
       />
 
       {/* Data Table */}

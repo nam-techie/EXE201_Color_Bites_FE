@@ -1,5 +1,6 @@
 import {
     DeleteOutlined,
+    DownloadOutlined,
     EditOutlined,
     EyeOutlined,
     PlusOutlined,
@@ -17,6 +18,7 @@ import { useDataTable } from '../../hooks/useDataTable'
 import { challengesApi } from '../../services/challengesApi'
 import type { Challenge } from '../../types/challenge'
 import { CHALLENGE_STATUS_CONFIG, CHALLENGE_TYPE_CONFIG } from '../../types/challenge'
+import { exportChallengesToExcel } from '../../utils/export'
 import { formatDate, formatNumber } from '../../utils/formatters'
 import ChallengeForm from './ChallengeForm'
 
@@ -24,6 +26,7 @@ const ChallengesList: React.FC = () => {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
   const [formVisible, setFormVisible] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const { confirm, modalProps } = useConfirm()
 
   // Data table hook
@@ -362,6 +365,21 @@ const ChallengesList: React.FC = () => {
     refresh()
   }
 
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      const response = await challengesApi.getChallenges({ page: 0, size: 10000 })
+      const challenges = response.data.data.content || []
+      await exportChallengesToExcel(challenges)
+      message.success(`Đã xuất ${challenges.length} thử thách ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting challenges:', error)
+      message.error('Có lỗi xảy ra khi xuất file Excel')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -375,13 +393,22 @@ const ChallengesList: React.FC = () => {
             <p className="text-gray-600">Quản lý tất cả thử thách trong hệ thống</p>
           </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreateChallenge}
-        >
-          Tạo thử thách mới
-        </Button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            loading={exportLoading}
+          >
+            Xuất Excel
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreateChallenge}
+          >
+            Tạo thử thách mới
+          </Button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -391,10 +418,7 @@ const ChallengesList: React.FC = () => {
         onSearch={handleSearch}
         filters={filterOptions}
         onReset={handleReset}
-        showExport={true}
-        onExport={() => {
-          message.info('Tính năng xuất Excel sẽ được triển khai')
-        }}
+        showExport={false}
       />
 
       {/* Data Table */}

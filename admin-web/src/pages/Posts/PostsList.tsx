@@ -1,10 +1,11 @@
 import {
     DeleteOutlined,
+    DownloadOutlined,
     EyeOutlined,
     FileTextOutlined,
     UndoOutlined
 } from '@ant-design/icons'
-import { Card, Drawer, message } from 'antd'
+import { Button, Card, Drawer, message } from 'antd'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import DataTable, { DataTableAction, DataTableColumn } from '../../components/common/DataTable'
@@ -14,12 +15,14 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { postsApi } from '../../services/postsApi'
 import type { PostResponse } from '../../types/post'
+import { exportPostsToExcel } from '../../utils/export'
 import { displayNumber, displayValue, formatDate, truncateText } from '../../utils/formatters'
 import PostDetail from './PostDetail'
 
 const PostsList: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<PostResponse | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const { confirm, modalProps } = useConfirm()
 
   // Data table hook
@@ -210,6 +213,20 @@ const PostsList: React.FC = () => {
     setFilters({ search: '', status: 'all' })
   }
 
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      const response = await postsApi.getPosts(0, 10000)
+      await exportPostsToExcel(response.data.data.content)
+      message.success(`Đã xuất ${response.data.data.content.length} bài viết ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting posts:', error)
+      message.error('Có lỗi xảy ra khi xuất file Excel')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -223,6 +240,13 @@ const PostsList: React.FC = () => {
             <p className="text-gray-600">Quản lý tất cả bài viết trong hệ thống</p>
           </div>
         </div>
+        <Button
+          icon={<DownloadOutlined />}
+          onClick={handleExport}
+          loading={exportLoading}
+        >
+          Xuất Excel
+        </Button>
       </div>
 
       {/* Filter Bar */}
@@ -232,10 +256,7 @@ const PostsList: React.FC = () => {
         onSearch={handleSearch}
         filters={filterOptions}
         onReset={handleReset}
-        showExport={true}
-        onExport={() => {
-          message.info('Tính năng xuất Excel sẽ được triển khai')
-        }}
+        showExport={false}
       />
 
       {/* Data Table */}

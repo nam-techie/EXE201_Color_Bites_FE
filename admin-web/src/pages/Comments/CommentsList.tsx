@@ -1,10 +1,11 @@
 import {
     CommentOutlined,
     DeleteOutlined,
+    DownloadOutlined,
     EyeOutlined,
     UndoOutlined
 } from '@ant-design/icons'
-import { Card, Drawer, message } from 'antd'
+import { Button, Card, Drawer, message } from 'antd'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import DataTable, { DataTableAction, DataTableColumn } from '../../components/common/DataTable'
@@ -14,6 +15,7 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { commentsApi } from '../../services/commentsApi'
 import type { Comment } from '../../types/comment'
+import { exportCommentsToExcel } from '../../utils/export'
 import { formatDate, truncateText } from '../../utils/formatters'
 import CommentDetail from './CommentDetail.tsx'
 
@@ -21,6 +23,7 @@ import CommentDetail from './CommentDetail.tsx'
 const CommentsList: React.FC = () => {
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null)
   const [detailVisible, setDetailVisible] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const { confirm, modalProps } = useConfirm()
 
   // Data table hook
@@ -215,6 +218,20 @@ const CommentsList: React.FC = () => {
     setFilters({ search: '' })
   }
 
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      const response = await commentsApi.getComments({ page: 0, limit: 10000 })
+      await exportCommentsToExcel(response.data)
+      message.success(`Đã xuất ${response.data.length} bình luận ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting comments:', error)
+      message.error('Có lỗi xảy ra khi xuất file Excel')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -228,6 +245,13 @@ const CommentsList: React.FC = () => {
             <p className="text-gray-600">Quản lý tất cả bình luận trong hệ thống</p>
           </div>
         </div>
+        <Button
+          icon={<DownloadOutlined />}
+          onClick={handleExport}
+          loading={exportLoading}
+        >
+          Xuất Excel
+        </Button>
       </div>
 
       {/* Filter Bar */}
@@ -236,10 +260,7 @@ const CommentsList: React.FC = () => {
         searchValue={filters.search}
         onSearch={handleSearch}
         onReset={handleReset}
-        showExport={true}
-        onExport={() => {
-          message.info('Tính năng xuất Excel sẽ được triển khai')
-        }}
+        showExport={false}
       />
 
       {/* Data Table */}

@@ -3,6 +3,14 @@ import 'jspdf-autotable'
 import ExcelJS from 'exceljs'
 import type { Transaction } from '../types/transaction'
 import { TRANSACTION_STATUS_CONFIG } from '../types/transaction'
+import type { ListAccountResponse } from '../types/user'
+import type { PostResponse } from '../types/post'
+import type { RestaurantResponse } from '../types/restaurant'
+import type { Comment } from '../types/comment'
+import type { Tag } from '../types/tag'
+import type { Mood } from '../types/mood'
+import type { Challenge } from '../types/challenge'
+import { CHALLENGE_TYPE_CONFIG, CHALLENGE_STATUS_CONFIG } from '../types/challenge'
 import { formatDate } from './formatters'
 
 // Extend jsPDF type to include autoTable
@@ -314,6 +322,633 @@ export const exportTransactionsToExcel = async (transactions: Transaction[]): Pr
     URL.revokeObjectURL(url)
   } catch (error) {
     console.error('Error exporting to Excel:', error)
+    throw error
+  }
+}
+
+// Export users to Excel with full formatting and UTF-8 support
+export const exportUsersToExcel = async (users: ListAccountResponse[]): Promise<void> => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    const worksheet = workbook.addWorksheet('Danh sách người dùng')
+    
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Tên người dùng', key: 'username', width: 20 },
+      { header: 'Email', key: 'email', width: 25 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Vai trò', key: 'role', width: 15 },
+      { header: 'Avatar URL', key: 'avatarUrl', width: 30 },
+      { header: 'Ngày tạo', key: 'created', width: 20 },
+      { header: 'Ngày cập nhật', key: 'updated', width: 20 }
+    ]
+    
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    users.forEach((user) => {
+      const row = worksheet.addRow({
+        id: user.id,
+        username: user.username || '',
+        email: (user as any).email || '',
+        status: user.active ? 'Hoạt động' : 'Bị chặn',
+        role: user.role || '',
+        avatarUrl: user.avatarUrl || '',
+        created: formatDate(user.created, 'DD/MM/YYYY HH:mm:ss'),
+        updated: formatDate(user.updated, 'DD/MM/YYYY HH:mm:ss')
+      })
+      
+      const createdCell = row.getCell('created')
+      createdCell.alignment = { horizontal: 'center' }
+      
+      const updatedCell = row.getCell('updated')
+      updatedCell.alignment = { horizontal: 'center' }
+      
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      row.height = 20
+    })
+    
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-nguoi-dung-${timestamp}.xlsx`
+    
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting users to Excel:', error)
+    throw error
+  }
+}
+
+// Export posts to Excel with full formatting and UTF-8 support
+export const exportPostsToExcel = async (posts: PostResponse[]): Promise<void> => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    const worksheet = workbook.addWorksheet('Danh sách bài viết')
+    
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Account ID', key: 'accountId', width: 15 },
+      { header: 'Tên người dùng', key: 'accountName', width: 20 },
+      { header: 'Email', key: 'authorEmail', width: 25 },
+      { header: 'Nội dung', key: 'content', width: 40 },
+      { header: 'Mood', key: 'moodName', width: 15 },
+      { header: 'Lượt thích', key: 'reactionCount', width: 12 },
+      { header: 'Bình luận', key: 'commentCount', width: 12 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 20 },
+      { header: 'Ngày cập nhật', key: 'updatedAt', width: 20 }
+    ]
+    
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    posts.forEach((post) => {
+      const row = worksheet.addRow({
+        id: post.id,
+        accountId: post.accountId || '',
+        accountName: post.accountName || '',
+        authorEmail: post.authorEmail || '',
+        content: post.content || '',
+        moodName: post.moodName || '',
+        reactionCount: post.reactionCount || 0,
+        commentCount: post.commentCount || 0,
+        status: post.isDeleted ? 'Đã xóa' : 'Hoạt động',
+        createdAt: formatDate(post.createdAt, 'DD/MM/YYYY HH:mm:ss'),
+        updatedAt: formatDate(post.updatedAt, 'DD/MM/YYYY HH:mm:ss')
+      })
+      
+      const reactionCell = row.getCell('reactionCount')
+      reactionCell.alignment = { horizontal: 'right' }
+      
+      const commentCell = row.getCell('commentCount')
+      commentCell.alignment = { horizontal: 'right' }
+      
+      const createdAtCell = row.getCell('createdAt')
+      createdAtCell.alignment = { horizontal: 'center' }
+      
+      const updatedAtCell = row.getCell('updatedAt')
+      updatedAtCell.alignment = { horizontal: 'center' }
+      
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      row.height = 20
+    })
+    
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-bai-viet-${timestamp}.xlsx`
+    
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting posts to Excel:', error)
+    throw error
+  }
+}
+
+// Export restaurants to Excel with full formatting and UTF-8 support
+export const exportRestaurantsToExcel = async (restaurants: RestaurantResponse[]): Promise<void> => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    const worksheet = workbook.addWorksheet('Danh sách nhà hàng')
+    
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Tên', key: 'name', width: 25 },
+      { header: 'Địa chỉ', key: 'address', width: 30 },
+      { header: 'Mô tả', key: 'description', width: 40 },
+      { header: 'Loại', key: 'type', width: 15 },
+      { header: 'Khu vực', key: 'region', width: 15 },
+      { header: 'Giá trung bình', key: 'avgPrice', width: 15 },
+      { header: 'Đánh giá', key: 'rating', width: 12 },
+      { header: 'Featured', key: 'featured', width: 12 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 20 }
+    ]
+    
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    restaurants.forEach((restaurant) => {
+      const row = worksheet.addRow({
+        id: restaurant.id,
+        name: restaurant.name || '',
+        address: restaurant.address || '',
+        description: restaurant.description || '',
+        type: restaurant.type || '',
+        region: restaurant.region || '',
+        avgPrice: restaurant.avgPrice || 0,
+        rating: restaurant.rating || 0,
+        featured: restaurant.featured ? 'Có' : 'Không',
+        status: restaurant.isDeleted ? 'Đã xóa' : 'Hoạt động',
+        createdAt: formatDate(restaurant.createdAt, 'DD/MM/YYYY HH:mm:ss')
+      })
+      
+      const avgPriceCell = row.getCell('avgPrice')
+      avgPriceCell.numFmt = '#,##0'
+      avgPriceCell.alignment = { horizontal: 'right' }
+      
+      const ratingCell = row.getCell('rating')
+      ratingCell.alignment = { horizontal: 'center' }
+      
+      const createdAtCell = row.getCell('createdAt')
+      createdAtCell.alignment = { horizontal: 'center' }
+      
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      row.height = 20
+    })
+    
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-nha-hang-${timestamp}.xlsx`
+    
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting restaurants to Excel:', error)
+    throw error
+  }
+}
+
+// Export comments to Excel with full formatting and UTF-8 support
+export const exportCommentsToExcel = async (comments: Comment[]): Promise<void> => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    const worksheet = workbook.addWorksheet('Danh sách bình luận')
+    
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Post ID', key: 'postId', width: 15 },
+      { header: 'Post Title', key: 'postTitle', width: 30 },
+      { header: 'User ID', key: 'userId', width: 15 },
+      { header: 'Tên người dùng', key: 'userName', width: 20 },
+      { header: 'Email', key: 'userEmail', width: 25 },
+      { header: 'Nội dung', key: 'content', width: 40 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 20 },
+      { header: 'Ngày cập nhật', key: 'updatedAt', width: 20 }
+    ]
+    
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    comments.forEach((comment) => {
+      const statusLabel = comment.status === 'active' ? 'Hoạt động' : 
+                         comment.status === 'hidden' ? 'Ẩn' : 
+                         comment.status === 'reported' ? 'Bị báo cáo' : comment.status
+      
+      const row = worksheet.addRow({
+        id: comment.id,
+        postId: comment.postId || '',
+        postTitle: comment.post?.title || '',
+        userId: comment.userId || '',
+        userName: comment.user?.name || '',
+        userEmail: comment.user?.email || '',
+        content: comment.content || '',
+        status: statusLabel,
+        createdAt: formatDate(comment.createdAt, 'DD/MM/YYYY HH:mm:ss'),
+        updatedAt: formatDate(comment.updatedAt, 'DD/MM/YYYY HH:mm:ss')
+      })
+      
+      const createdAtCell = row.getCell('createdAt')
+      createdAtCell.alignment = { horizontal: 'center' }
+      
+      const updatedAtCell = row.getCell('updatedAt')
+      updatedAtCell.alignment = { horizontal: 'center' }
+      
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      row.height = 20
+    })
+    
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-binh-luan-${timestamp}.xlsx`
+    
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting comments to Excel:', error)
+    throw error
+  }
+}
+
+// Export tags to Excel with full formatting and UTF-8 support
+export const exportTagsToExcel = async (tags: Tag[]): Promise<void> => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    const worksheet = workbook.addWorksheet('Danh sách tag')
+    
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Tên', key: 'name', width: 20 },
+      { header: 'Mô tả', key: 'description', width: 40 },
+      { header: 'Số lần sử dụng', key: 'usageCount', width: 15 },
+      { header: 'Số bài viết', key: 'postCount', width: 12 },
+      { header: 'Số nhà hàng', key: 'restaurantCount', width: 12 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 20 },
+      { header: 'Ngày cập nhật', key: 'updatedAt', width: 20 }
+    ]
+    
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    tags.forEach((tag) => {
+      const row = worksheet.addRow({
+        id: tag.id,
+        name: tag.name || '',
+        description: tag.description || '',
+        usageCount: tag.usageCount || 0,
+        postCount: tag.postCount || 0,
+        restaurantCount: tag.restaurantCount || 0,
+        status: tag.isDeleted ? 'Đã xóa' : 'Hoạt động',
+        createdAt: formatDate(tag.createdAt, 'DD/MM/YYYY HH:mm:ss'),
+        updatedAt: formatDate(tag.updatedAt, 'DD/MM/YYYY HH:mm:ss')
+      })
+      
+      const usageCountCell = row.getCell('usageCount')
+      usageCountCell.alignment = { horizontal: 'right' }
+      
+      const postCountCell = row.getCell('postCount')
+      postCountCell.alignment = { horizontal: 'right' }
+      
+      const restaurantCountCell = row.getCell('restaurantCount')
+      restaurantCountCell.alignment = { horizontal: 'right' }
+      
+      const createdAtCell = row.getCell('createdAt')
+      createdAtCell.alignment = { horizontal: 'center' }
+      
+      const updatedAtCell = row.getCell('updatedAt')
+      updatedAtCell.alignment = { horizontal: 'center' }
+      
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      row.height = 20
+    })
+    
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-tag-${timestamp}.xlsx`
+    
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting tags to Excel:', error)
+    throw error
+  }
+}
+
+// Export moods to Excel with full formatting and UTF-8 support
+export const exportMoodsToExcel = async (moods: Mood[]): Promise<void> => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    const worksheet = workbook.addWorksheet('Danh sách mood')
+    
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Tên', key: 'name', width: 20 },
+      { header: 'Emoji', key: 'emoji', width: 12 },
+      { header: 'Số lần sử dụng', key: 'usageCount', width: 15 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 20 },
+      { header: 'Ngày cập nhật', key: 'updatedAt', width: 20 }
+    ]
+    
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    moods.forEach((mood) => {
+      const row = worksheet.addRow({
+        id: mood.id,
+        name: mood.name || '',
+        emoji: mood.emoji || '',
+        usageCount: mood.usageCount || 0,
+        status: mood.isDeleted ? 'Đã xóa' : 'Hoạt động',
+        createdAt: formatDate(mood.createdAt, 'DD/MM/YYYY HH:mm:ss'),
+        updatedAt: mood.updatedAt ? formatDate(mood.updatedAt, 'DD/MM/YYYY HH:mm:ss') : ''
+      })
+      
+      const usageCountCell = row.getCell('usageCount')
+      usageCountCell.alignment = { horizontal: 'right' }
+      
+      const createdAtCell = row.getCell('createdAt')
+      createdAtCell.alignment = { horizontal: 'center' }
+      
+      if (mood.updatedAt) {
+        const updatedAtCell = row.getCell('updatedAt')
+        updatedAtCell.alignment = { horizontal: 'center' }
+      }
+      
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      row.height = 20
+    })
+    
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-mood-${timestamp}.xlsx`
+    
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting moods to Excel:', error)
+    throw error
+  }
+}
+
+// Export challenges to Excel with full formatting and UTF-8 support
+export const exportChallengesToExcel = async (challenges: Challenge[]): Promise<void> => {
+  try {
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    const worksheet = workbook.addWorksheet('Danh sách thử thách')
+    
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Tiêu đề', key: 'title', width: 30 },
+      { header: 'Mô tả', key: 'description', width: 40 },
+      { header: 'Loại', key: 'type', width: 20 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Nhà hàng', key: 'restaurantName', width: 25 },
+      { header: 'Target Count', key: 'targetCount', width: 15 },
+      { header: 'Ngày bắt đầu', key: 'startDate', width: 20 },
+      { header: 'Ngày kết thúc', key: 'endDate', width: 20 },
+      { header: 'Số người tham gia', key: 'participantCount', width: 18 },
+      { header: 'Số người hoàn thành', key: 'completionCount', width: 20 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 20 }
+    ]
+    
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    challenges.forEach((challenge) => {
+      const typeLabel = CHALLENGE_TYPE_CONFIG[challenge.type]?.label || challenge.type
+      const statusLabel = CHALLENGE_STATUS_CONFIG[challenge.status]?.label || challenge.status
+      
+      const row = worksheet.addRow({
+        id: challenge.id,
+        title: challenge.title || '',
+        description: challenge.description || '',
+        type: typeLabel,
+        status: statusLabel,
+        restaurantName: challenge.restaurantName || '',
+        targetCount: challenge.targetCount || 0,
+        startDate: formatDate(challenge.startDate, 'DD/MM/YYYY HH:mm:ss'),
+        endDate: formatDate(challenge.endDate, 'DD/MM/YYYY HH:mm:ss'),
+        participantCount: challenge.participantCount || 0,
+        completionCount: challenge.completionCount || 0,
+        createdAt: formatDate(challenge.createdAt, 'DD/MM/YYYY HH:mm:ss')
+      })
+      
+      const targetCountCell = row.getCell('targetCount')
+      targetCountCell.alignment = { horizontal: 'right' }
+      
+      const participantCountCell = row.getCell('participantCount')
+      participantCountCell.alignment = { horizontal: 'right' }
+      
+      const completionCountCell = row.getCell('completionCount')
+      completionCountCell.alignment = { horizontal: 'right' }
+      
+      const startDateCell = row.getCell('startDate')
+      startDateCell.alignment = { horizontal: 'center' }
+      
+      const endDateCell = row.getCell('endDate')
+      endDateCell.alignment = { horizontal: 'center' }
+      
+      const createdAtCell = row.getCell('createdAt')
+      createdAtCell.alignment = { horizontal: 'center' }
+      
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      row.height = 20
+    })
+    
+    worksheet.views = [{ state: 'frozen', ySplit: 1 }]
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-thu-thach-${timestamp}.xlsx`
+    
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting challenges to Excel:', error)
     throw error
   }
 }

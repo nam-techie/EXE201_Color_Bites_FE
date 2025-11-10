@@ -1,5 +1,6 @@
 import {
     DeleteOutlined,
+    DownloadOutlined,
     EditOutlined,
     PlusOutlined,
     SmileOutlined
@@ -14,6 +15,7 @@ import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { moodsApi } from '../../services/moodsApi'
 import type { Mood } from '../../types/mood'
+import { exportMoodsToExcel } from '../../utils/export'
 import { formatDate, formatNumber } from '../../utils/formatters'
 import MoodForm from './MoodForm'
 
@@ -21,6 +23,7 @@ const MoodsList: React.FC = () => {
   const [selectedMood, setSelectedMood] = useState<Mood | null>(null)
   const [formVisible, setFormVisible] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const { confirm, modalProps } = useConfirm()
 
   // Data table hook
@@ -200,6 +203,21 @@ const MoodsList: React.FC = () => {
     refresh()
   }
 
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      const response = await moodsApi.getMoods({ page: 0, size: 10000 })
+      const moods = response.data.data.content || []
+      await exportMoodsToExcel(moods)
+      message.success(`Đã xuất ${moods.length} mood ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting moods:', error)
+      message.error('Có lỗi xảy ra khi xuất file Excel')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -213,13 +231,22 @@ const MoodsList: React.FC = () => {
             <p className="text-gray-600">Quản lý tất cả mood trong hệ thống</p>
           </div>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreateMood}
-        >
-          Thêm mood mới
-        </Button>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <Button
+            icon={<DownloadOutlined />}
+            onClick={handleExport}
+            loading={exportLoading}
+          >
+            Xuất Excel
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreateMood}
+          >
+            Thêm mood mới
+          </Button>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -229,10 +256,7 @@ const MoodsList: React.FC = () => {
         onSearch={handleSearch}
         filters={filterOptions}
         onReset={handleReset}
-        showExport={true}
-        onExport={() => {
-          message.info('Tính năng xuất Excel sẽ được triển khai')
-        }}
+        showExport={false}
       />
 
       {/* Data Table */}
