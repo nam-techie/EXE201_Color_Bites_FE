@@ -17,7 +17,7 @@ const ChallengeStatistics: React.FC = () => {
       setLoading(true)
       setError(null)
       const response = await statisticsApi.getChallengeStatistics()
-      setStatistics(response.data)
+      setStatistics(response.data as ChallengeStatistics)
     } catch (error) {
       console.error('Error fetching challenge statistics:', error)
       setError(error instanceof Error ? error.message : 'Không thể tải thống kê thử thách')

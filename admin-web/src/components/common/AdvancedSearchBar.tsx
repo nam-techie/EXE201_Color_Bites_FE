@@ -1,7 +1,7 @@
 import { SearchOutlined, FilterOutlined, ClearOutlined } from '@ant-design/icons'
 import { Button, Input, Select, DatePicker, Space, Card, Collapse } from 'antd'
 import React, { useState } from 'react'
-import dayjs, { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import { useDebounce } from '../../utils/debounce'
 
 const { RangePicker } = DatePicker
@@ -48,7 +48,6 @@ interface SelectField {
 const AdvancedSearchBar: React.FC<AdvancedSearchBarProps> = ({
   onSearch,
   onReset,
-  loading = false,
   placeholder = 'Tìm kiếm...',
   searchFields = [],
   dateFields = [],

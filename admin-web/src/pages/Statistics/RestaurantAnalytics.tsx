@@ -29,7 +29,7 @@ const RestaurantAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getRestaurantStatistics()
-        setStats(response.data)
+        setStats(response.data as RestaurantStats)
       } catch (err) {
         console.error('Error fetching restaurant statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê nhà hàng')
@@ -158,7 +158,6 @@ const RestaurantAnalytics: React.FC = () => {
           <Card title="Tăng trưởng nhà hàng theo tháng" className="h-full">
             <LineChart
               data={restaurantGrowthData}
-              dataKey="restaurants"
               xAxisKey="month"
               lines={[
                 { dataKey: 'restaurants', name: 'Tổng nhà hàng', color: '#1890ff' },

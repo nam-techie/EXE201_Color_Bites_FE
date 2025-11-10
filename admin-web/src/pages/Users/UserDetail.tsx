@@ -40,19 +40,6 @@ const UserDetail: React.FC<UserDetailProps> = ({ user }) => {
     fetchUserDetail()
   }, [user.id])
 
-  // Get subscription status color
-  const getSubscriptionStatusColor = (status: string) => {
-    switch (status) {
-      case 'ACTIVE':
-        return 'success' // green
-      case 'EXPIRED':
-        return 'error' // red
-      case 'CANCELED':
-        return 'warning' // orange
-      default:
-        return 'default'
-    }
-  }
 
   // Get subscription status text
   const getSubscriptionStatusText = (status: string) => {

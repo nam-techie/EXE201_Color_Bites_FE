@@ -29,7 +29,7 @@ const RevenueReports: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getRevenueStatistics()
-        setStats(response.data)
+        setStats(response.data as RevenueStats)
       } catch (err) {
         console.error('Error fetching revenue statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê doanh thu')
@@ -154,7 +154,6 @@ const RevenueReports: React.FC = () => {
           <Card title="Doanh thu theo tháng" className="h-full">
             <LineChart
               data={revenueData}
-              dataKey="revenue"
               xAxisKey="month"
               lines={[
                 { dataKey: 'revenue', name: 'Doanh thu (VND)', color: '#52c41a' },

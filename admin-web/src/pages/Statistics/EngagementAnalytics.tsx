@@ -30,7 +30,7 @@ const EngagementAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getEngagementStatistics()
-        setStats(response.data)
+        setStats(response.data as EngagementStats)
       } catch (err) {
         console.error('Error fetching engagement statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê tương tác')
@@ -163,7 +163,6 @@ const EngagementAnalytics: React.FC = () => {
           <Card title="Tăng trưởng tương tác theo tháng" className="h-full">
             <LineChart
               data={engagementData}
-              dataKey="likes"
               xAxisKey="month"
               lines={[
                 { dataKey: 'likes', name: 'Lượt thích', color: '#ff4d4f' },

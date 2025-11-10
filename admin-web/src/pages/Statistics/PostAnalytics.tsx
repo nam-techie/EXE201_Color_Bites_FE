@@ -28,7 +28,7 @@ const PostAnalytics: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getPostStatistics()
-        setStats(response.data)
+        setStats(response.data as PostStats)
       } catch (err) {
         console.error('Error fetching post statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê bài viết')
@@ -147,7 +147,6 @@ const PostAnalytics: React.FC = () => {
           <Card title="Tăng trưởng bài viết theo tháng" className="h-full">
             <LineChart
               data={postGrowthData}
-              dataKey="posts"
               xAxisKey="month"
               lines={[
                 { dataKey: 'posts', name: 'Tổng bài viết', color: '#1890ff' },

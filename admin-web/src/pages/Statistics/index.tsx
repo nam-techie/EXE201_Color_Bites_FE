@@ -40,7 +40,7 @@ const StatisticsOverview: React.FC = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getSystemStatistics()
-        setStats(response.data)
+        setStats(response.data as SystemStats)
       } catch (err) {
         console.error('Error fetching statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê')
@@ -160,7 +160,6 @@ const StatisticsOverview: React.FC = () => {
           <Card title="Tăng trưởng người dùng và bài viết" className="h-full">
             <LineChart
               data={userGrowthData}
-              dataKey="users"
               xAxisKey="month"
               lines={[
                 { dataKey: 'users', name: 'Người dùng', color: '#1890ff' },

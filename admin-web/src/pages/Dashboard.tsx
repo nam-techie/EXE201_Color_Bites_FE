@@ -44,7 +44,7 @@ const Dashboard = () => {
         setLoading(true)
         setError(null)
         const response = await statisticsApi.getSystemStatistics()
-        setStats(response.data)
+        setStats(response.data as SystemStats)
       } catch (err) {
         console.error('Error fetching statistics:', err)
         setError(err instanceof Error ? err.message : 'Không thể tải thống kê')

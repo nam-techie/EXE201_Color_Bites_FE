@@ -26,9 +26,7 @@ const DataTableWithBulkActions = <T extends Record<string, any>>({
   rowKey,
   scroll,
   onBulkDelete,
-  onBulkExport,
-  onBulkUpdate,
-  getItemName = (item: any) => item.name || item.title || item.id
+  onBulkExport
 }: DataTableWithBulkActionsProps<T>) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
   const [selectedItems, setSelectedItems] = useState<T[]>([])
@@ -71,15 +69,6 @@ const DataTableWithBulkActions = <T extends Record<string, any>>({
   const handleBulkExport = async (items: T[]) => {
     if (onBulkExport) {
       await onBulkExport(items)
-    }
-  }
-
-  const handleBulkUpdate = async (items: T[], updates: any) => {
-    if (onBulkUpdate) {
-      await onBulkUpdate(items, updates)
-      // Clear selection after successful update
-      setSelectedRowKeys([])
-      setSelectedItems([])
     }
   }
 
