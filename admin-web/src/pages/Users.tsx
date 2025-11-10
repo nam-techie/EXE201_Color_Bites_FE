@@ -1,7 +1,9 @@
+import { Drawer } from 'antd'
 import { Ban, CheckCircle, Eye, MoreHorizontal, Search, Users as UsersIcon } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { adminApi } from '../services/adminApi'
 import { ListAccountResponse } from '../types/user'
+import UserDetail from './Users/UserDetail'
 
 const Users = () => {
   const [users, setUsers] = useState<ListAccountResponse[]>([])
@@ -9,6 +11,10 @@ const Users = () => {
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'blocked'>('all')
+  
+  // Detail drawer state
+  const [selectedUser, setSelectedUser] = useState<ListAccountResponse | null>(null)
+  const [detailVisible, setDetailVisible] = useState(false)
 
   // Fetch users from API
   const fetchUsers = async () => {
@@ -62,6 +68,18 @@ const Users = () => {
       console.error('Error activating user:', error)
       alert('Có lỗi xảy ra khi kích hoạt người dùng')
     }
+  }
+
+  // View user detail
+  const handleViewDetail = (user: ListAccountResponse) => {
+    setSelectedUser(user)
+    setDetailVisible(true)
+  }
+
+  // Close detail drawer
+  const handleCloseDetail = () => {
+    setDetailVisible(false)
+    setSelectedUser(null)
   }
 
   // Filter users
@@ -272,7 +290,11 @@ const Users = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
-                        <button className="text-gray-600 hover:text-gray-900">
+                        <button 
+                          onClick={() => handleViewDetail(user)}
+                          className="text-gray-600 hover:text-gray-900"
+                          title="Xem chi tiết"
+                        >
                           <Eye className="w-4 h-4" />
                         </button>
                         {user.active ? (
@@ -304,6 +326,24 @@ const Users = () => {
           </table>
         </div>
       </div>
+
+      {/* User Detail Drawer */}
+      <Drawer
+        title="Chi tiết người dùng"
+        placement="right"
+        width={600}
+        open={detailVisible}
+        onClose={handleCloseDetail}
+        destroyOnClose
+      >
+        {selectedUser && (
+          <UserDetail 
+            user={selectedUser}
+            onClose={handleCloseDetail}
+            onUpdate={fetchUsers}
+          />
+        )}
+      </Drawer>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import axios, { AxiosInstance } from 'axios'
 import { AccountResponse, AuthApiResponse, LoginRequest } from '../types/auth'
-import { ApiResponse, ListAccountResponse } from '../types/user'
+import { ApiResponse, ListAccountResponse, UserInformationResponse } from '../types/user'
 
 // API Configuration - sử dụng production backend
 // const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
@@ -133,6 +133,27 @@ class AdminApiService {
       throw new Error(response.data.message || 'Không thể kích hoạt người dùng')
     } catch (error) {
       console.error('❌ Error activating user:', error)
+      throw error
+    }
+  }
+
+  // Get user information detail
+  async getUserInformation(userId: string): Promise<ApiResponse<UserInformationResponse>> {
+    try {
+      console.log('📡 Fetching user information:', userId)
+      
+      const response = await this.axiosInstance.get<ApiResponse<UserInformationResponse>>(
+        `/api/admin/viewDetailUser/${userId}`
+      )
+      
+      if (response.data.status === 200 && response.data.data) {
+        console.log('✅ User information fetched successfully')
+        return response.data
+      }
+      
+      throw new Error(response.data.message || 'Không thể tải thông tin người dùng')
+    } catch (error) {
+      console.error('❌ Error fetching user information:', error)
       throw error
     }
   }
