@@ -15,7 +15,7 @@ class MoodsApiService {
   // GET /api/admin/moods - Lấy toàn bộ moods (tương thích với MoodsList)
   async getMoods(params: MoodListParams = {}): Promise<ApiResponse<PagedResponse<Mood>>> {
     try {
-      console.log('📡 Fetching all moods:', params)
+      console.log(' Fetching all moods:', params)
       
       const response = await this.axiosInstance.get<ApiResponse<Mood[]>>(
         '/api/admin/moods'
@@ -99,7 +99,7 @@ class MoodsApiService {
   // GET /api/admin/moods/{id} - Lấy chi tiết mood
   async getMoodById(id: string): Promise<ApiResponse<Mood>> {
     try {
-      console.log('📡 Fetching mood details:', id)
+      console.log(' Fetching mood details:', id)
       
       const response = await this.axiosInstance.get<ApiResponse<Mood>>(
         `/api/admin/moods/${id}`
@@ -185,7 +185,7 @@ class MoodsApiService {
   // Lấy thống kê moods
   async getMoodStats(): Promise<ApiResponse<MoodStats>> {
     try {
-      console.log('📡 Fetching mood statistics')
+      console.log(' Fetching mood statistics')
       
       const response = await this.axiosInstance.get<ApiResponse<MoodStats>>(
         '/api/moods/statistics'

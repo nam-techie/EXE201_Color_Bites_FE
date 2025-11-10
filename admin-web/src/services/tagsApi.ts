@@ -3,8 +3,8 @@ import {
     TagFilters,
     TagListResponse
 } from '../types/tag'
-import { adminApi } from './adminApi'
 import type { ApiResponse } from '../types/user'
+import { adminApi } from './adminApi'
 
 // Tags API service for admin dashboard
 class TagsApiService {
@@ -13,7 +13,7 @@ class TagsApiService {
   // GET /api/admin/tags - Lấy danh sách tags với pagination (tương thích với TagsList)
   async getTags(filters: TagFilters = {}): Promise<TagListResponse> {
     try {
-      console.log('📡 Fetching tags:', filters)
+      console.log(' Fetching tags:', filters)
       
       const page = filters.page || 0
       const limit = filters.limit || 10
@@ -57,7 +57,7 @@ class TagsApiService {
   // GET /api/admin/tags/{id} - Lấy chi tiết tag
   async getTagById(id: string): Promise<ApiResponse<Tag>> {
     try {
-      console.log('📡 Fetching tag by id:', id)
+      console.log(' Fetching tag by id:', id)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<Tag>>(
         `${this.baseURL}/${id}`
@@ -182,7 +182,7 @@ class TagsApiService {
   // GET /api/admin/tags/statistics - Lấy thống kê tags
   async getTagStatistics(): Promise<ApiResponse<{ [key: string]: any }>> {
     try {
-      console.log('📡 Fetching tag statistics')
+      console.log(' Fetching tag statistics')
       
       const response = await adminApi.axiosInstance.get<ApiResponse<{ [key: string]: any }>>(
         `${this.baseURL}/statistics`

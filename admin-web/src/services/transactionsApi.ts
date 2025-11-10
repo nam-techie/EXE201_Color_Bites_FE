@@ -5,8 +5,8 @@ import {
     TransactionStats,
     TransactionUpdateStatusRequest
 } from '../types/transaction'
-import { adminApi } from './adminApi'
 import type { ApiResponse } from '../types/user'
+import { adminApi } from './adminApi'
 
 // Transactions API service for admin dashboard - Updated theo backend document
 class TransactionsApiService {
@@ -15,7 +15,7 @@ class TransactionsApiService {
   // GET /api/admin/transactions/all - Lấy toàn bộ transactions (tương thích với TransactionsList)
   async getTransactions(filters: TransactionFilters = {}): Promise<TransactionListResponse> {
     try {
-      console.log('📡 Fetching all transactions:', filters)
+      console.log(' Fetching all transactions:', filters)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<Transaction[]>>(
         `${this.baseURL}/all`
@@ -89,7 +89,7 @@ class TransactionsApiService {
   // GET /api/admin/transactions/{id} - Lấy chi tiết transaction
   async getTransactionById(id: string): Promise<ApiResponse<Transaction>> {
     try {
-      console.log('📡 Fetching transaction by id:', id)
+      console.log(' Fetching transaction by id:', id)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<Transaction>>(
         `${this.baseURL}/${id}`
@@ -114,7 +114,7 @@ class TransactionsApiService {
     size: number = 10
   ): Promise<ApiResponse<TransactionListResponse>> {
     try {
-      console.log('📡 Fetching transactions by status:', { status, page, size })
+      console.log(' Fetching transactions by status:', { status, page, size })
       
       const response = await adminApi.axiosInstance.get<ApiResponse<TransactionListResponse>>(
         `${this.baseURL}/status/${status}?page=${page}&size=${size}`
@@ -151,7 +151,7 @@ class TransactionsApiService {
   // GET /api/admin/transactions/stats - Lấy thống kê transactions (tương thích với TransactionsList)
   async getTransactionStats(): Promise<TransactionStats> {
     try {
-      console.log('📡 Fetching api/admin/transaction stats')
+      console.log(' Fetching api/admin/transaction stats')
       
       // Note: Backend không có endpoint này, nhưng giữ lại để tương thích
       // Có thể cần implement ở backend hoặc xử lý khác

@@ -16,7 +16,7 @@ class RestaurantsApiService {
     filters?: RestaurantFilters
   ): Promise<ApiResponse<RestaurantsPageResponse>> {
     try {
-      console.log('📡 Fetching restaurants:', { page, size, filters })
+      console.log(' Fetching restaurants:', { page, size, filters })
       
       const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantsPageResponse>>(
         `${this.baseURL}?page=${page}&size=${size}`
@@ -74,7 +74,7 @@ class RestaurantsApiService {
   // GET /api/admin/restaurants/{id} - Lấy chi tiết restaurant (tương thích với RestaurantDetail)
   async getRestaurantDetail(restaurantId: string): Promise<ApiResponse<RestaurantDetail>> {
     try {
-      console.log('📡 Fetching restaurant by id:', restaurantId)
+      console.log(' Fetching restaurant by id:', restaurantId)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<RestaurantDetail>>(
         `${this.baseURL}/${restaurantId}`

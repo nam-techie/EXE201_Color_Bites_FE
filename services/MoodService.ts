@@ -59,7 +59,7 @@ export class MoodService {
     */
    private async getMoodsPaginated(page: number = 1, size: number = 10): Promise<MoodListResponse | null> {
       try {
-         console.log(`📡 Fetching moods - Page: ${page}, Size: ${size}`)
+         console.log(` Fetching moods - Page: ${page}, Size: ${size}`)
          
          const response = await apiService.get<MoodListResponse>(
             `${API_ENDPOINTS.MOODS.LIST}?page=${page}&size=${size}`

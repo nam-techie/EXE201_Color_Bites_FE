@@ -113,7 +113,7 @@ export const withCache = <T extends any[], R>(
     }
 
     // Fetch data and cache it
-    console.log(`📡 Cache miss for key: ${key}, fetching...`)
+    console.log(` Cache miss for key: ${key}, fetching...`)
     const data = await fn(...args)
     cacheManager.set(key, data, ttl)
     

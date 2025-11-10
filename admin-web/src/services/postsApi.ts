@@ -16,7 +16,7 @@ class PostsApiService {
     filters?: PostFilters
   ): Promise<ApiResponse<PostsPageResponse>> {
     try {
-      console.log('📡 Fetching posts:', { page, size, filters })
+      console.log(' Fetching posts:', { page, size, filters })
       
       const response = await adminApi.axiosInstance.get<ApiResponse<PostsPageResponse>>(
         `${this.baseURL}?page=${page}&size=${size}`
@@ -45,7 +45,7 @@ class PostsApiService {
   // GET /api/admin/posts/{id} - Lấy chi tiết post (tương thích với PostDetail)
   async getPostDetail(postId: string): Promise<ApiResponse<PostDetail>> {
     try {
-      console.log('📡 Fetching post by id:', postId)
+      console.log(' Fetching post by id:', postId)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<PostDetail>>(
         `${this.baseURL}/${postId}`

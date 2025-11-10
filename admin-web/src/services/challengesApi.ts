@@ -15,7 +15,7 @@ class ChallengesApiService {
   // GET /api/admin/challenges - Lấy toàn bộ challenges (tương thích với ChallengesList)
   async getChallenges(params: ChallengeListParams = {}): Promise<ApiResponse<PagedResponse<Challenge>>> {
     try {
-      console.log('📡 Fetching all challenges:', params)
+      console.log(' Fetching all challenges:', params)
       
       // Gọi API giống như postsApi - interceptor sẽ tự động thêm token
       const response = await adminApi.axiosInstance.get<ApiResponse<any[]>>(
@@ -175,7 +175,7 @@ class ChallengesApiService {
   // GET /api/admin/challenges/{id} - Lấy chi tiết challenge
   async getChallengeById(id: string): Promise<ApiResponse<Challenge>> {
     try {
-      console.log('📡 Fetching challenge details:', id)
+      console.log(' Fetching challenge details:', id)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<any>>(
         `${this.baseURL}/${id}`
@@ -361,7 +361,7 @@ class ChallengesApiService {
   // Lấy danh sách bài nộp của challenge
   async getChallengeEntries(challengeId: string, params: { page?: number; size?: number } = {}): Promise<ApiResponse<PagedResponse<ChallengeEntry>>> {
     try {
-      console.log('📡 Fetching challenge entries:', challengeId, params)
+      console.log(' Fetching challenge entries:', challengeId, params)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<PagedResponse<ChallengeEntry>>>(
         `/api/challenges/${challengeId}/entries`,
@@ -425,7 +425,7 @@ class ChallengesApiService {
   // Lấy thống kê challenges
   async getChallengeStats(): Promise<ApiResponse<ChallengeStats>> {
     try {
-      console.log('📡 Fetching challenge statistics')
+      console.log(' Fetching challenge statistics')
       
       const response = await adminApi.axiosInstance.get<ApiResponse<ChallengeStats>>(
         '/api/admin/statistics/challenges'
