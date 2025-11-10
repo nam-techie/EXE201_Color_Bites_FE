@@ -1,12 +1,11 @@
 import {
-    CalendarOutlined,
     ClockCircleOutlined,
     CrownOutlined,
     GiftOutlined,
     InfoCircleOutlined,
     UserOutlined
 } from '@ant-design/icons'
-import { Card, Col, Descriptions, message, Row, Space, Statistic, Tag } from 'antd'
+import { Card, Col, Descriptions, message, Row, Space, Statistic } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { adminApi } from '../../services/adminApi'
 import { ListAccountResponse, UserInformationResponse } from '../../types/user'
