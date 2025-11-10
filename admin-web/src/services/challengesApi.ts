@@ -134,7 +134,7 @@ class ChallengesApiService {
           number: page
         }
         
-        console.log(`✅ Fetched ${paginatedData.length} challenges (${filteredChallenges.length} total)`)
+        console.log(` Fetched ${paginatedData.length} challenges (${filteredChallenges.length} total)`)
         return {
           status: 200,
           message: 'Success',
@@ -236,7 +236,7 @@ class ChallengesApiService {
           completionCount: raw.completionCount || 0
         }
         
-        console.log('✅ Fetched challenge details successfully')
+        console.log(' Fetched challenge details successfully')
         return {
           status: 200,
           message: 'Success',
@@ -262,7 +262,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Challenge created successfully')
+        console.log(' Challenge created successfully')
         return response.data
       }
       
@@ -284,7 +284,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Challenge updated successfully')
+        console.log(' Challenge updated successfully')
         return response.data
       }
       
@@ -305,7 +305,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Challenge deleted successfully')
+        console.log(' Challenge deleted successfully')
         return response.data
       }
       
@@ -326,7 +326,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Challenge activated successfully')
+        console.log(' Challenge activated successfully')
         return response.data
       }
       
@@ -347,7 +347,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Challenge deactivated successfully')
+        console.log(' Challenge deactivated successfully')
         return response.data
       }
       
@@ -369,7 +369,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data?.content?.length || 0} entries`)
+        console.log(` Fetched ${response.data.data?.content?.length || 0} entries`)
         return response.data
       }
       
@@ -390,7 +390,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Entry approved successfully')
+        console.log(' Entry approved successfully')
         return response.data
       }
       
@@ -411,7 +411,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Entry rejected successfully')
+        console.log(' Entry rejected successfully')
         return response.data
       }
       
@@ -432,7 +432,7 @@ class ChallengesApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Fetched challenge statistics successfully')
+        console.log(' Fetched challenge statistics successfully')
         return response.data
       }
       

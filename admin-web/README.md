@@ -5,12 +5,12 @@ Admin dashboard cho hệ thống Mummi - ứng dụng chia sẻ ẩm thực và 
 ## 🚀 Tính năng chính
 
 ### Phase 1 & 2 (Đã hoàn thành)
-- ✅ **Quản lý người dùng** - Xem, chặn/kích hoạt người dùng
-- ✅ **Quản lý bài viết** - CRUD bài viết, xem chi tiết
-- ✅ **Quản lý nhà hàng** - CRUD nhà hàng, đánh giá
-- ✅ **Quản lý giao dịch** - Theo dõi thanh toán, thống kê doanh thu
-- ✅ **Quản lý bình luận** - Kiểm duyệt, xóa bình luận
-- ✅ **Quản lý tags** - CRUD tags, thống kê sử dụng
+-  **Quản lý người dùng** - Xem, chặn/kích hoạt người dùng
+-  **Quản lý bài viết** - CRUD bài viết, xem chi tiết
+-  **Quản lý nhà hàng** - CRUD nhà hàng, đánh giá
+-  **Quản lý giao dịch** - Theo dõi thanh toán, thống kê doanh thu
+-  **Quản lý bình luận** - Kiểm duyệt, xóa bình luận
+-  **Quản lý tags** - CRUD tags, thống kê sử dụng
 
 ### Phase 3 (Mới triển khai)
 - 🎭 **Quản lý Moods** - CRUD moods, theo dõi sử dụng

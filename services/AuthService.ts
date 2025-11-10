@@ -65,7 +65,7 @@ export class AuthService {
           active: userData.active
         }))
         
-        console.log('✅ Login successful - token and user saved')
+        console.log(' Login successful - token and user saved')
         console.log('🔑 Token:', userData.token.substring(0, 50) + '...')
         console.log('👤 User:', userData.userName, userData.email, userData.role)
         
@@ -116,7 +116,7 @@ export class AuthService {
       console.log('📥 Register response:', response.data)
 
       if (response.data.status === 200) {
-        console.log('✅ Register successful - no auto-login')
+        console.log(' Register successful - no auto-login')
         return response.data.data || 'Đăng ký thành công'
       }
 
@@ -156,7 +156,7 @@ export class AuthService {
     try {
       await AsyncStorage.removeItem('authToken')
       await AsyncStorage.removeItem('user')
-      console.log('✅ Logout successful - cleared local data')
+      console.log(' Logout successful - cleared local data')
     } catch (error) {
       console.error('❌ Logout error:', error)
       throw error

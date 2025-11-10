@@ -51,7 +51,7 @@ class StatisticsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ System statistics fetched successfully')
+        console.log(' System statistics fetched successfully')
         return response.data
       }
       
@@ -60,7 +60,7 @@ class StatisticsApiService {
       console.error('Error fetching system statistics:', error)
       throw error
     }
-  },
+  }
 
   // GET /api/admin/statistics/users - Lấy thống kê users
   async getUserStatistics(): Promise<ApiResponse<UserStatisticsResponse>> {
@@ -72,7 +72,7 @@ class StatisticsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ User statistics fetched successfully')
+        console.log(' User statistics fetched successfully')
         return response.data
       }
       
@@ -81,7 +81,7 @@ class StatisticsApiService {
       console.error('Error fetching post statistics:', error)
       throw error
     }
-  },
+  }
 
   // GET /api/admin/statistics/posts - Lấy thống kê posts
   async getPostStatistics(): Promise<ApiResponse<PostStatisticsResponse>> {
@@ -93,7 +93,7 @@ class StatisticsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Post statistics fetched successfully')
+        console.log(' Post statistics fetched successfully')
         return response.data
       }
       
@@ -102,7 +102,7 @@ class StatisticsApiService {
       console.error('Error fetching revenue statistics:', error)
       throw error
     }
-  },
+  }
 
   // GET /api/admin/statistics/restaurants - Lấy thống kê restaurants
   async getRestaurantStatistics(): Promise<ApiResponse<RestaurantStatisticsResponse>> {
@@ -114,7 +114,7 @@ class StatisticsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Restaurant statistics fetched successfully')
+        console.log(' Restaurant statistics fetched successfully')
         return response.data
       }
       
@@ -135,7 +135,7 @@ class StatisticsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Revenue statistics fetched successfully')
+        console.log(' Revenue statistics fetched successfully')
         return response.data
       }
       
@@ -156,7 +156,7 @@ class StatisticsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Engagement statistics fetched successfully')
+        console.log(' Engagement statistics fetched successfully')
         return response.data
       }
       
@@ -177,7 +177,7 @@ class StatisticsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Challenge statistics fetched successfully')
+        console.log(' Challenge statistics fetched successfully')
         return response.data
       }
       
@@ -188,45 +188,8 @@ class StatisticsApiService {
     }
   }
 
-  // GET /api/admin/statistics/engagement - Lấy thống kê tương tác
-  async getEngagementStatistics(): Promise<ApiResponse<EngagementStatisticsResponse>> {
-    try {
-      console.log('📡 Fetching engagement statistics')
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<EngagementStatisticsResponse>>(
-        '/api/admin/statistics/engagement'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ Engagement statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê tương tác')
-    } catch (error) {
-      console.error('❌ Error fetching engagement statistics:', error)
-      throw error
-    }
-  }
-
-  // GET /api/admin/statistics/challenges - Lấy thống kê challenges
-  async getChallengeStatistics(): Promise<ApiResponse<ChallengeStatisticsResponse>> {
-    try {
-      console.log('📡 Fetching challenge statistics')
-      
-      const response = await adminApi.axiosInstance.get<ApiResponse<ChallengeStatisticsResponse>>(
-        '/api/admin/statistics/challenges'
-      )
-      
-      if (response.data.status === 200) {
-        console.log('✅ Challenge statistics fetched successfully')
-        return response.data
-      }
-      
-      throw new Error(response.data.message || 'Không thể tải thống kê challenges')
-    } catch (error) {
-      console.error('❌ Error fetching challenge statistics:', error)
-      throw error
-    }
-  }
 }
+
+// Export singleton instance
+export const statisticsApi = new StatisticsApiService()
+export default statisticsApi

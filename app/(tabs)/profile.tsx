@@ -132,7 +132,7 @@ export default function ProfileScreen() {
             
             // Normalize data trước khi set vào state
             const normalizedPosts = response.content.map(normalizePost)
-            console.log('✅ Normalized posts:', normalizedPosts.length, 'posts')
+            console.log(' Normalized posts:', normalizedPosts.length, 'posts')
             console.log('🖼️ Posts with images:', normalizedPosts.filter(p => p.imageUrls && p.imageUrls.length > 0).length)
             console.log('📄 Posts without images:', normalizedPosts.filter(p => !p.imageUrls || p.imageUrls.length === 0).length)
             
@@ -229,7 +229,7 @@ export default function ProfileScreen() {
          console.log('👤 Loading user profile data...')
          const profileData = await userService.getUserInformation()
          setUserInfo(profileData)
-         console.log('✅ User profile loaded:', {
+         console.log(' User profile loaded:', {
             username: profileData.username,
             gender: profileData.gender,
             avatarUrl: profileData.avatarUrl,
@@ -293,7 +293,7 @@ export default function ProfileScreen() {
       console.log('🖼️ Post clicked, switching to list view:', post.id, 'Current viewMode:', viewMode)
       setSelectedPostForList(post)
       setViewMode('list')
-      console.log('✅ ViewMode set to list, selectedPost:', post.id)
+      console.log(' ViewMode set to list, selectedPost:', post.id)
    }, [viewMode])
 
    const handleLogout = async () => {
@@ -597,7 +597,7 @@ export default function ProfileScreen() {
                                     }} // Show first image with fallback
                               style={styles.postImage}
                               contentFit="cover"
-                                    onLoad={() => console.log('✅ Image loaded:', post.imageUrls[0])}
+                                    onLoad={() => console.log(' Image loaded:', post.imageUrls[0])}
                                     onError={(error) => console.error('❌ Image load error:', error, 'URL:', post.imageUrls[0])}
                            />
                                  {post.imageUrls.length > 1 && (

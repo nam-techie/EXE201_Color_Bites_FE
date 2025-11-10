@@ -213,12 +213,12 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
             )}
             {transaction.status === 'SUCCESS' && (
               <div className="text-green-600 font-medium">
-                ✅ Giao dịch đã được duyệt thành công
+                 Giao dịch đã được duyệt thành công
               </div>
             )}
             {transaction.status === 'FAILED' && (
               <div className="text-red-600 font-medium">
-                ❌ Giao dịch đã bị từ chối
+                Giao dịch đã bị từ chối
               </div>
             )}
             {transaction.status === 'CANCELED' && (

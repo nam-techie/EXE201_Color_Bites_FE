@@ -1,10 +1,10 @@
 import {
-    Comment,
-    CommentFilters,
-    CommentListResponse
+  Comment,
+  CommentFilters,
+  CommentListResponse
 } from '../types/comment'
-import { adminApi } from './adminApi'
 import type { ApiResponse } from '../types/user'
+import { adminApi } from './adminApi'
 
 // Comments API service for admin dashboard - Updated theo backend document
 class CommentsApiService {
@@ -13,7 +13,7 @@ class CommentsApiService {
   // GET /api/admin/comments - Lấy danh sách comments với pagination (tương thích với CommentsList)
   async getComments(filters: CommentFilters = {}): Promise<CommentListResponse> {
     try {
-      console.log('📡 Fetching comments:', filters)
+      console.log(' Fetching comments:', filters)
       
       const page = filters.page || 0
       const limit = filters.limit || 10
@@ -71,7 +71,7 @@ class CommentsApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách comment')
     } catch (error: any) {
-      console.error('❌ Error fetching comments:', error)
+      console.error('Error fetching comments:', error)
       // Return empty response instead of throwing to prevent page crash
       return {
         data: [],
@@ -99,20 +99,20 @@ class CommentsApiService {
   // GET /api/admin/comments/{id} - Lấy chi tiết comment
   async getCommentById(id: string): Promise<ApiResponse<Comment>> {
     try {
-      console.log('📡 Fetching comment by id:', id)
+      console.log(' Fetching comment by id:', id)
       
       const response = await adminApi.axiosInstance.get<ApiResponse<Comment>>(
         `${this.baseURL}/${id}`
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Comment detail fetched successfully')
+        console.log(' Comment detail fetched successfully')
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể tải chi tiết comment')
     } catch (error) {
-      console.error('❌ Error fetching comment:', error)
+      console.error('Error fetching comment:', error)
       throw error
     }
   }
@@ -120,20 +120,20 @@ class CommentsApiService {
   // DELETE /api/admin/comments/{id} - Xóa comment
   async deleteComment(id: string): Promise<ApiResponse<void>> {
     try {
-      console.log('📤 Deleting comment:', id)
+      console.log(' Deleting comment:', id)
       
       const response = await adminApi.axiosInstance.delete<ApiResponse<void>>(
         `${this.baseURL}/${id}`
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Comment deleted successfully')
+        console.log(' Comment deleted successfully')
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể xóa comment')
     } catch (error) {
-      console.error('❌ Error deleting comment:', error)
+      console.error('Error deleting comment:', error)
       throw error
     }
   }
@@ -141,75 +141,55 @@ class CommentsApiService {
   // PUT /api/admin/comments/{id}/restore - Khôi phục comment đã xóa
   async restoreComment(id: string): Promise<ApiResponse<void>> {
     try {
-      console.log('📤 Restoring comment:', id)
+      console.log(' Restoring comment:', id)
       
       const response = await adminApi.axiosInstance.put<ApiResponse<void>>(
         `${this.baseURL}/${id}/restore`
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Comment restored successfully')
+        console.log(' Comment restored successfully')
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể khôi phục comment')
     } catch (error) {
-      console.error('❌ Error restoring comment:', error)
-      throw error
-    }
-  },
-
-  // Delete single comment (soft delete)
-  async deleteComment(id: string): Promise<void> {
-    try {
-      await adminApi.delete(`/api/admin/comments/${id}`)
-    } catch (error) {
-      console.error('Error deleting comment:', error)
-      throw error
-    }
-  },
-
-  // Restore deleted comment
-  async restoreComment(id: string): Promise<void> {
-    try {
-      await adminApi.put(`/api/admin/comments/${id}/restore`)
-    } catch (error) {
       console.error('Error restoring comment:', error)
       throw error
     }
-  },
+  }
 
   // Get comments by post
   async getCommentsByPost(postId: string, page: number = 0, size: number = 10): Promise<CommentListResponse> {
     try {
-      console.log('📡 Fetching comments by post:', { postId, page, size })
+      console.log(' Fetching comments by post:', { postId, page, size })
       
       const response = await adminApi.axiosInstance.get<ApiResponse<CommentListResponse>>(
         `${this.baseURL}/post/${postId}?page=${page}&size=${size}`
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Comments by post fetched successfully')
-        return response.data
+        console.log(' Comments by post fetched successfully')
+        return response.data.data
       }
       
       throw new Error(response.data.message || 'Không thể tải comment theo bài viết')
     } catch (error) {
-      console.error('❌ Error fetching comments by post:', error)
+      console.error('Error fetching comments by post:', error)
       throw error
     }
   }
 
   // PUT /api/admin/comments/{id}/status - Cập nhật status comment (tương thích với CommentsList)
-  async updateCommentStatus(id: string, data: CommentUpdateStatusRequest): Promise<Comment> {
+  async updateCommentStatus(id: string, data: any): Promise<Comment> {
     try {
-      console.log('📤 Updating comment status:', id, data)
+      console.log('Updating comment status:', id, data)
       
       // Note: Backend không có endpoint này, nhưng giữ lại để tương thích
       // Có thể cần implement ở backend hoặc xử lý khác
       throw new Error('Method not implemented - backend endpoint missing')
     } catch (error) {
-      console.error('❌ Error updating comment status:', error)
+      console.error('Error updating comment status:', error)
       throw error
     }
   }
@@ -217,20 +197,20 @@ class CommentsApiService {
   // GET /api/admin/comments/statistics - Lấy thống kê comments
   async getCommentStatistics(): Promise<ApiResponse<{ [key: string]: any }>> {
     try {
-      console.log('📡 Fetching comment statistics')
+      console.log(' Fetching comment statistics')
       
       const response = await adminApi.axiosInstance.get<ApiResponse<{ [key: string]: any }>>(
         `${this.baseURL}/statistics`
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Comment statistics fetched successfully')
+        console.log(' Comment statistics fetched successfully')
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể tải thống kê comment')
     } catch (error) {
-      console.error('❌ Error fetching comment statistics:', error)
+      console.error('Error fetching comment statistics:', error)
       throw error
     }
   }

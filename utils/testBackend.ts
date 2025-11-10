@@ -17,7 +17,7 @@ export const testBackendConnection = async () => {
     
     if (response.ok) {
       const data = await response.text()
-      console.log('✅ Backend is running:', data)
+      console.log(' Backend is running:', data)
       return true
     } else {
       console.log('⚠️ Backend health check failed, but server might be running')

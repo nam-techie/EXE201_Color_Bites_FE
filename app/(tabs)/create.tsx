@@ -36,7 +36,7 @@ export default function CreatePostScreen() {
     
     const success = await createPost()
     if (success) {
-      console.log('✅ Post created successfully!')
+      console.log(' Post created successfully!')
     }
   }
 
@@ -49,7 +49,7 @@ export default function CreatePostScreen() {
           {user ? (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ fontSize: 12, color: '#10B981', marginRight: 8 }}>
-                ✅ {user.name}
+                 {user.name}
               </Text>
             </View>
           ) : (

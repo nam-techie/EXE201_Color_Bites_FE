@@ -26,7 +26,7 @@ class RestaurantsApiService {
         // Ensure data structure is correct
         const pageData = response.data.data
         if (pageData && pageData.content) {
-          console.log(`✅ Fetched ${pageData.content.length} restaurants`)
+          console.log(` Fetched ${pageData.content.length} restaurants`)
           return response.data
         } else {
           // Return empty page if structure is wrong
@@ -81,7 +81,7 @@ class RestaurantsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Restaurant detail fetched successfully')
+        console.log(' Restaurant detail fetched successfully')
         return response.data
       }
       
@@ -107,7 +107,7 @@ class RestaurantsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Restaurant deleted successfully')
+        console.log(' Restaurant deleted successfully')
         return response.data
       }
       
@@ -128,7 +128,7 @@ class RestaurantsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Restaurant restored successfully')
+        console.log(' Restaurant restored successfully')
         return response.data
       }
       

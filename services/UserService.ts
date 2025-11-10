@@ -25,7 +25,7 @@ export class UserService {
          )
          
          if (response.status === 200 && response.data) {
-            console.log('✅ User information fetched successfully:', response.data)
+            console.log(' User information fetched successfully:', response.data)
             return response.data
          }
          

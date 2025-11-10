@@ -64,7 +64,7 @@ class TagsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Tag detail fetched successfully')
+        console.log(' Tag detail fetched successfully')
         return response.data
       }
       
@@ -76,7 +76,7 @@ class TagsApiService {
   }
 
   // POST /api/admin/tags - Tạo tag mới (tương thích với TagForm) - Using query params theo document
-  async createTag(name: string, description?: string): Promise<Tag> {
+  async createTag(data: { name: string; description?: string }): Promise<Tag> {
     try {
       console.log('📤 Creating tag:', data)
       
@@ -91,7 +91,7 @@ class TagsApiService {
       )
       
       if (response.data.status === 201) {
-        console.log('✅ Tag created successfully')
+        console.log(' Tag created successfully')
         return response.data.data
       }
       
@@ -107,7 +107,7 @@ class TagsApiService {
     name: string,
     description?: string
   ): Promise<ApiResponse<Tag>> {
-    const tag = await this.createTag({ name, description, color: '#4299e1' })
+    const tag = await this.createTag({ name, description })
     return {
       status: 201,
       message: 'Success',
@@ -131,7 +131,7 @@ class TagsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Tag updated successfully')
+        console.log(' Tag updated successfully')
         return response.data.data
       }
       
@@ -166,7 +166,7 @@ class TagsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Tag deleted successfully')
+        console.log(' Tag deleted successfully')
         return
       }
       
@@ -177,16 +177,7 @@ class TagsApiService {
     }
   }
 
-  // Get tag statistics
-  async getTagStatistics(): Promise<any> {
-    try {
-      const response = await adminApi.get('/api/admin/tags/statistics')
-      return response.data
-    } catch (error) {
-      console.error('Error fetching tag statistics:', error)
-      throw error
-    }
-  },
+
 
   // GET /api/admin/tags/statistics - Lấy thống kê tags
   async getTagStatistics(): Promise<ApiResponse<{ [key: string]: any }>> {
@@ -198,7 +189,7 @@ class TagsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Tag statistics fetched successfully')
+        console.log(' Tag statistics fetched successfully')
         return response.data
       }
       
@@ -207,17 +198,7 @@ class TagsApiService {
       console.error('❌ Error fetching tag statistics:', error)
       throw error
     }
-  },
-
-  // Restore deleted tag
-  async restoreTag(id: string): Promise<void> {
-    try {
-      await adminApi.put(`/api/admin/tags/${id}/restore`)
-    } catch (error) {
-      console.error('Error restoring tag:', error)
-      throw error
-    }
-  },
+  }
 
   // Restore deleted tag
   async restoreTag(id: string): Promise<void> {

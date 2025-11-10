@@ -28,7 +28,7 @@ export class PostService {
          console.log('Response Data:', response.data)
          
          if (response.status === 201 && response.data) {
-            console.log('✅ Post created successfully:', response.data)
+            console.log(' Post created successfully:', response.data)
             return response.data
          }
          

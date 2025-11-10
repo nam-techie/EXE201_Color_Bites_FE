@@ -36,14 +36,14 @@ export class MoodService {
                if (result.status === 'fulfilled' && result.value) {
                   const transformedMoods = this.transformMoodResponses(result.value.content)
                   allMoods = allMoods.concat(transformedMoods)
-                  console.log(`✅ Page ${index + 2} fetched: ${transformedMoods.length} moods`)
+                  console.log(` Page ${index + 2} fetched: ${transformedMoods.length} moods`)
                } else {
                   console.error(`❌ Failed to fetch page ${index + 2}:`, result.status === 'rejected' ? result.reason : 'No data')
                }
             })
          }
          
-         console.log(`✅ Successfully fetched ${allMoods.length} moods from API`)
+         console.log(` Successfully fetched ${allMoods.length} moods from API`)
          return allMoods
          
       } catch (error) {
@@ -66,7 +66,7 @@ export class MoodService {
          )
          
          if (response.status === 200 && response.data) {
-            console.log(`✅ Page ${page} fetched: ${response.data.content.length} moods`)
+            console.log(` Page ${page} fetched: ${response.data.content.length} moods`)
             return response.data
          }
          

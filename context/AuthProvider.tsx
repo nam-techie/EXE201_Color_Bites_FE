@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          if (token && userData) {
             try {
                const parsedUser = JSON.parse(userData)
-               console.log('✅ Found valid auth state for user:', parsedUser.name)
+               console.log(' Found valid auth state for user:', parsedUser.name)
                setUser(parsedUser)
             } catch (error) {
                console.error('❌ Error parsing user data, clearing auth state:', error)
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          }
          
          setUser(user)
-         console.log('✅ Login successful! Token saved for API calls.')
+         console.log(' Login successful! Token saved for API calls.')
          console.log('👤 User:', user.name, '| Role:', userData.role)
          
       } catch (error) {
@@ -115,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          
          const message = await authService.register(username, email, password, confirmPassword)
          
-         console.log('✅ Register successful! No auto-login:', message)
+         console.log(' Register successful! No auto-login:', message)
          
          // Không set user - yêu cầu login riêng
          return message
@@ -141,7 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          // Clear from state
          setUser(null)
          
-         console.log('✅ Logout successful - all auth data cleared')
+         console.log(' Logout successful - all auth data cleared')
          
       } catch (error) {
          console.error('❌ Error during logout:', error)
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // Update in AsyncStorage
             await AsyncStorage.setItem('user', JSON.stringify(updatedUser))
-            console.log('✅ User avatar updated in context:', avatarUrl)
+            console.log(' User avatar updated in context:', avatarUrl)
          }
       } catch (error) {
          console.error('❌ Error updating user avatar:', error)

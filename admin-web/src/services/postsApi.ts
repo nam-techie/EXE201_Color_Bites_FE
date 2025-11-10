@@ -23,7 +23,7 @@ class PostsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log(`✅ Fetched ${response.data.data.content.length} posts`)
+        console.log(` Fetched ${response.data.data.content.length} posts`)
         return response.data
       }
       
@@ -52,7 +52,7 @@ class PostsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Post detail fetched successfully')
+        console.log(' Post detail fetched successfully')
         return response.data
       }
       
@@ -78,7 +78,7 @@ class PostsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Post deleted successfully')
+        console.log(' Post deleted successfully')
         return response.data
       }
       
@@ -99,7 +99,7 @@ class PostsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Post restored successfully')
+        console.log(' Post restored successfully')
         return response.data
       }
       

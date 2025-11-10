@@ -70,7 +70,7 @@ class MoodsApiService {
           number: page
         }
         
-        console.log(`✅ Fetched ${paginatedData.length} moods (${filteredMoods.length} total)`)
+        console.log(` Fetched ${paginatedData.length} moods (${filteredMoods.length} total)`)
         return {
           status: 200,
           message: 'Success',
@@ -106,7 +106,7 @@ class MoodsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Fetched mood details successfully')
+        console.log(' Fetched mood details successfully')
         return response.data
       }
       
@@ -128,7 +128,7 @@ class MoodsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Mood created successfully')
+        console.log(' Mood created successfully')
         return response.data
       }
       
@@ -150,7 +150,7 @@ class MoodsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Mood updated successfully')
+        console.log(' Mood updated successfully')
         return response.data
       }
       
@@ -171,7 +171,7 @@ class MoodsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Mood deleted successfully')
+        console.log(' Mood deleted successfully')
         return response.data
       }
       
@@ -192,7 +192,7 @@ class MoodsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Fetched mood statistics successfully')
+        console.log(' Fetched mood statistics successfully')
         return response.data
       }
       

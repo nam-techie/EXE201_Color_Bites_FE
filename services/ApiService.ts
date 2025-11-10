@@ -24,7 +24,7 @@ class ApiService {
                
                if (token) {
                   config.headers.Authorization = `Bearer ${token}`
-                  console.log('✅ Authorization header added')
+                  console.log(' Authorization header added')
                } else {
                   console.warn('⚠️ No auth token found - API call may fail if auth required')
                }

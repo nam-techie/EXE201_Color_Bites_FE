@@ -92,7 +92,7 @@ const ChallengeStatistics: React.FC = () => {
             <Statistic
               title="Thử thách hoàn thành"
               value={statistics.completedChallenges}
-              prefix="✅"
+              prefix=""
               valueStyle={{ color: '#722ed1' }}
             />
           </Card>

@@ -98,7 +98,7 @@ const RestaurantsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            ⭐ {record.rating != null ? displayValue(record.rating?.toFixed(1) : 'N/A', '0.0')}
+            ⭐ {record.rating != null ? displayValue(record.rating?.toFixed(1), '0.0') : 'N/A'}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
             {displayCurrency(record.avgPrice || 0, '0')}/người

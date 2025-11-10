@@ -16,7 +16,7 @@ export async function clearAllAuthData() {
     const remainingToken = await AsyncStorage.getItem('authToken')
     const remainingUser = await AsyncStorage.getItem('user')
     
-    console.log('✅ Auth data cleared successfully')
+    console.log(' Auth data cleared successfully')
     console.log('Remaining token:', remainingToken ? 'ERROR - Still exists!' : 'None')
     console.log('Remaining user:', remainingUser ? 'ERROR - Still exists!' : 'None')
     

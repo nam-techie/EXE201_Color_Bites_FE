@@ -41,7 +41,7 @@ const Login = () => {
         password: formData.password
       })
 
-      console.log('✅ Admin login successful:', response.data.username)
+      console.log(' Admin login successful:', response.data.username)
       navigate('/')
       
     } catch (error) {

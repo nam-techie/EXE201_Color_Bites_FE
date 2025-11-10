@@ -27,22 +27,22 @@ class AdminApiService {
           
           if (token) {
             config.headers.Authorization = `Bearer ${token}`
-            console.log('✅ Admin Authorization header added')
-            console.log('📤 Full Authorization header:', config.headers.Authorization)
+            console.log(' Admin Authorization header added')
+            console.log(' Full Authorization header:', config.headers.Authorization)
           } else {
             console.warn('⚠️ No admin auth token found - API call may fail if auth required')
           }
           
-          console.log('📤 Admin Request URL:', config.url)
-          console.log('📤 Admin Request Method:', config.method?.toUpperCase())
-          console.log('📤 Admin Full URL:', `${config.baseURL}${config.url}`)
+          console.log(' Admin Request URL:', config.url)
+          console.log(' Admin Request Method:', config.method?.toUpperCase())
+          console.log(' Admin Full URL:', `${config.baseURL}${config.url}`)
         } catch (error) {
-          console.error('❌ Error getting admin auth token:', error)
+          console.error('Error getting admin auth token:', error)
         }
         return config
       },
       (error) => {
-        console.error('❌ Admin Request interceptor error:', error)
+        console.error('Admin Request interceptor error:', error)
         return Promise.reject(error)
       },
     )
@@ -65,10 +65,10 @@ class AdminApiService {
         // Handle 403 - Forbidden (không có quyền truy cập)
         if (error.response?.status === 403) {
           const serverMessage = error.response?.data?.message || 'Bạn không có quyền truy cập tài nguyên này'
-          console.error('❌ 403 Forbidden:', serverMessage)
-          console.error('❌ Request URL:', error.config?.url)
-          console.error('❌ Request Method:', error.config?.method)
-          console.error('❌ Response data:', error.response?.data)
+          console.error('403 Forbidden:', serverMessage)
+          console.error('Request URL:', error.config?.url)
+          console.error('Request Method:', error.config?.method)
+          console.error('Response data:', error.response?.data)
           // Giữ nguyên error object để giữ thông tin response
           const customError: any = new Error(serverMessage)
           customError.response = error.response
@@ -96,20 +96,20 @@ class AdminApiService {
   // Get all users by admin
   async getAllUsers(): Promise<ApiResponse<ListAccountResponse[]>> {
     try {
-      console.log('📡 Fetching all users by admin')
+      console.log(' Fetching all users by admin')
       
       const response = await this.axiosInstance.get<ApiResponse<ListAccountResponse[]>>(
         '/api/admin/user'
       )
       
       if (response.data.status === 200 && response.data.data) {
-        console.log(`✅ Fetched ${response.data.data.length} users`)
+        console.log(` Fetched ${response.data.data.length} users`)
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể tải danh sách người dùng')
     } catch (error) {
-      console.error('❌ Error fetching users:', error)
+      console.error('Error fetching users:', error)
       throw error
     }
   }
@@ -117,20 +117,20 @@ class AdminApiService {
   // Block user
   async blockUser(userId: string): Promise<ApiResponse<void>> {
     try {
-      console.log('📤 Blocking user:', userId)
+      console.log(' Blocking user:', userId)
       
       const response = await this.axiosInstance.put<ApiResponse<void>>(
         `/api/admin/block-user/${userId}`
       )
       
       if (response.data.status === 200) {
-        console.log('✅ User blocked successfully:', userId)
+        console.log(' User blocked successfully:', userId)
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể chặn người dùng')
     } catch (error) {
-      console.error('❌ Error blocking user:', error)
+      console.error('Error blocking user:', error)
       throw error
     }
   }
@@ -138,20 +138,20 @@ class AdminApiService {
   // Activate user
   async activeUser(userId: string): Promise<ApiResponse<void>> {
     try {
-      console.log('📤 Activating user:', userId)
+      console.log(' Activating user:', userId)
       
       const response = await this.axiosInstance.put<ApiResponse<void>>(
         `/api/admin/active-user/${userId}`
       )
       
       if (response.data.status === 200) {
-        console.log('✅ User activated successfully:', userId)
+        console.log(' User activated successfully:', userId)
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể kích hoạt người dùng')
     } catch (error) {
-      console.error('❌ Error activating user:', error)
+      console.error('Error activating user:', error)
       throw error
     }
   }
@@ -159,20 +159,20 @@ class AdminApiService {
   // Get user information detail
   async getUserInformation(userId: string): Promise<ApiResponse<UserInformationResponse>> {
     try {
-      console.log('📡 Fetching user information:', userId)
+      console.log(' Fetching user information:', userId)
       
       const response = await this.axiosInstance.get<ApiResponse<UserInformationResponse>>(
         `/api/admin/viewDetailUser/${userId}`
       )
       
       if (response.data.status === 200 && response.data.data) {
-        console.log('✅ User information fetched successfully')
+        console.log(' User information fetched successfully')
         return response.data
       }
       
       throw new Error(response.data.message || 'Không thể tải thông tin người dùng')
     } catch (error) {
-      console.error('❌ Error fetching user information:', error)
+      console.error('Error fetching user information:', error)
       throw error
     }
   }
@@ -196,7 +196,7 @@ class AdminApiService {
   // Admin login with real API
   async login(credentials: LoginRequest): Promise<AuthApiResponse<AccountResponse>> {
     try {
-      console.log('📤 Admin login request:', { username: credentials.username })
+      console.log(' Admin login request:', { username: credentials.username })
       
       const response = await this.axiosInstance.post<AuthApiResponse<AccountResponse>>(
         '/api/auth/login',
@@ -220,13 +220,13 @@ class AdminApiService {
           role: accountData.role
         }))
         
-        console.log('✅ Admin login successful')
+        console.log(' Admin login successful')
         return response.data
       }
       
       throw new Error(response.data.message || 'Đăng nhập thất bại')
     } catch (error) {
-      console.error('❌ Admin login failed:', error)
+      console.error('Admin login failed:', error)
       if (axios.isAxiosError(error)) {
         const serverMessage = error.response?.data?.message || 'Đăng nhập thất bại'
         throw new Error(serverMessage)
@@ -240,7 +240,7 @@ class AdminApiService {
     try {
       const token = this.getAuthToken()
       if (token) {
-        console.log('📤 Admin logout request')
+        console.log(' Admin logout request')
         
         await this.axiosInstance.post('/api/auth/logout', {}, {
           headers: {
@@ -248,10 +248,10 @@ class AdminApiService {
           }
         })
         
-        console.log('✅ Admin logout successful')
+        console.log(' Admin logout successful')
       }
     } catch (error) {
-      console.error('❌ Admin logout error:', error)
+      console.error('Admin logout error:', error)
       // Continue with local cleanup even if API call fails
     } finally {
       // Always clear local storage
@@ -262,33 +262,33 @@ class AdminApiService {
   // Generic CRUD methods for other API services
   async get<T>(url: string): Promise<ApiResponse<T>> {
     try {
-      console.log('📡 GET request:', url)
+      console.log(' GET request:', url)
       const response = await this.axiosInstance.get<ApiResponse<T>>(url)
       return response.data
     } catch (error) {
-      console.error('❌ GET request error:', error)
+      console.error('GET request error:', error)
       throw error
     }
   }
 
   async post<T>(url: string, data?: any): Promise<ApiResponse<T>> {
     try {
-      console.log('📤 POST request:', url, data)
+      console.log(' POST request:', url, data)
       const response = await this.axiosInstance.post<ApiResponse<T>>(url, data)
       return response.data
     } catch (error) {
-      console.error('❌ POST request error:', error)
+      console.error('POST request error:', error)
       throw error
     }
   }
 
   async put<T>(url: string, data?: any): Promise<ApiResponse<T>> {
     try {
-      console.log('📤 PUT request:', url, data)
+      console.log(' PUT request:', url, data)
       const response = await this.axiosInstance.put<ApiResponse<T>>(url, data)
       return response.data
     } catch (error) {
-      console.error('❌ PUT request error:', error)
+      console.error('PUT request error:', error)
       throw error
     }
   }
@@ -299,18 +299,18 @@ class AdminApiService {
       const response = await this.axiosInstance.delete<ApiResponse<T>>(url)
       return response.data
     } catch (error) {
-      console.error('❌ DELETE request error:', error)
+      console.error('DELETE request error:', error)
       throw error
     }
   }
 
   async patch<T>(url: string, data?: any): Promise<ApiResponse<T>> {
     try {
-      console.log('📤 PATCH request:', url, data)
+      console.log(' PATCH request:', url, data)
       const response = await this.axiosInstance.patch<ApiResponse<T>>(url, data)
       return response.data
     } catch (error) {
-      console.error('❌ PATCH request error:', error)
+      console.error('PATCH request error:', error)
       throw error
     }
   }

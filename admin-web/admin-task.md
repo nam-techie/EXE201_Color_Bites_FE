@@ -829,7 +829,7 @@ Authorization: Bearer {jwt_token}
 👥 Users Management
 ├── 👤 All Users
 ├── 🚫 Blocked Users
-├── ✅ Active Users
+├──  Active Users
 └── 📊 User Statistics
 
 📝 Posts Management
@@ -852,8 +852,8 @@ Authorization: Bearer {jwt_token}
 
 💳 Transactions/Payments
 ├── 💰 All Transactions
-├── ✅ Successful Payments
-├── ❌ Failed Payments
+├──  Successful Payments
+├── Failed Payments
 ├── ⏳ Pending Payments
 └── 📊 Revenue Analytics
 
@@ -878,14 +878,14 @@ Authorization: Bearer {jwt_token}
 ## 🚨 **LƯU Ý QUAN TRỌNG VỀ SOFT DELETE**
 
 ### **APIs có thể soft delete (có trường isDeleted):**
-- ✅ **Posts**: `/api/admin/posts/{id}` (DELETE) + `/api/admin/posts/{id}/restore` (PUT)
-- ✅ **Comments**: `/api/admin/comments/{id}` (DELETE) + `/api/admin/comments/{id}/restore` (PUT)
-- ✅ **Restaurants**: `/api/admin/restaurants/{id}` (DELETE) + `/api/admin/restaurants/{id}/restore` (PUT)
-- ✅ **Tags**: `/api/admin/tags/{id}` (DELETE) + restore endpoint (nếu có)
+-  **Posts**: `/api/admin/posts/{id}` (DELETE) + `/api/admin/posts/{id}/restore` (PUT)
+-  **Comments**: `/api/admin/comments/{id}` (DELETE) + `/api/admin/comments/{id}/restore` (PUT)
+-  **Restaurants**: `/api/admin/restaurants/{id}` (DELETE) + `/api/admin/restaurants/{id}/restore` (PUT)
+-  **Tags**: `/api/admin/tags/{id}` (DELETE) + restore endpoint (nếu có)
 
 ### **APIs KHÔNG có soft delete (không có trường isDeleted):**
-- ❌ **Users**: Chỉ có block/unblock, không có delete
-- ❌ **Transactions**: Không có delete (chỉ xem và thống kê)
+- **Users**: Chỉ có block/unblock, không có delete
+- **Transactions**: Không có delete (chỉ xem và thống kê)
 
 ---
 
@@ -1090,4 +1090,4 @@ interface Page<T> {
 **📝 Last Updated**: 2025-01-25  
 **👤 Created by**: AI Assistant  
 **🏷️ Version**: 2.0.0  
-**📋 Status**: ✅ Complete - Ready for Frontend Implementation
+**📋 Status**:  Complete - Ready for Frontend Implementation

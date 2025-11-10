@@ -96,7 +96,7 @@ class TransactionsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Transaction detail fetched successfully')
+        console.log(' Transaction detail fetched successfully')
         return response.data
       }
       
@@ -121,7 +121,7 @@ class TransactionsApiService {
       )
       
       if (response.data.status === 200) {
-        console.log('✅ Transactions by status fetched successfully')
+        console.log(' Transactions by status fetched successfully')
         return response.data
       }
       
@@ -132,16 +132,7 @@ class TransactionsApiService {
     }
   }
 
-  // Get transactions by status
-  async getTransactionsByStatus(status: string, page: number = 0, size: number = 10): Promise<TransactionListResponse> {
-    try {
-      const response = await adminApi.get(`/api/admin/transactions/status/${status}?page=${page}&size=${size}`)
-      return response.data
-    } catch (error) {
-      console.error('Error fetching transactions by status:', error)
-      throw error
-    }
-  },
+
 
   // PUT /api/admin/transactions/{id}/status - Cập nhật status transaction (tương thích với TransactionsList)
   async updateTransactionStatus(id: string, data: TransactionUpdateStatusRequest): Promise<Transaction> {

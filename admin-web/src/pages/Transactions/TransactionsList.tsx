@@ -334,7 +334,7 @@ const TransactionsList: React.FC = () => {
           <StatCard
             title="Giao dịch hoàn thành"
             value={displayNumber(stats?.completedCount, '0')}
-            icon="✅"
+            icon=""
             color="#52c41a"
             loading={statsLoading}
           />
