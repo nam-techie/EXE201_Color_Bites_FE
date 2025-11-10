@@ -1,5 +1,9 @@
 import jsPDF from 'jspdf'
 import 'jspdf-autotable'
+import ExcelJS from 'exceljs'
+import type { Transaction } from '../types/transaction'
+import { TRANSACTION_STATUS_CONFIG } from '../types/transaction'
+import { formatDate } from './formatters'
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
@@ -178,16 +182,140 @@ export const exportRestaurants = (restaurants: any[]): void => {
 export const exportTransactions = (transactions: any[]): void => {
   const data = transactions.map(transaction => ({
     'ID': transaction.id,
-    'Người dùng': transaction.accountName,
+    'Account ID': transaction.accountId,
+    'Tên người dùng': transaction.accountName,
+    'Email người dùng': transaction.accountEmail,
     'Số tiền': transaction.amount,
+    'Đơn vị tiền tệ': transaction.currency,
     'Loại': transaction.type,
-    'Trạng thái': transaction.status,
-    'Kế hoạch': transaction.plan,
+    'Trạng thái': TRANSACTION_STATUS_CONFIG[transaction.status as keyof typeof TRANSACTION_STATUS_CONFIG]?.label || transaction.status,
+    'Gói dịch vụ': transaction.plan,
     'Cổng thanh toán': transaction.gateway,
-    'Ngày tạo': new Date(transaction.createdAt).toLocaleDateString('vi-VN')
+    'Mã đơn hàng': transaction.orderCode,
+    'ID giao dịch nhà cung cấp': transaction.providerTxnId,
+    'Ngày tạo': formatDate(transaction.createdAt, 'DD/MM/YYYY HH:mm:ss'),
+    'Ngày cập nhật': formatDate(transaction.updatedAt, 'DD/MM/YYYY HH:mm:ss'),
+    'Tài khoản hoạt động': transaction.accountIsActive ? 'Có' : 'Không',
+    'Vai trò tài khoản': transaction.accountRole
   }))
 
   exportToExcel(data, 'danh-sach-giao-dich')
+}
+
+// Export transactions to Excel with full formatting and UTF-8 support
+export const exportTransactionsToExcel = async (transactions: Transaction[]): Promise<void> => {
+  try {
+    // Create a new workbook
+    const workbook = new ExcelJS.Workbook()
+    workbook.creator = 'Color Bites Admin'
+    workbook.created = new Date()
+    workbook.modified = new Date()
+    
+    // Create worksheet
+    const worksheet = workbook.addWorksheet('Danh sách giao dịch')
+    
+    // Define columns with Vietnamese headers
+    worksheet.columns = [
+      { header: 'ID', key: 'id', width: 15 },
+      { header: 'Account ID', key: 'accountId', width: 15 },
+      { header: 'Tên người dùng', key: 'accountName', width: 20 },
+      { header: 'Email người dùng', key: 'accountEmail', width: 25 },
+      { header: 'Số tiền', key: 'amount', width: 15 },
+      { header: 'Đơn vị tiền tệ', key: 'currency', width: 10 },
+      { header: 'Loại', key: 'type', width: 15 },
+      { header: 'Trạng thái', key: 'status', width: 15 },
+      { header: 'Gói dịch vụ', key: 'plan', width: 15 },
+      { header: 'Cổng thanh toán', key: 'gateway', width: 15 },
+      { header: 'Mã đơn hàng', key: 'orderCode', width: 20 },
+      { header: 'ID giao dịch nhà cung cấp', key: 'providerTxnId', width: 25 },
+      { header: 'Ngày tạo', key: 'createdAt', width: 20 },
+      { header: 'Ngày cập nhật', key: 'updatedAt', width: 20 },
+      { header: 'Tài khoản hoạt động', key: 'accountIsActive', width: 18 },
+      { header: 'Vai trò tài khoản', key: 'accountRole', width: 15 }
+    ]
+    
+    // Style header row
+    const headerRow = worksheet.getRow(1)
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FF1890FF' }
+    }
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' }
+    headerRow.height = 25
+    
+    // Add data rows
+    transactions.forEach((transaction) => {
+      const statusLabel = TRANSACTION_STATUS_CONFIG[transaction.status]?.label || transaction.status
+      
+      const row = worksheet.addRow({
+        id: transaction.id,
+        accountId: transaction.accountId,
+        accountName: transaction.accountName || '',
+        accountEmail: transaction.accountEmail || '',
+        amount: transaction.amount || 0,
+        currency: transaction.currency || 'VND',
+        type: transaction.type || '',
+        status: statusLabel,
+        plan: transaction.plan || '',
+        gateway: transaction.gateway || '',
+        orderCode: transaction.orderCode || '',
+        providerTxnId: transaction.providerTxnId || '',
+        createdAt: formatDate(transaction.createdAt, 'DD/MM/YYYY HH:mm:ss'),
+        updatedAt: formatDate(transaction.updatedAt, 'DD/MM/YYYY HH:mm:ss'),
+        accountIsActive: transaction.accountIsActive ? 'Có' : 'Không',
+        accountRole: transaction.accountRole || ''
+      })
+      
+      // Format amount column as currency
+      const amountCell = row.getCell('amount')
+      amountCell.numFmt = '#,##0'
+      amountCell.alignment = { horizontal: 'right' }
+      
+      // Format date columns
+      const createdAtCell = row.getCell('createdAt')
+      createdAtCell.alignment = { horizontal: 'center' }
+      
+      const updatedAtCell = row.getCell('updatedAt')
+      updatedAtCell.alignment = { horizontal: 'center' }
+      
+      // Center align status
+      const statusCell = row.getCell('status')
+      statusCell.alignment = { horizontal: 'center' }
+      
+      // Set row height
+      row.height = 20
+    })
+    
+    // Freeze header row
+    worksheet.views = [
+      { state: 'frozen', ySplit: 1 }
+    ]
+    
+    // Generate filename with timestamp
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5)
+    const filename = `danh-sach-giao-dich-${timestamp}.xlsx`
+    
+    // Write to buffer and download
+    const buffer = await workbook.xlsx.writeBuffer()
+    const blob = new Blob([buffer], { 
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+    })
+    
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    link.href = url
+    link.download = filename
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting to Excel:', error)
+    throw error
+  }
 }
 
 export const exportComments = (comments: any[]): void => {

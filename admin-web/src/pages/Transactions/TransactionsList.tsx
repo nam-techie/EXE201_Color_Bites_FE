@@ -17,6 +17,7 @@ import { transactionsApi } from '../../services/transactionsApi'
 import type { Transaction, TransactionStats } from '../../types/transaction'
 import { TRANSACTION_STATUS_CONFIG } from '../../types/transaction'
 import { displayCurrency, displayNumber, displayValue, formatDate } from '../../utils/formatters'
+import { exportTransactionsToExcel } from '../../utils/export'
 import TransactionDetail from './TransactionDetail'
 
 const TransactionsList: React.FC = () => {
@@ -24,6 +25,7 @@ const TransactionsList: React.FC = () => {
   const [detailVisible, setDetailVisible] = useState(false)
   const [stats, setStats] = useState<TransactionStats | null>(null)
   const [statsLoading, setStatsLoading] = useState(false)
+  const [exportLoading, setExportLoading] = useState(false)
   const { confirm, modalProps } = useConfirm()
 
   // Data table hook
@@ -58,6 +60,41 @@ const TransactionsList: React.FC = () => {
     }
   })
 
+  // Calculate statistics from transactions data
+  const calculateTransactionStats = (transactions: Transaction[]): TransactionStats => {
+    const totalTransactions = transactions.length
+    
+    // Calculate total revenue (sum of SUCCESS transactions)
+    const totalRevenue = transactions
+      .filter(t => t.status === 'SUCCESS')
+      .reduce((sum, t) => sum + (t.amount || 0), 0)
+    
+    // Calculate pending amount (sum of PENDING transactions)
+    const pendingAmount = transactions
+      .filter(t => t.status === 'PENDING')
+      .reduce((sum, t) => sum + (t.amount || 0), 0)
+    
+    // Count failed transactions
+    const failedCount = transactions.filter(t => t.status === 'FAILED').length
+    
+    // Count completed transactions
+    const completedCount = transactions.filter(t => t.status === 'SUCCESS').length
+    
+    // Calculate average amount
+    const averageAmount = totalTransactions > 0
+      ? transactions.reduce((sum, t) => sum + (t.amount || 0), 0) / totalTransactions
+      : 0
+    
+    return {
+      totalRevenue,
+      pendingAmount,
+      failedCount,
+      completedCount,
+      totalTransactions,
+      averageAmount
+    }
+  }
+
   // Load stats on component mount
   useEffect(() => {
     loadStats()
@@ -66,10 +103,26 @@ const TransactionsList: React.FC = () => {
   const loadStats = async () => {
     setStatsLoading(true)
     try {
-      const statsData = await transactionsApi.getTransactionStats()
-      setStats(statsData)
+      // Fetch all transactions without pagination to calculate stats
+      const response = await transactionsApi.getTransactions({
+        page: 0,
+        limit: 10000 // Large limit to get all transactions
+      })
+      
+      // Calculate stats from all transactions
+      const calculatedStats = calculateTransactionStats(response.data)
+      setStats(calculatedStats)
     } catch (error) {
       console.error('Error loading stats:', error)
+      // Set default stats on error
+      setStats({
+        totalRevenue: 0,
+        pendingAmount: 0,
+        failedCount: 0,
+        completedCount: 0,
+        totalTransactions: 0,
+        averageAmount: 0
+      })
     } finally {
       setStatsLoading(false)
     }
@@ -276,8 +329,24 @@ const TransactionsList: React.FC = () => {
     setFilters({ search: '', status: undefined, type: undefined })
   }
 
-  const handleExport = () => {
-    message.info('Tính năng xuất Excel sẽ được triển khai')
+  const handleExport = async () => {
+    setExportLoading(true)
+    try {
+      // Fetch all transactions without pagination
+      const response = await transactionsApi.getTransactions({
+        page: 0,
+        limit: 10000 // Large limit to get all transactions
+      })
+      
+      // Export to Excel
+      await exportTransactionsToExcel(response.data)
+      message.success(`Đã xuất ${response.data.length} giao dịch ra file Excel`)
+    } catch (error) {
+      console.error('Error exporting transactions:', error)
+      message.error('Không thể xuất file Excel. Vui lòng thử lại sau.')
+    } finally {
+      setExportLoading(false)
+    }
   }
 
   return (
@@ -296,6 +365,7 @@ const TransactionsList: React.FC = () => {
         <Button
           icon={<DownloadOutlined />}
           onClick={handleExport}
+          loading={exportLoading}
         >
           Xuất Excel
         </Button>
