@@ -47,7 +47,7 @@ class RestaurantsApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách nhà hàng')
     } catch (error: any) {
-      console.error('❌ Error fetching restaurants:', error)
+      console.error(' Error fetching restaurants:', error)
       // Return empty response instead of throwing to prevent page crash
       return {
         status: 200,
@@ -87,7 +87,7 @@ class RestaurantsApiService {
       
       throw new Error(response.data.message || 'Không thể tải chi tiết nhà hàng')
     } catch (error) {
-      console.error('❌ Error fetching restaurant detail:', error)
+      console.error(' Error fetching restaurant detail:', error)
       throw error
     }
   }
@@ -113,7 +113,7 @@ class RestaurantsApiService {
       
       throw new Error(response.data.message || 'Không thể xóa nhà hàng')
     } catch (error) {
-      console.error('❌ Error deleting restaurant:', error)
+      console.error(' Error deleting restaurant:', error)
       throw error
     }
   }
@@ -134,7 +134,7 @@ class RestaurantsApiService {
       
       throw new Error(response.data.message || 'Không thể khôi phục nhà hàng')
     } catch (error) {
-      console.error('❌ Error restoring restaurant:', error)
+      console.error(' Error restoring restaurant:', error)
       throw error
     }
   }

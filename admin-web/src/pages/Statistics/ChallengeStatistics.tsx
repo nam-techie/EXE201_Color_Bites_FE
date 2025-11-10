@@ -37,7 +37,7 @@ const ChallengeStatistics: React.FC = () => {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600 mb-4">❌ {error}</div>
+        <div className="text-red-600 mb-4"> {error}</div>
         <button 
           onClick={fetchStatistics}
           className="btn-primary"

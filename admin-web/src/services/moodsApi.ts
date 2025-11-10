@@ -80,7 +80,7 @@ class MoodsApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách moods')
     } catch (error: any) {
-      console.error('❌ Error fetching moods:', error)
+      console.error(' Error fetching moods:', error)
       // Return empty response instead of throwing to prevent page crash
       return {
         status: 200,
@@ -112,7 +112,7 @@ class MoodsApiService {
       
       throw new Error(response.data.message || 'Không thể tải chi tiết mood')
     } catch (error) {
-      console.error('❌ Error fetching mood details:', error)
+      console.error(' Error fetching mood details:', error)
       throw error
     }
   }
@@ -134,7 +134,7 @@ class MoodsApiService {
       
       throw new Error(response.data.message || 'Không thể tạo mood')
     } catch (error) {
-      console.error('❌ Error creating mood:', error)
+      console.error(' Error creating mood:', error)
       throw error
     }
   }
@@ -156,7 +156,7 @@ class MoodsApiService {
       
       throw new Error(response.data.message || 'Không thể cập nhật mood')
     } catch (error) {
-      console.error('❌ Error updating mood:', error)
+      console.error(' Error updating mood:', error)
       throw error
     }
   }
@@ -177,7 +177,7 @@ class MoodsApiService {
       
       throw new Error(response.data.message || 'Không thể xóa mood')
     } catch (error) {
-      console.error('❌ Error deleting mood:', error)
+      console.error(' Error deleting mood:', error)
       throw error
     }
   }
@@ -198,7 +198,7 @@ class MoodsApiService {
       
       throw new Error(response.data.message || 'Không thể tải thống kê moods')
     } catch (error) {
-      console.error('❌ Error fetching mood statistics:', error)
+      console.error(' Error fetching mood statistics:', error)
       throw error
     }
   }

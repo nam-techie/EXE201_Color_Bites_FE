@@ -84,7 +84,7 @@ export class AuthService {
       throw new Error(response.data.message || 'Đăng nhập thất bại')
       
     } catch (error: any) {
-      console.error('❌ Login error:', error)
+      console.error(' Login error:', error)
       
       // Nếu có response từ BE (không phải network error)
       if (error.response?.data) {
@@ -132,7 +132,7 @@ export class AuthService {
       throw new Error(response.data.message || 'Đăng ký thất bại')
       
     } catch (error: any) {
-      console.error('❌ Register error:', error)
+      console.error(' Register error:', error)
       
       // Nếu có response từ BE
       if (error.response?.data) {
@@ -158,7 +158,7 @@ export class AuthService {
       await AsyncStorage.removeItem('user')
       console.log(' Logout successful - cleared local data')
     } catch (error) {
-      console.error('❌ Logout error:', error)
+      console.error(' Logout error:', error)
       throw error
     }
   }
@@ -181,7 +181,7 @@ export class AuthService {
 
       return response.data.status === 200
     } catch (error) {
-      console.error('❌ Token validation error:', error)
+      console.error(' Token validation error:', error)
       return false
     }
   }
@@ -207,7 +207,7 @@ export class AuthService {
 
       throw new Error('Cannot get user info')
     } catch (error) {
-      console.error('❌ Get current user error:', error)
+      console.error(' Get current user error:', error)
       throw error
     }
   }

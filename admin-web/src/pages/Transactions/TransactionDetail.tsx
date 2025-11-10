@@ -79,7 +79,7 @@ const TransactionDetail: React.FC<TransactionDetailProps> = ({
               {displayCurrency(transaction.amount)}
             </div>
             <div className="flex items-center justify-center space-x-2">
-              <span className="text-lg">💰</span>
+              <span className="text-lg"></span>
               <span className="font-medium">{displayValue(transaction.type)}</span>
             </div>
           </div>

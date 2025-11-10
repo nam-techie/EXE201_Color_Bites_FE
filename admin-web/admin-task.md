@@ -851,10 +851,10 @@ Authorization: Bearer {jwt_token}
 └── 📊 Restaurant Analytics
 
 💳 Transactions/Payments
-├── 💰 All Transactions
+├──  All Transactions
 ├──  Successful Payments
 ├── Failed Payments
-├── ⏳ Pending Payments
+├──  Pending Payments
 └── 📊 Revenue Analytics
 
 🏷️ Tags Management
@@ -868,7 +868,7 @@ Authorization: Bearer {jwt_token}
 ├── 👥 User Analytics
 ├── 📝 Post Analytics
 ├── 🍽️ Restaurant Analytics
-├── 💰 Revenue Reports
+├──  Revenue Reports
 ├── 💬 Engagement Analytics
 └── 📊 System Health
 ```

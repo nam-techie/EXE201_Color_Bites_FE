@@ -33,7 +33,7 @@ export class PostService {
          }
          
          // Log chi tiết lỗi
-         console.error('❌ API Error Details:')
+         console.error(' API Error Details:')
          console.error('- Status Code:', response.status)
          console.error('- Message:', response.message)
          console.error('- Data:', response.data)

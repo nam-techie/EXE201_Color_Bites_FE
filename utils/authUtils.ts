@@ -22,7 +22,7 @@ export async function clearAllAuthData() {
     
     return true
   } catch (error) {
-    console.error('❌ Error clearing auth data:', error)
+    console.error(' Error clearing auth data:', error)
     return false
   }
 }
@@ -41,7 +41,7 @@ export async function checkAuthData() {
     
     return { token, user: user ? JSON.parse(user) : null }
   } catch (error) {
-    console.error('❌ Error checking auth data:', error)
+    console.error(' Error checking auth data:', error)
     return { token: null, user: null }
   }
 }

@@ -307,7 +307,7 @@ const TransactionsList: React.FC = () => {
           <StatCard
             title="Tổng doanh thu"
             value={displayCurrency(stats?.totalRevenue, '0')}
-            icon="💰"
+            icon=""
             color="#52c41a"
             loading={statsLoading}
           />
@@ -316,7 +316,7 @@ const TransactionsList: React.FC = () => {
           <StatCard
             title="Số tiền chờ xử lý"
             value={displayCurrency(stats?.pendingAmount, '0')}
-            icon="⏳"
+            icon=""
             color="#faad14"
             loading={statsLoading}
           />
@@ -325,7 +325,7 @@ const TransactionsList: React.FC = () => {
           <StatCard
             title="Giao dịch thất bại"
             value={displayNumber(stats?.failedCount, '0')}
-            icon="❌"
+            icon=""
             color="#ff4d4f"
             loading={statsLoading}
           />

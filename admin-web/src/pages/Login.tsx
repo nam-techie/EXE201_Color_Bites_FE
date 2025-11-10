@@ -45,7 +45,7 @@ const Login = () => {
       navigate('/')
       
     } catch (error) {
-      console.error('❌ Admin login failed:', error)
+      console.error(' Admin login failed:', error)
       setError(error instanceof Error ? error.message : 'Đăng nhập thất bại')
     } finally {
       setLoading(false)

@@ -144,8 +144,8 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách challenges')
     } catch (error: any) {
-      console.error('❌ Error fetching challenges:', error)
-      console.error('❌ Error details:', {
+      console.error(' Error fetching challenges:', error)
+      console.error(' Error details:', {
         message: error.message,
         response: error.response?.data,
         status: error.response?.status,
@@ -246,7 +246,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể tải chi tiết challenge')
     } catch (error) {
-      console.error('❌ Error fetching challenge details:', error)
+      console.error(' Error fetching challenge details:', error)
       throw error
     }
   }
@@ -268,7 +268,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể tạo challenge')
     } catch (error) {
-      console.error('❌ Error creating challenge:', error)
+      console.error(' Error creating challenge:', error)
       throw error
     }
   }
@@ -290,7 +290,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể cập nhật challenge')
     } catch (error) {
-      console.error('❌ Error updating challenge:', error)
+      console.error(' Error updating challenge:', error)
       throw error
     }
   }
@@ -311,7 +311,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể xóa challenge')
     } catch (error) {
-      console.error('❌ Error deleting challenge:', error)
+      console.error(' Error deleting challenge:', error)
       throw error
     }
   }
@@ -332,7 +332,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể kích hoạt challenge')
     } catch (error) {
-      console.error('❌ Error activating challenge:', error)
+      console.error(' Error activating challenge:', error)
       throw error
     }
   }
@@ -353,7 +353,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể vô hiệu hóa challenge')
     } catch (error) {
-      console.error('❌ Error deactivating challenge:', error)
+      console.error(' Error deactivating challenge:', error)
       throw error
     }
   }
@@ -375,7 +375,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách bài nộp')
     } catch (error) {
-      console.error('❌ Error fetching challenge entries:', error)
+      console.error(' Error fetching challenge entries:', error)
       throw error
     }
   }
@@ -396,7 +396,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể duyệt bài nộp')
     } catch (error) {
-      console.error('❌ Error approving entry:', error)
+      console.error(' Error approving entry:', error)
       throw error
     }
   }
@@ -417,7 +417,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể từ chối bài nộp')
     } catch (error) {
-      console.error('❌ Error rejecting entry:', error)
+      console.error(' Error rejecting entry:', error)
       throw error
     }
   }
@@ -438,7 +438,7 @@ class ChallengesApiService {
       
       throw new Error(response.data.message || 'Không thể tải thống kê challenges')
     } catch (error) {
-      console.error('❌ Error fetching challenge statistics:', error)
+      console.error(' Error fetching challenge statistics:', error)
       throw error
     }
   }

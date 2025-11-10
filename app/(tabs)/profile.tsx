@@ -10,18 +10,18 @@ import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
 import { useCallback, useEffect, useState } from 'react'
 import {
-   ActivityIndicator,
-   Alert,
-   BackHandler,
-   Dimensions,
-   FlatList,
-   RefreshControl,
-   SafeAreaView,
-   ScrollView,
-   StyleSheet,
-   Text,
-   TouchableOpacity,
-   View
+    ActivityIndicator,
+    Alert,
+    BackHandler,
+    Dimensions,
+    FlatList,
+    RefreshControl,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native'
 import Toast from 'react-native-toast-message'
 
@@ -211,7 +211,7 @@ export default function ProfileScreen() {
             }))
          }
       } catch (error) {
-         console.error('❌ Error loading user posts:', error)
+         console.error(' Error loading user posts:', error)
          Toast.show({
             type: 'error',
             text1: 'Lỗi',
@@ -237,7 +237,7 @@ export default function ProfileScreen() {
             subscriptionPlan: profileData.subscriptionPlan
          })
       } catch (error) {
-         console.error('❌ Error loading user profile:', error)
+         console.error(' Error loading user profile:', error)
          // Keep userInfo as null to use fallback data
       }
    }, [])
@@ -598,7 +598,7 @@ export default function ProfileScreen() {
                               style={styles.postImage}
                               contentFit="cover"
                                     onLoad={() => console.log(' Image loaded:', post.imageUrls[0])}
-                                    onError={(error) => console.error('❌ Image load error:', error, 'URL:', post.imageUrls[0])}
+                                    onError={(error) => console.error(' Image load error:', error, 'URL:', post.imageUrls[0])}
                            />
                                  {post.imageUrls.length > 1 && (
                                     <View style={styles.multipleImagesIndicator}>

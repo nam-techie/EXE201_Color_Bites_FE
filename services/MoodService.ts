@@ -38,7 +38,7 @@ export class MoodService {
                   allMoods = allMoods.concat(transformedMoods)
                   console.log(` Page ${index + 2} fetched: ${transformedMoods.length} moods`)
                } else {
-                  console.error(`❌ Failed to fetch page ${index + 2}:`, result.status === 'rejected' ? result.reason : 'No data')
+                  console.error(` Failed to fetch page ${index + 2}:`, result.status === 'rejected' ? result.reason : 'No data')
                }
             })
          }
@@ -47,7 +47,7 @@ export class MoodService {
          return allMoods
          
       } catch (error) {
-         console.error('❌ Error fetching moods from API:', error)
+         console.error(' Error fetching moods from API:', error)
          // Trả về array rỗng thay vì throw error để app không crash
          console.log('🔄 Returning empty array due to API error')
          return []
@@ -74,7 +74,7 @@ export class MoodService {
          return null
          
       } catch (error) {
-         console.error(`❌ Error fetching page ${page}:`, error)
+         console.error(` Error fetching page ${page}:`, error)
          return null
       }
    }

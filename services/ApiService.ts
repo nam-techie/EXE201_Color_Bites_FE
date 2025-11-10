@@ -33,12 +33,12 @@ class ApiService {
                console.log('📤 Request URL:', config.url)
                console.log('📤 Request Method:', config.method)
             } catch (error) {
-               console.error('❌ Error getting auth token:', error)
+               console.error(' Error getting auth token:', error)
             }
             return config
          },
          (error) => {
-            console.error('❌ Request interceptor error:', error)
+            console.error(' Request interceptor error:', error)
             return Promise.reject(error)
          },
       )

@@ -63,7 +63,7 @@ const moveDirectories = async (userInput) => {
                console.log(`➡️ /${dir} moved to /${exampleDir}/${dir}.`)
             } else {
                await fs.promises.rm(oldDirPath, { recursive: true, force: true })
-               console.log(`❌ /${dir} deleted.`)
+               console.log(` /${dir} deleted.`)
             }
          } else {
             console.log(`➡️ /${dir} does not exist, skipping.`)
@@ -94,7 +94,7 @@ const moveDirectories = async (userInput) => {
          }`,
       )
    } catch (error) {
-      console.error(`❌ Error during script execution: ${error.message}`)
+      console.error(` Error during script execution: ${error.message}`)
    }
 }
 
@@ -105,7 +105,7 @@ rl.question(
       if (userInput === 'y' || userInput === 'n') {
          moveDirectories(userInput).finally(() => rl.close())
       } else {
-         console.log("❌ Invalid input. Please enter 'Y' or 'N'.")
+         console.log(" Invalid input. Please enter 'Y' or 'N'.")
          rl.close()
       }
    },

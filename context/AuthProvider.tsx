@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                console.log(' Found valid auth state for user:', parsedUser.name)
                setUser(parsedUser)
             } catch (error) {
-               console.error('❌ Error parsing user data, clearing auth state:', error)
+               console.error(' Error parsing user data, clearing auth state:', error)
                await AsyncStorage.removeItem('authToken')
                await AsyncStorage.removeItem('user')
                setUser(null)
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
          }
       } catch (error) {
-         console.error('❌ Error checking auth state:', error)
+         console.error(' Error checking auth state:', error)
          // Clear everything on error
          await AsyncStorage.removeItem('authToken')
          await AsyncStorage.removeItem('user')
@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          console.log('👤 User:', user.name, '| Role:', userData.role)
          
       } catch (error) {
-         console.error('❌ Login failed:', error)
+         console.error(' Login failed:', error)
          // Ensure clean state on failure
          await AsyncStorage.removeItem('authToken')
          await AsyncStorage.removeItem('user')
@@ -121,7 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          return message
          
       } catch (error) {
-         console.error('❌ Register failed:', error)
+         console.error(' Register failed:', error)
          // Ensure clean state on failure
          await AsyncStorage.removeItem('authToken')
          await AsyncStorage.removeItem('user')
@@ -144,7 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
          console.log(' Logout successful - all auth data cleared')
          
       } catch (error) {
-         console.error('❌ Error during logout:', error)
+         console.error(' Error during logout:', error)
          // Force clear even on error
          setUser(null)
          throw error
@@ -162,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log(' User avatar updated in context:', avatarUrl)
          }
       } catch (error) {
-         console.error('❌ Error updating user avatar:', error)
+         console.error(' Error updating user avatar:', error)
          throw error
       }
    }

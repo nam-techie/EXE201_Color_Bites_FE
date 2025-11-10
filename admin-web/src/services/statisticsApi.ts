@@ -152,7 +152,7 @@ class StatisticsApiService {
       
       throw new Error(response.data.message || 'Không thể tải thống kê tương tác')
     } catch (error) {
-      console.error('❌ Error fetching engagement statistics:', error)
+      console.error(' Error fetching engagement statistics:', error)
       throw error
     }
   }
@@ -173,7 +173,7 @@ class StatisticsApiService {
       
       throw new Error(response.data.message || 'Không thể tải thống kê challenges')
     } catch (error) {
-      console.error('❌ Error fetching challenge statistics:', error)
+      console.error(' Error fetching challenge statistics:', error)
       throw error
     }
   }

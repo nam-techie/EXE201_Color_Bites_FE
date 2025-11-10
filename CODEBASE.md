@@ -69,7 +69,7 @@ export class EntityService {
       
       throw new Error(response.message || 'Không thể tải dữ liệu')
     } catch (error) {
-      console.error('❌ Error fetching entities:', error)
+      console.error(' Error fetching entities:', error)
       throw new Error('Không thể tải dữ liệu từ server')
     }
   }
@@ -90,7 +90,7 @@ export class EntityService {
       
       throw new Error(response.message || 'Không thể tạo dữ liệu')
     } catch (error) {
-      console.error('❌ Error creating entity:', error)
+      console.error(' Error creating entity:', error)
       throw error
     }
   }
@@ -326,7 +326,7 @@ export default function EntitiesScreen() {
 
 ## 🚨 Important Rules
 
-### ❌ DON'T DO:
+###  DON'T DO:
 - **No mock data fallbacks** - Show errors instead
 - **No silent failures** - Always inform user of errors
 - **No hardcoded tokens** - Use AsyncStorage

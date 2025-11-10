@@ -29,7 +29,7 @@ class PostsApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách bài viết')
     } catch (error) {
-      console.error('❌ Error fetching posts:', error)
+      console.error(' Error fetching posts:', error)
       throw error
     }
   }
@@ -58,7 +58,7 @@ class PostsApiService {
       
       throw new Error(response.data.message || 'Không thể tải chi tiết bài viết')
     } catch (error) {
-      console.error('❌ Error fetching post detail:', error)
+      console.error(' Error fetching post detail:', error)
       throw error
     }
   }
@@ -84,7 +84,7 @@ class PostsApiService {
       
       throw new Error(response.data.message || 'Không thể xóa bài viết')
     } catch (error) {
-      console.error('❌ Error deleting post:', error)
+      console.error(' Error deleting post:', error)
       throw error
     }
   }
@@ -105,7 +105,7 @@ class PostsApiService {
       
       throw new Error(response.data.message || 'Không thể khôi phục bài viết')
     } catch (error) {
-      console.error('❌ Error restoring post:', error)
+      console.error(' Error restoring post:', error)
       throw error
     }
   }

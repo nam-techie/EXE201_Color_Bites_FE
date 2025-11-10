@@ -17,7 +17,7 @@ async function clearAuthData() {
     console.log('📱 Restart the app to see changes');
     
   } catch (error) {
-    console.error('❌ Error clearing auth data:', error);
+    console.error(' Error clearing auth data:', error);
   }
 }
 

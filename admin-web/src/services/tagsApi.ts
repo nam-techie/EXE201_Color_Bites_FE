@@ -37,7 +37,7 @@ class TagsApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách tag')
     } catch (error) {
-      console.error('❌ Error fetching tags:', error)
+      console.error(' Error fetching tags:', error)
       throw error
     }
   }
@@ -71,7 +71,7 @@ class TagsApiService {
       
       throw new Error(response.data.message || 'Không thể tải chi tiết tag')
     } catch (error) {
-      console.error('❌ Error fetching tag:', error)
+      console.error(' Error fetching tag:', error)
       throw error
     }
   }
@@ -98,7 +98,7 @@ class TagsApiService {
       
       throw new Error(response.data.message || 'Không thể tạo tag')
     } catch (error) {
-      console.error('❌ Error creating tag:', error)
+      console.error(' Error creating tag:', error)
       throw error
     }
   }
@@ -138,7 +138,7 @@ class TagsApiService {
       
       throw new Error(response.data.message || 'Không thể cập nhật tag')
     } catch (error) {
-      console.error('❌ Error updating tag:', error)
+      console.error(' Error updating tag:', error)
       throw error
     }
   }
@@ -173,7 +173,7 @@ class TagsApiService {
       
       throw new Error(response.data.message || 'Không thể xóa tag')
     } catch (error) {
-      console.error('❌ Error deleting tag:', error)
+      console.error(' Error deleting tag:', error)
       throw error
     }
   }
@@ -196,7 +196,7 @@ class TagsApiService {
       
       throw new Error(response.data.message || 'Không thể tải thống kê tag')
     } catch (error) {
-      console.error('❌ Error fetching tag statistics:', error)
+      console.error(' Error fetching tag statistics:', error)
       throw error
     }
   }

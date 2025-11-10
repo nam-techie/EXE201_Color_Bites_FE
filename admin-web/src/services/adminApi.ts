@@ -3,8 +3,8 @@ import { AccountResponse, AuthApiResponse, LoginRequest } from '../types/auth'
 import { ApiResponse, ListAccountResponse, UserInformationResponse } from '../types/user'
 
 // API Configuration - sử dụng local backend cho development
-const API_BASE_URL = 'http://localhost:8080' // Local backend for development
-// const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
+// const API_BASE_URL = 'http://localhost:8080' // Local backend for development
+const API_BASE_URL = 'https://mumii-be.namtechie.id.vn' // Production backend on Azure
 
 class AdminApiService {
   public axiosInstance: AxiosInstance

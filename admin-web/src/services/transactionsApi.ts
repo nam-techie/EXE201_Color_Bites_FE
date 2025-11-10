@@ -63,7 +63,7 @@ class TransactionsApiService {
       
       throw new Error(response.data.message || 'Không thể tải danh sách giao dịch')
     } catch (error: any) {
-      console.error('❌ Error fetching transactions:', error)
+      console.error(' Error fetching transactions:', error)
       // Return empty response instead of throwing to prevent page crash
       return {
         data: [],
@@ -104,7 +104,7 @@ class TransactionsApiService {
       
       throw new Error(response.data.message || 'Không thể tải chi tiết giao dịch')
     } catch (error) {
-      console.error('❌ Error fetching transaction:', error)
+      console.error(' Error fetching transaction:', error)
       throw error
     }
   }
@@ -129,7 +129,7 @@ class TransactionsApiService {
       
       throw new Error(response.data.message || 'Không thể tải giao dịch theo trạng thái')
     } catch (error) {
-      console.error('❌ Error fetching transactions by status:', error)
+      console.error(' Error fetching transactions by status:', error)
       throw error
     }
   }
@@ -145,7 +145,7 @@ class TransactionsApiService {
       // Có thể cần implement ở backend hoặc xử lý khác
       throw new Error('Method not implemented - backend endpoint missing')
     } catch (error) {
-      console.error('❌ Error updating transaction status:', error)
+      console.error(' Error updating transaction status:', error)
       throw error
     }
   }
@@ -159,7 +159,7 @@ class TransactionsApiService {
       // Có thể cần implement ở backend hoặc xử lý khác
       throw new Error('Method not implemented - backend endpoint missing')
     } catch (error) {
-      console.error('❌ Error fetching transaction stats:', error)
+      console.error(' Error fetching transaction stats:', error)
       throw error
     }
   }

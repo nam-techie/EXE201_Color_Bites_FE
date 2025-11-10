@@ -28,7 +28,7 @@ export default function CreatePostScreen() {
   const handleCreatePost = async () => {
     // Kiểm tra user đã đăng nhập chưa
     if (!user) {
-      console.error('❌ User not logged in')
+      console.error(' User not logged in')
       return
     }
     
@@ -55,7 +55,7 @@ export default function CreatePostScreen() {
           ) : (
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={{ fontSize: 12, color: '#EF4444', marginRight: 8 }}>
-                ❌ Chưa đăng nhập
+                 Chưa đăng nhập
               </Text>
             </View>
           )}
