@@ -33,8 +33,8 @@ export interface DashboardData {
   loading: boolean
   error: string | null
   kpis: DashboardKpi[]
-  contentDistribution: Array<{ name: string; value: number; color?: string }>
-  userStatus: Array<{ name: string; value: number; color?: string }>
+  contentDistribution: Array<{ name: string; value: number; color: string }>
+  userStatus: Array<{ name: string; value: number; color: string }>
   userPostGrowth: Array<{ month: string; users: number; posts: number }>
   revenueSeries: Array<{ label: string; revenue: number }>
   topPosts: DashboardTopItem[]
