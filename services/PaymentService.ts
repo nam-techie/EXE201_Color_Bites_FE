@@ -226,7 +226,7 @@ export class PaymentService {
    */
   createPremiumPaymentRequest(): CreatePaymentRequest {
     return {
-      amount: 5000, // 36,000 VND
+      amount: 36000, // 36,000 VND
       description: 'Premium Color Bites', // Giảm xuống dưới 25 ký tự
       currency: 'VND',
       returnUrl: 'https://color-bites.app/payment/success',
@@ -235,7 +235,7 @@ export class PaymentService {
         {
           name: 'Gói Premium - Color Bites',
           quantity: 1,
-          price: 5000
+          price: 36000
         }
       ]
     }
