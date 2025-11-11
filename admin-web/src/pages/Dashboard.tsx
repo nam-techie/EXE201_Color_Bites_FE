@@ -1,176 +1,153 @@
-import {
-  CreditCard,
-  FileText,
-  Store,
-  Users
-} from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { BarChart3, CreditCard, FileText, Store, Users } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { DatePicker, Radio, Row, Col } from 'antd'
 import LoadingState from '../components/common/LoadingState'
-import StatCard from '../components/common/StatCard'
-import { statisticsApi } from '../services/statisticsApi'
-import { displayNumber } from '../utils/formatters'
+import KpiCard from '../components/dashboard/KpiCard'
+import TrendCard from '../components/dashboard/TrendCard'
+import PieChart from '../components/charts/PieChart'
+import TopListCard from '../components/dashboard/TopListCard'
+import { useDashboardStats } from '../hooks/useDashboardStats'
+import { formatNumber } from '../utils/formatters'
 
-interface SystemStats {
-  totalUsers: number
-  activeUsers: number
-  totalPosts: number
-  totalRestaurants: number
-  totalTransactions: number
-  totalComments?: number
-  totalTags?: number
-  totalChallenges?: number
-  totalRevenue?: number
-  monthlyRevenue?: number
-  dailyRevenue?: number
-  successfulTransactions?: number
-  failedTransactions?: number
-  pendingTransactions?: number
-  totalReactions?: number
-  totalFavorites?: number
-  averageRating?: number
-  totalMoodMaps?: number
-  totalQuizzes?: number
-}
+const { RangePicker } = DatePicker
 
 const Dashboard = () => {
-  const [stats, setStats] = useState<SystemStats | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [period, setPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly')
+  const [dateRange, setDateRange] = useState<any>()
 
-  // Fetch system statistics
-  useEffect(() => {
-    const fetchStatistics = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const response = await statisticsApi.getSystemStatistics()
-        setStats(response.data as SystemStats)
-      } catch (err) {
-        console.error('Error fetching statistics:', err)
-        setError(err instanceof Error ? err.message : 'Không thể tải thống kê')
-      } finally {
-        setLoading(false)
-      }
-    }
+  const { loading, error, kpis, contentDistribution, userStatus, userPostGrowth, revenueSeries, topPosts, topRestaurants, topUsers } =
+    useDashboardStats({
+      period,
+      dateRange: dateRange
+        ? { start: dateRange[0].toISOString(), end: dateRange[1].toISOString() }
+        : undefined
+    })
 
-    fetchStatistics()
-  }, [])
-
-  const statCards = stats ? [
-    {
-      title: 'Tổng người dùng',
-      value: displayNumber(stats.totalUsers, '0'),
-      icon: <Users className="w-6 h-6" />,
-      color: '#1890ff',
-      change: {
-        value: Math.round((stats.activeUsers / stats.totalUsers) * 100),
-        type: 'increase' as const,
-        label: `${displayNumber(stats.activeUsers, '0')} hoạt động`
-      }
-    },
-    {
-      title: 'Tổng bài viết',
-      value: displayNumber(stats.totalPosts, '0'),
-      icon: <FileText className="w-6 h-6" />,
-      color: '#52c41a',
-      change: {
-        value: Math.round((stats.totalPosts / stats.totalPosts) * 100),
-        type: 'increase' as const,
-        label: `${displayNumber(stats.totalPosts, '0')} tổng số`
-      }
-    },
-    {
-      title: 'Tổng nhà hàng',
-      value: displayNumber(stats.totalRestaurants, '0'),
-      icon: <Store className="w-6 h-6" />,
-      color: '#faad14',
-      change: {
-        value: Math.round((stats.totalRestaurants / stats.totalRestaurants) * 100),
-        type: 'increase' as const,
-        label: `${displayNumber(stats.totalRestaurants, '0')} tổng số`
-      }
-    },
-    {
-      title: 'Tổng giao dịch',
-      value: displayNumber(stats.totalTransactions, '0'),
-      icon: <CreditCard className="w-6 h-6" />,
-      color: '#722ed1',
-      change: {
-        value: 0,
-        type: 'increase' as const,
-        label: 'Tổng số giao dịch'
-      }
-    }
-  ] : []
-
-  const trafficData = [
-    { label: 'Visits', value: '29.703 Users (40%)', color: 'bg-green-500' },
-    { label: 'Unique', value: '24.093 Users (20%)', color: 'bg-blue-500' },
-    { label: 'Pageviews', value: '78.706 Views (60%)', color: 'bg-yellow-500' },
-    { label: 'New Users', value: '22.123 Users (80%)', color: 'bg-red-500' },
-    { label: 'Bounce Rate', value: 'Average Rate (40.15%)', color: 'bg-purple-500' }
-  ]
+  const kpiIcons = useMemo(
+    () => ({
+      users: <Users className="w-6 h-6" />,
+      posts: <FileText className="w-6 h-6" />,
+      restaurants: <Store className="w-6 h-6" />,
+      transactions: <CreditCard className="w-6 h-6" />,
+      'revenue-month': <BarChart3 className="w-6 h-6" />
+    }),
+    []
+  )
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+            <BarChart3 className="w-6 h-6 text-primary-600" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600">Tổng quan hoạt động hệ thống</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Radio.Group
+            value={period}
+            onChange={(e) => setPeriod(e.target.value)}
+            options={[
+              { label: 'Day', value: 'daily' },
+              { label: 'Week', value: 'weekly' },
+              { label: 'Month', value: 'monthly' },
+              { label: 'Year', value: 'yearly' }
+            ]}
+            optionType="button"
+            buttonStyle="solid"
+          />
+          <RangePicker onChange={(val) => setDateRange(val)} />
+        </div>
+      </div>
+
       <LoadingState
         loading={loading}
         error={error}
-        empty={!loading && !stats}
+        empty={!loading && kpis.length === 0}
         emptyText="Không có dữ liệu thống kê"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {statCards.map((stat, index) => (
-            <StatCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              color={stat.color}
-              change={stat.change}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          {kpis.map((kpi) => (
+            <KpiCard
+              key={kpi.key}
+              title={kpi.title}
+              value={formatNumber(kpi.value)}
+              icon={kpiIcons[kpi.key as keyof typeof kpiIcons]}
+              color={kpi.key === 'users' ? '#1890ff' : kpi.key === 'posts' ? '#52c41a' : kpi.key === 'restaurants' ? '#faad14' : '#722ed1'}
+              extraLabel={kpi.extra?.label}
+              extraValue={kpi.extra?.value}
             />
           ))}
         </div>
       </LoadingState>
 
-      {/* Traffic Chart */}
-      <div className="card p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold text-gray-900">Traffic</h2>
-          <p className="text-sm text-gray-500">January - July 2023</p>
-        </div>
-        
-        {/* Chart Placeholder */}
-        <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center mb-6">
-          <p className="text-gray-500">Chart visualization would go here</p>
-        </div>
-
-        {/* Traffic Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          {trafficData.map((item, index) => (
-            <div key={index} className="text-center">
-              <div className={`w-4 h-4 ${item.color} rounded-full mx-auto mb-2`}></div>
-              <p className="text-sm font-medium text-gray-900">{item.label}</p>
-              <p className="text-xs text-gray-600">{item.value}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Additional Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[1, 2, 3, 4].map((item) => (
-          <div key={item} className="card p-6">
-            <div className="h-32 bg-gradient-to-br from-primary-400 to-primary-600 rounded-lg flex items-center justify-center mb-4">
-              <div className="text-white text-center">
-                <div className="text-2xl font-bold mb-1">89.9%</div>
-                <div className="text-sm opacity-90">Metric {item}</div>
-              </div>
-            </div>
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={16}>
+          <TrendCard
+            title="Tăng trưởng người dùng và bài viết"
+            mode="line"
+            data={userPostGrowth}
+            xAxisKey="month"
+            lines={[
+              { dataKey: 'users', name: 'Người dùng', color: '#1890ff' },
+              { dataKey: 'posts', name: 'Bài viết', color: '#52c41a' }
+            ]}
+            height={300}
+            tooltipFormatter={(value, name) => [formatNumber(Number(value)), name]}
+          />
+        </Col>
+        <Col xs={24} lg={8}>
+          <div className="h-full card">
+            <PieChart
+              data={contentDistribution}
+              height={340}
+              showLabel={true}
+              labelFormatter={(entry) => `${entry.value}`}
+              tooltipFormatter={(value, name) => [formatNumber(Number(value)), name]}
+            />
           </div>
-        ))}
-      </div>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} lg={12}>
+          <div className="card">
+            <PieChart
+              data={userStatus}
+              height={300}
+              showLabel={true}
+              labelFormatter={(entry) => `${entry.value}`}
+              tooltipFormatter={(value, name) => [formatNumber(Number(value)), name]}
+            />
+          </div>
+        </Col>
+        <Col xs={24} lg={12}>
+          <TrendCard
+            title="Doanh thu theo kỳ"
+            mode="bar"
+            data={revenueSeries}
+            xAxisKey="label"
+            bars={[{ dataKey: 'revenue', name: 'Doanh thu', color: '#722ed1' }]}
+            height={300}
+            tooltipFormatter={(value, name) => [formatNumber(Number(value)), name]}
+          />
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]}>
+        <Col xs={24} md={8}>
+          <TopListCard title="Top bài viết" items={topPosts} valueLabel="Điểm" />
+        </Col>
+        <Col xs={24} md={8}>
+          <TopListCard title="Top nhà hàng" items={topRestaurants} valueLabel="Điểm" />
+        </Col>
+        <Col xs={24} md={8}>
+          <TopListCard title="Top người dùng" items={topUsers} valueLabel="Điểm" />
+        </Col>
+      </Row>
     </div>
   )
 }
