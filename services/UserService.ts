@@ -54,7 +54,7 @@ export class UserService {
          
          throw new Error(response.message || 'Không thể lấy thông tin người dùng')
       } catch (error) {
-         console.error('❌ Error fetching user information:', error)
+         console.error(' Error fetching user information:', error)
          throw error
       }
    }

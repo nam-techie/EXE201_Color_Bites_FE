@@ -56,12 +56,12 @@ export class PostService {
          console.log('Response Data:', response.data)
          
          if (response.status === 201 && response.data) {
-            console.log('✅ Post created successfully:', response.data)
+            console.log(' Post created successfully:', response.data)
             return response.data
          }
          
          // Log chi tiết lỗi
-         console.error('❌ API Error Details:')
+         console.error(' API Error Details:')
          console.error('- Status Code:', response.status)
          console.error('- Message:', response.message)
          console.error('- Data:', response.data)
