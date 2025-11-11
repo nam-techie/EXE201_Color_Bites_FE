@@ -369,7 +369,7 @@ const ChallengesList: React.FC = () => {
     setExportLoading(true)
     try {
       const response = await challengesApi.getChallenges({ page: 0, size: 10000 })
-      const challenges = response.data.data.content || []
+      const challenges = response.data.content || []
       await exportChallengesToExcel(challenges)
       message.success(`Đã xuất ${challenges.length} thử thách ra file Excel`)
     } catch (error) {

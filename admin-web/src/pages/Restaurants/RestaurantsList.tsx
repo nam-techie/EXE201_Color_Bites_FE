@@ -273,8 +273,8 @@ const RestaurantsList: React.FC = () => {
     setExportLoading(true)
     try {
       const response = await restaurantsApi.getRestaurants(0, 10000)
-      await exportRestaurantsToExcel(response.data.data.content)
-      message.success(`Đã xuất ${response.data.data.content.length} nhà hàng ra file Excel`)
+      await exportRestaurantsToExcel(response.data.content)
+      message.success(`Đã xuất ${response.data.content.length} nhà hàng ra file Excel`)
     } catch (error) {
       console.error('Error exporting restaurants:', error)
       message.error('Có lỗi xảy ra khi xuất file Excel')

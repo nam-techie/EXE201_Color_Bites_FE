@@ -207,7 +207,7 @@ const MoodsList: React.FC = () => {
     setExportLoading(true)
     try {
       const response = await moodsApi.getMoods({ page: 0, size: 10000 })
-      const moods = response.data.data.content || []
+      const moods = response.data.content || []
       await exportMoodsToExcel(moods)
       message.success(`Đã xuất ${moods.length} mood ra file Excel`)
     } catch (error) {
