@@ -217,8 +217,8 @@ const PostsList: React.FC = () => {
     setExportLoading(true)
     try {
       const response = await postsApi.getPosts(0, 10000)
-      await exportPostsToExcel(response.data.data.content)
-      message.success(`Đã xuất ${response.data.data.content.length} bài viết ra file Excel`)
+      await exportPostsToExcel(response.data.content)
+      message.success(`Đã xuất ${response.data.content.length} bài viết ra file Excel`)
     } catch (error) {
       console.error('Error exporting posts:', error)
       message.error('Có lỗi xảy ra khi xuất file Excel')
