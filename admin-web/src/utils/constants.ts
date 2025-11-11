@@ -60,8 +60,10 @@ export const DEFAULT_PAGE_SIZE = 20
 export const DEFAULT_PAGE = 1
 
 // API constants
-export const API_BASE_URL = 'https://mumii-be.namtechie.id.vn'
-// export const API_BASE_URL = 'http://localhost:8080'  
+export const API_BASE_URL =
+  (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.VITE_API_BASE_URL)
+    ? (import.meta as any).env.VITE_API_BASE_URL
+    : 'http://localhost:8080'
 export const API_TIMEOUT = 30000
 
 // Date format constants
