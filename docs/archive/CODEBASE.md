@@ -1,4 +1,8 @@
+<<<<<<< HEAD:CODEBASE.md
 # 📚 Mummi - Codebase Documentation
+=======
+# 📚 MUMII - Codebase Documentation
+>>>>>>> develop:docs/archive/CODEBASE.md
 
 ## 🏗️ Architecture Overview
 

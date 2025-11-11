@@ -9,17 +9,45 @@ import { apiService } from './ApiService'
 
 export class PostService {
    /**
-    * Tạo bài viết mới
+    * Tạo bài viết mới với multipart/form-data
     */
-   async createPost(postData: CreatePostRequest): Promise<PostResponse> {
+   async createPost(postData: CreatePostRequest, selectedImageUri?: string): Promise<PostResponse> {
       try {
          console.log('=== CREATE POST DEBUG ===')
          console.log('API URL:', `${API_BASE_URL}${API_ENDPOINTS.POSTS.CREATE}`)
-         console.log('Request payload:', JSON.stringify(postData, null, 2))
+         console.log('Request data:', { content: postData.content, moodId: postData.moodId, hasImage: !!selectedImageUri })
          
-         const response = await apiService.post<PostResponse>(
+         // Tạo FormData cho multipart request
+         const formData = new FormData()
+         
+         // Thêm content (required)
+         formData.append('content', postData.content)
+         
+         // Thêm moodId (optional)
+         if (postData.moodId) {
+            formData.append('moodId', postData.moodId)
+         }
+         
+         // Thêm file nếu có
+         if (selectedImageUri) {
+            // Tạo file object từ URI
+            const filename = selectedImageUri.split('/').pop() || 'image.jpg'
+            const match = /\.(\w+)$/.exec(filename)
+            const type = match ? `image/${match[1]}` : 'image/jpeg'
+            
+            const file = {
+               uri: selectedImageUri,
+               type: type,
+               name: filename,
+            } as any
+            
+            formData.append('files', file)
+            console.log('📎 Added image file:', filename, type)
+         }
+         
+         const response = await apiService.upload<PostResponse>(
             API_ENDPOINTS.POSTS.CREATE,
-            postData
+            formData
          )
          
          console.log('Raw API Response:', JSON.stringify(response, null, 2))

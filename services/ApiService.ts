@@ -7,6 +7,7 @@ class ApiService {
    private axiosInstance: AxiosInstance
 
    constructor() {
+      console.log('🚀 ApiService constructor - API_BASE_URL:', API_BASE_URL)
       this.axiosInstance = axios.create({
          baseURL: API_BASE_URL,
          timeout: 30000,

@@ -16,7 +16,7 @@
 ## 🏗️ Kiến trúc dự án
 
 ```
-EXE201_Color_Bites_FE/
+EXE201_MUMII_FE/
 ├── app/                          # Thư mục chính chứa các màn hình (File-based routing)
 │   ├── (tabs)/                   # Tab navigation group
 │   │   ├── _layout.tsx          # Layout cho tab navigation
@@ -72,7 +72,7 @@ EXE201_Color_Bites_FE/
 
    ```bash
    git clone <repository-url>
-   cd EXE201_Color_Bites_FE
+   cd EXE201_MUMII_FE
    ```
 
 2. **Cài đặt dependencies**
@@ -83,7 +83,28 @@ EXE201_Color_Bites_FE/
    yarn install
    ```
 
-3. **Khởi chạy development server**
+3. **Setup Environment Variables**
+
+   Tạo file `.env` trong thư mục gốc:
+   ```bash
+   touch .env
+   ```
+
+   Thêm các biến môi trường cần thiết:
+   ```bash
+   # Backend API
+   EXPO_PUBLIC_API_BASE_URL=http://localhost:8080
+
+   # Google Maps API Key (Bắt buộc)
+   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_api_key_here
+
+   # OpenRouteService API Key (Tùy chọn)
+   EXPO_PUBLIC_OPENROUTE_API_KEY=your_openroute_key_here
+   ```
+
+   📋 **Hướng dẫn chi tiết**: Xem file [docs/TOM_TAT_DU_AN.md](./docs/TOM_TAT_DU_AN.md)
+
+4. **Khởi chạy development server**
    ```bash
    npm start
    # hoặc
@@ -184,11 +205,11 @@ npx expo start --web
 ```json
 {
    "expo": {
-      "name": "color-bite",
-      "slug": "color-bite",
+      "name": "mumii",
+      "slug": "mumii",
       "version": "1.0.0",
       "orientation": "portrait",
-      "scheme": "colorbite",
+      "scheme": "mumii",
       "newArchEnabled": true
    }
 }
@@ -281,12 +302,25 @@ npx expo build:ios
    npx expo start --ios --simulator
    ```
 
-## 📚 Tài liệu tham khảo
+4. **Environment variables không hoạt động**
+   - Kiểm tra file `.env` có tồn tại không
+   - Restart development server: `npx expo start --clear`
+   - Xem hướng dẫn chi tiết trong [docs/TOM_TAT_DU_AN.md](./docs/TOM_TAT_DU_AN.md)
 
+## 📚 Tài liệu
+
+### 📖 Tài liệu chính
+- **[docs/TOM_TAT_DU_AN.md](./docs/TOM_TAT_DU_AN.md)** - Tài liệu tóm tắt ngắn gọn (ĐỌC ĐẦU TIÊN)
+
+### 📑 Tài liệu chi tiết (trong docs/archive/)
+- Các tài liệu kỹ thuật chi tiết về Google Maps, Map Provider, Environment Config, etc.
+
+### 🔗 Tài liệu tham khảo bên ngoài
 - [Expo Documentation](https://docs.expo.dev/)
 - [React Native Documentation](https://reactnative.dev/)
 - [Expo Router Documentation](https://docs.expo.dev/router/introduction/)
 - [React Navigation Documentation](https://reactnavigation.org/)
+- [Google Maps Platform](https://mapsplatform.google.com/)
 
 ## 🤝 Đóng góp
 
@@ -298,7 +332,7 @@ npx expo build:ios
 
 ## 📄 License
 
-Dự án này là private và thuộc về team phát triển EXE201_Color_Bites.
+Dự án này là private và thuộc về team phát triển EXE201_MUMII.
 
 ## 👥 Team
 
