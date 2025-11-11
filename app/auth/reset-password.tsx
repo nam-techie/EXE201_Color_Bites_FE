@@ -1,7 +1,6 @@
 'use client'
 
 import { Ionicons } from '@expo/vector-icons'
-import { LinearGradient } from 'expo-linear-gradient'
 import { router } from 'expo-router'
 import { useState } from 'react'
 import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
@@ -89,85 +88,73 @@ export default function ResetPasswordScreen() {
 
    return (
       <SafeAreaView style={styles.container}>
-         <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
          
-         <LinearGradient
-            colors={['#FDF6E3', '#FFE4B5', '#FFD700']}
-            style={styles.gradient}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-         >
-            {/* Header */}
-            <View style={styles.header}>
-               <TouchableOpacity 
-                  style={styles.backButton}
-                  onPress={() => router.back()}
+         {/* Header */}
+         <View style={styles.header}>
+            <TouchableOpacity 
+               style={styles.backButton}
+               onPress={() => router.back()}
+            >
+               <Ionicons name="arrow-back" size={24} color="#111827" />
+            </TouchableOpacity>
+         </View>
+
+         {/* Title */}
+         <Text style={styles.title}>Đặt lại mật khẩu</Text>
+
+         {/* Content */}
+         <View style={styles.content}>         
+            {/* New Password */}
+            <View style={styles.inputWrap}>
+               <TextInput
+                  style={[styles.input, { paddingRight: 44 }]}
+                  placeholder="Mật khẩu mới"
+                  placeholderTextColor="#9AA4B2"
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                  secureTextEntry={!showNewPassword}
+                  autoCapitalize="none"
+               />
+               <TouchableOpacity
+                  style={styles.eyeBtn}
+                  onPress={() => setShowNewPassword(!showNewPassword)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                >
-                  <Ionicons name="arrow-back" size={24} color="#000" />
+                  <Ionicons
+                     name={showNewPassword ? 'eye' : 'eye-off'}
+                     size={20}
+                     color="#6B7280"
+                  />
                </TouchableOpacity>
             </View>
 
-            {/* Main Content */}
-            <View style={styles.content}>
-               {/* Title */}
-               <Text style={styles.title}>Đặt lại mật khẩu</Text>
-               
-               {/* Description */}
-               <Text style={styles.description}>
-                  Tạo mật khẩu mới cho tài khoản của bạn
-               </Text>
-               
-               {/* New Password */}
-               <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Mật khẩu mới</Text>
-                  <View style={styles.inputWrapper}>
-                     <TextInput
-                        style={styles.passwordInput}
-                        value={newPassword}
-                        onChangeText={setNewPassword}
-                        placeholder="Nhập mật khẩu mới"
-                        placeholderTextColor="#999"
-                        secureTextEntry={!showNewPassword}
-                     />
-                     <TouchableOpacity 
-                        style={styles.eyeButton}
-                        onPress={() => setShowNewPassword(!showNewPassword)}
-                     >
-                        <Ionicons 
-                           name={showNewPassword ? "eye-off" : "eye"} 
-                           size={20} 
-                           color="#666" 
-                        />
-                     </TouchableOpacity>
-                  </View>
-               </View>
+            {/* Confirm Password */}
+            <View style={styles.inputWrap}>
+               <TextInput
+                  style={[styles.input, { paddingRight: 44 }]}
+                  placeholder="Xác nhận mật khẩu"
+                  placeholderTextColor="#9AA4B2"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  secureTextEntry={!showConfirmPassword}
+                  autoCapitalize="none"
+               />
+               <TouchableOpacity
+                  style={styles.eyeBtn}
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+               >
+                  <Ionicons
+                     name={showConfirmPassword ? 'eye' : 'eye-off'}
+                     size={20}
+                     color="#6B7280"
+                  />
+               </TouchableOpacity>
+            </View>
 
-               {/* Confirm Password */}
-               <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
-                  <View style={styles.inputWrapper}>
-                     <TextInput
-                        style={styles.passwordInput}
-                        value={confirmPassword}
-                        onChangeText={setConfirmPassword}
-                        placeholder="Xác nhận mật khẩu mới"
-                        placeholderTextColor="#999"
-                        secureTextEntry={!showConfirmPassword}
-                     />
-                     <TouchableOpacity 
-                        style={styles.eyeButton}
-                        onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                     >
-                        <Ionicons 
-                           name={showConfirmPassword ? "eye-off" : "eye"} 
-                           size={20} 
-                           color="#666" 
-                        />
-                     </TouchableOpacity>
-                  </View>
-               </View>
-
-               {/* Password Requirements */}
+            {/* Password Requirements */}
+            {newPassword.length > 0 && (
                <View style={styles.requirementsContainer}>
                   <Text style={styles.requirementsTitle}>Yêu cầu mật khẩu:</Text>
                   <Text style={[styles.requirement, hasMinLength(newPassword) && styles.requirementMet]}>
@@ -189,21 +176,20 @@ export default function ResetPasswordScreen() {
                      • Mật khẩu xác nhận phải khớp
                   </Text>
                </View>
+            )}
 
-               {/* Reset Button */}
-               <TouchableOpacity 
-                  style={[styles.resetButton, (!isPasswordValid() || isLoading) && styles.resetButtonDisabled]}
-                  onPress={handleResetPassword}
-                  disabled={!isPasswordValid() || isLoading}
-                  activeOpacity={0.8}
-               >
-                  <Ionicons name="key" size={20} color="#FFF" style={styles.buttonIcon} />
-                  <Text style={[styles.resetButtonText, (!isPasswordValid() || isLoading) && styles.resetButtonTextDisabled]}>
-                     {isLoading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
-                  </Text>
-               </TouchableOpacity>
-            </View>
-         </LinearGradient>
+            {/* Reset Button */}
+            <TouchableOpacity 
+               style={[styles.resetButton, (!isPasswordValid() || isLoading) && styles.resetButtonDisabled]}
+               onPress={handleResetPassword}
+               disabled={!isPasswordValid() || isLoading}
+               activeOpacity={0.9}
+            >
+               <Text style={[styles.resetButtonText, (!isPasswordValid() || isLoading) && styles.resetButtonTextDisabled]}>
+                  {isLoading ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}
+               </Text>
+            </TouchableOpacity>
+         </View>
       </SafeAreaView>
    )
 }
@@ -211,115 +197,95 @@ export default function ResetPasswordScreen() {
 const styles = StyleSheet.create({
    container: {
       flex: 1,
-   },
-   gradient: {
-      flex: 1,
+      backgroundColor: '#FFFFFF',
    },
    header: {
-      paddingHorizontal: 20,
-      paddingTop: 20,
-      paddingBottom: 20,
+      paddingHorizontal: 16,
+      paddingTop: 40,
+      paddingBottom: -50,
    },
    backButton: {
       width: 40,
       height: 40,
-      borderRadius: 20,
-      backgroundColor: 'rgba(0, 0, 0, 0.1)',
-      justifyContent: 'center',
       alignItems: 'center',
+      justifyContent: 'center',
+   },
+   title: {
+      fontSize: 40,
+      fontWeight: '800',
+      color: '#111827',
+      paddingHorizontal: 20,
+      marginTop: 12,
+      marginBottom: 24,
    },
    content: {
       flex: 1,
-      paddingHorizontal: 40,
-      paddingTop: 20,
-   },
-   title: {
-      fontSize: 32,
-      fontWeight: 'bold',
-      color: '#000',
-      textAlign: 'center',
-      marginBottom: 16,
-      letterSpacing: -0.5,
+      paddingHorizontal: 20,
    },
    description: {
-      fontSize: 16,
-      color: '#666',
+      fontSize: 18,
+      color: '#6B7280',
       textAlign: 'center',
       lineHeight: 24,
       marginBottom: 40,
+      paddingHorizontal: 20,
    },
-   inputContainer: {
+   inputWrap: {
+      position: 'relative',
       marginBottom: 20,
    },
-   inputLabel: {
-      fontSize: 16,
-      fontWeight: '500',
-      color: '#000',
-      marginBottom: 8,
+   input: {
+      backgroundColor: '#F5F7FF',
+      borderRadius: 12,
+      paddingVertical: 14,
+      paddingHorizontal: 14,
+      fontSize: 20,
+      color: '#111827',
    },
-   inputWrapper: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      borderBottomWidth: 1,
-      borderBottomColor: '#DDD',
-   },
-   passwordInput: {
-      flex: 1,
-      paddingVertical: 12,
-      fontSize: 16,
-      color: '#000',
-   },
-   eyeButton: {
-      padding: 8,
+   eyeBtn: {
+      position: 'absolute',
+      right: 12,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
    },
    requirementsContainer: {
-      marginBottom: 30,
-      paddingHorizontal: 10,
+      marginTop: 8,
+      marginBottom: 12,
+      paddingHorizontal: 4,
    },
    requirementsTitle: {
-      fontSize: 14,
-      fontWeight: '500',
-      color: '#666',
-      marginBottom: 8,
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#6B7280',
+      marginBottom: 6,
    },
    requirement: {
       fontSize: 14,
-      color: '#999',
-      marginBottom: 4,
+      color: '#9CA3AF',
+      marginBottom: 3,
    },
    requirementMet: {
-      color: '#4CAF50',
+      color: '#10B981',
    },
    resetButton: {
-      backgroundColor: '#FF9500',
-      borderRadius: 16,
-      paddingVertical: 18,
+      marginTop: 8,
+      borderRadius: 28,
+      paddingVertical: 14,
       alignItems: 'center',
-      flexDirection: 'row',
       justifyContent: 'center',
-      shadowColor: '#FF9500',
-      shadowOffset: {
-         width: 0,
-         height: 6,
-      },
-      shadowOpacity: 0.3,
-      shadowRadius: 12,
-      elevation: 8,
+      backgroundColor: '#FFB74D',
    },
    resetButtonDisabled: {
-      backgroundColor: '#DDD',
-      shadowOpacity: 0,
-      elevation: 0,
+      backgroundColor: '#DDE3ED',
    },
    resetButtonText: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#FFF',
+      fontSize: 20,
+      fontWeight: '700',
+      color: '#FFFFFF',
    },
    resetButtonTextDisabled: {
-      color: '#999',
-   },
-   buttonIcon: {
-      marginRight: 8,
+      color: '#FFFFFF',
+      opacity: 0.9,
    },
 }) 

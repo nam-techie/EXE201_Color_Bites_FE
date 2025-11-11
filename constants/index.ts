@@ -24,6 +24,18 @@ if (__DEV__) {
   console.log('[ENV DEBUG] Map provider: OpenStreetMap')
 }
    
+// OpenAI Configuration (for client-side prototyping only)
+const openaiEnvKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY
+const openaiExtraKey = (Constants?.expoConfig as any)?.extra?.OPENAI_API_KEY as string | undefined
+export const OPENAI_API_KEY = openaiEnvKey || openaiExtraKey || ''
+export const OPENAI_MODEL =
+  (process.env.EXPO_PUBLIC_OPENAI_MODEL as string | undefined) ||
+  ((Constants?.expoConfig as any)?.extra?.OPENAI_MODEL as string | undefined) ||
+  'gpt-4o-mini'
+if (__DEV__) {
+  console.log('[ENV DEBUG] OpenAI key configured:', OPENAI_API_KEY ? 'yes' : 'no', 'model:', OPENAI_MODEL)
+}
+
 // Backend API Configuration
 // Chọn baseURL theo môi trường chạy để tránh lỗi Network Error
 const getApiBaseUrl = () => {
@@ -63,6 +75,7 @@ const getApiBaseUrl = () => {
 }
 
 export const API_BASE_URL = getApiBaseUrl()
+// export const API_BASE_URL = 'https://api-mumii.namtechie.id.vn'
 if (__DEV__) {
   console.log('[ENV DEBUG] API base URL:', API_BASE_URL)
   console.log('[ENV DEBUG] Platform.OS:', Platform.OS)
@@ -76,6 +89,7 @@ export const API_ENDPOINTS = {
       BY_ID: '/api/posts/read',
       BY_USER: '/api/posts/read/user',
       BY_MOOD: '/api/posts/read/mood',
+      BY_PRIVACY: '/api/posts/read/privacy',
       SEARCH: '/api/posts/search',
       UPDATE: '/api/posts/edit',
       DELETE: '/api/posts/delete',
@@ -99,12 +113,29 @@ export const API_ENDPOINTS = {
       LOGOUT: '/api/auth/logout',
       REFRESH: '/api/auth/refresh',
       VERIFY_TOKEN: '/api/auth/verify',
+      CHANGE_PASSWORD: '/api/auth/change-password',
+      FORGOT_PASSWORD: '/api/auth/forgot-password',
+      RESET_PASSWORD: '/api/auth/reset-password',
       ME: '/api/auth/me',
+   },
+   // OTP endpoints
+   OTP: {
+      VERIFY_REGISTER: '/api/otp/verify-register',
+      VERIFY_RESET_PASSWORD: '/api/otp/verify-reset-password',
    },
    // User Information endpoints
    USER_INFO: {
       GET: '/api/user-info',
+      UPDATE: '/api/user-info',
+      UPLOAD_AVATAR: '/api/user-info/uploadAvatar', // usage: `${UPLOAD_AVATAR}/${accountId}`
    },
+  // Payment endpoints
+  PAYMENT: {
+     CREATE: '/api/payment/subscription/create',
+     STATUS: '/api/payment/subscription/status',
+     CONFIRM: '/api/payment/subscription/confirm',
+     HISTORY: '/api/payment/history',
+  },
 }
 
 // Map Configuration

@@ -1,224 +1,359 @@
 'use client'
 
+import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
 import { router } from 'expo-router'
 import React from 'react'
 import {
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native'
 
 export default function WelcomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
-
-      {/* MAIN = ở giữa màn hình */}
-      <View style={styles.main}>
-        {/* Logo */}
-        <View style={styles.logoWrap}>
-          <Image
-            source={require('@/assets/images/icon.jpg')}
-            style={styles.logo}
-            contentFit="contain"
-            transition={200}
-          />
+      <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+      
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Logo Section */}
+        <View style={styles.logoSection}>
+          <View style={styles.logoWrapper}>
+            <Image
+              source={require('@/assets/images/icon.jpg')}
+              style={styles.logo}
+              contentFit="cover"
+              transition={300}
+            />
+          </View>
+          <Text style={styles.appName}>MUMII</Text>
+          <Text style={styles.tagline}>Hành trình ẩm thực của bạn</Text>
         </View>
 
-        {/* Texts */}
-        <View style={styles.textWrap}>
-          <Text style={styles.slogan}>Gu vị riêng, trải nghiệm khác</Text>
-          <Text style={styles.headline}>Đăng ký miễn phí.</Text>
+        {/* Decorative food emojis */}
+        <View style={styles.emojiContainer}>
+          <Text style={styles.emoji}>🍕</Text>
+          <Text style={styles.emoji}>🍜</Text>
+          <Text style={styles.emoji}>🍔</Text>
+          <Text style={styles.emoji}>🍱</Text>
+          <Text style={styles.emoji}>🍰</Text>
+        </View>
 
-          <Text style={styles.legal}>
-            Bằng việc đăng ký, bạn chấp nhận{' '}
-            <Text
-              style={styles.link}
-              onPress={() => router.push('/auth/terms-of-service')}
+        {/* Features Section */}
+        <View style={styles.featuresSection}>
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Ionicons name="restaurant" size={19} color="#FF6B35" />
+            </View>
+            <Text style={styles.featureTitle}>Khám phá</Text>
+            <Text style={styles.featureDescription}>Ngàn quán ăn</Text>
+          </View>
+
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Ionicons name="people" size={19} color="#FF6B35" />
+            </View>
+            <Text style={styles.featureTitle}>Cộng đồng</Text>
+            <Text style={styles.featureDescription}>Kết nối</Text>
+          </View>
+
+          <View style={styles.featureCard}>
+            <View style={styles.featureIconContainer}>
+              <Ionicons name="star" size={19} color="#FF6B35" />
+            </View>
+            <Text style={styles.featureTitle}>Đánh giá</Text>
+            <Text style={styles.featureDescription}>Chia sẻ</Text>
+          </View>
+        </View>
+
+        {/* Main Content */}
+        <View style={styles.contentSection}>
+
+          {/* Action Buttons */}
+          <View style={styles.actionsContainer}>
+            {/* Google Sign In Button with Gradient */}
+            <TouchableOpacity
+              activeOpacity={0.8}
+              onPress={() => console.log('Google sign in pressed')}
             >
-              Điều khoản dịch vụ
-            </Text>{' '}
-            và{' '}
-            <Text
-              style={styles.link}
-              onPress={() => router.push('/auth/privacy-policy')}
+              <CrossPlatformGradient
+                colors={['#FF6B35', '#FF1493']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gradientButton}
+              >
+                <Ionicons name="logo-google" size={18} color="#FFFFFF" />
+                <Text style={styles.gradientButtonText}>Tiếp tục với Google</Text>
+              </CrossPlatformGradient>
+            </TouchableOpacity>
+
+            {/* Email Sign Up Button */}
+            <TouchableOpacity
+              style={styles.emailButton}
+              activeOpacity={0.8}
+              onPress={() => router.push('/auth/signup-form')}
             >
-              Chính sách quyền riêng tư
-            </Text>{' '}
-            của MUMII
-          </Text>
+              <Ionicons name="mail-outline" size={18} color="#FF6B35" />
+              <Text style={styles.emailButtonText}>Đăng ký với Email</Text>
+            </TouchableOpacity>
+
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>hoặc</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Login Button */}
+            <TouchableOpacity
+              style={styles.loginButton}
+              activeOpacity={0.85}
+              onPress={() => router.push('/auth/login')}
+            >
+              <Text style={styles.loginButtonText}>Đã có tài khoản? </Text>
+              <Text style={styles.loginButtonLink}>Đăng nhập</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Legal Text */}
+          <View style={styles.legalContainer}>
+            <Text style={styles.legalText}>
+              Bằng việc đăng ký, bạn chấp nhận{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => router.push('/auth/terms-of-service')}
+              >
+                Điều khoản dịch vụ
+              </Text>{' '}
+              và{' '}
+              <Text
+                style={styles.legalLink}
+                onPress={() => router.push('/auth/privacy-policy')}
+              >
+                Chính sách quyền riêng tư
+              </Text>
+            </Text>
+          </View>
         </View>
-
-        {/* Actions */}
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.btnPrimary}
-            activeOpacity={0.88}
-            onPress={() => console.log('Google sign in pressed')}
-          >
-            <Ionicons name="logo-google" size={20} color="#FFFFFF" />
-            <Text style={styles.btnPrimaryText}>Tiếp tục với Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.btnOutline}
-            activeOpacity={0.88}
-            onPress={() => router.push('/auth/signup-form')}
-          >
-            <Ionicons name="mail-outline" size={20} color="#333333" />
-            <Text style={styles.btnOutlineText}>Đăng ký bằng email</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* FOOTER = sát đáy, không dư khoảng trống */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Đã có tài khoản? </Text>
-        <TouchableOpacity onPress={() => router.push('/auth/login')}>
-          <Text style={styles.footerLink}>Đăng nhập</Text>
-        </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
 
-const MAX_WIDTH = 360
-const BTN_HEIGHT = 56
-const RADIUS = 28
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 20
+    backgroundColor: '#F9FAFB',
   },
-
-  /* Trung tâm màn hình */
-  main: {
+  scrollContent: {
     flexGrow: 1,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 0,
-    marginTop: 30
-  },
-
-  /* Logo */
-  logoWrap: {
-    width: 140,
-    alignItems: 'center',
-    marginBottom: -450
+    paddingTop: 50,
+    justifyContent: 'space-between',
   },
   
-  logo: {
-    width: 140,
-    height: 140,
-    borderRadius: 32,
+  // Logo Section
+  logoSection: {
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    marginBottom: 28,
+  },
+  logoWrapper: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
-    shadowRadius: 24,
-    elevation: 10
+    padding: 8,
+    marginBottom: 18,
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 7,
   },
-
-  /* Texts */
-  textWrap: {
+  logo: {
     width: '100%',
-    maxWidth: MAX_WIDTH,
-    alignItems: 'center',
-    marginTop: 490,
-    marginBottom: 15
+    height: '100%',
+    borderRadius: 42,
   },
-  slogan: {
-    fontSize: 25,
-    fontWeight: '500',
-    color: '#111',
-    textAlign: 'center',
-    marginBottom: 150
-  },
-  headline: {
-    fontSize: 33,
+  appName: {
+    fontSize: 34,
     fontWeight: '800',
-    color: '#000',
-    textAlign: 'center',
-    letterSpacing: -0.5,
-    marginBottom: 20
+    color: '#111827',
+    letterSpacing: 0.8,
+    marginBottom: 6,
   },
-  legal: {
-    fontSize: 16,
-    lineHeight: 20,
-    color: '#6B6B6B',
-    textAlign: 'center',
-    paddingHorizontal: 8
-  },
-  link: {
-    color: '#4A90E2',
-    textDecorationLine: 'underline'
-  },
-
-  /* Buttons */
-  actions: {
-    width: '95%',
-    maxWidth: MAX_WIDTH,
-    marginTop: 15,
-    gap: 20,
-    alignSelf: 'center'
-  },
-  btnPrimary: {
-    height: BTN_HEIGHT,
-    borderRadius: RADIUS,
-    backgroundColor: '#FB8C00',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-  },
-
-  btnPrimaryText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF'
-  },
-
-  btnOutline: {
-   height: BTN_HEIGHT,
-   borderRadius: RADIUS,
-   backgroundColor: '#FFFFFF',
-   flexDirection: 'row',
-   alignItems: 'center',
-   justifyContent: 'center',
-   borderWidth: 1.5,
-   borderColor: '#D7D7D7',
-   gap: 10,
-  },
-
-  btnOutlineText: {
-    fontSize: 20,
+  tagline: {
+    fontSize: 15,
+    color: '#6B7280',
     fontWeight: '500',
-    color: '#333333'
   },
-
-  /* Footer */
-  footer: {
+  
+  // Decorative Emojis
+  emojiContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 14,
+    paddingHorizontal: 24,
+    marginBottom: 26,
+  },
+  emoji: {
+    fontSize: 30,
+  },
+  
+  // Features Section
+  featuresSection: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    marginBottom: 32,
+    gap: 12,
+  },
+  featureCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 13,
+    padding: 12,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 5,
+    elevation: 2,
+  },
+  featureIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF5F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 7,
+  },
+  featureTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 3,
+  },
+  featureDescription: {
+    fontSize: 9,
+    color: '#6B7280',
+    textAlign: 'center',
+    lineHeight: 12,
+  },
+  
+  // Content Section
+  contentSection: {
+    paddingHorizontal: 24,
+    paddingBottom: 12,
+  },
+  
+  // Actions Container
+  actionsContainer: {
+    marginBottom: 10,
+  },
+  
+  // Gradient Button (Google)
+  gradientButton: {
+    height: 48,
+    borderRadius: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#FF6B35',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  gradientButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  
+  // Email Button
+  emailButton: {
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 8,
+    borderWidth: 2,
+    borderColor: '#FF6B35',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  emailButtonText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FF6B35',
+  },
+  
+  // Divider
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  dividerText: {
+    marginHorizontal: 10,
+    fontSize: 12,
+    color: '#9CA3AF',
+    fontWeight: '500',
+  },
+  
+  // Login Button
+  loginButton: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingBottom: 130,
-    paddingTop: 20
+    paddingVertical: 8,
   },
-  footerText: {
-    fontSize: 20,
-    color: '#666'
+  loginButtonText: {
+    fontSize: 14,
+    color: '#6B7280',
+    fontWeight: '500',
   },
-  footerLink: {
-    fontSize: 20,
+  loginButtonLink: {
+    fontSize: 14,
     fontWeight: '700',
-    color: '#4A90E2'
-  }
+    color: '#FF6B35',
+  },
+  
+  // Legal Text
+  legalContainer: {
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  legalText: {
+    fontSize: 10,
+    lineHeight: 15,
+    color: '#9CA3AF',
+    textAlign: 'center',
+  },
+  legalLink: {
+    color: '#FF6B35',
+    fontWeight: '600',
+  },
 })

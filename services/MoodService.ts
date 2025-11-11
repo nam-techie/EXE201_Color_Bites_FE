@@ -36,18 +36,18 @@ export class MoodService {
                if (result.status === 'fulfilled' && result.value) {
                   const transformedMoods = this.transformMoodResponses(result.value.content)
                   allMoods = allMoods.concat(transformedMoods)
-                  console.log(`✅ Page ${index + 2} fetched: ${transformedMoods.length} moods`)
+                  console.log(` Page ${index + 2} fetched: ${transformedMoods.length} moods`)
                } else {
-                  console.error(`❌ Failed to fetch page ${index + 2}:`, result.status === 'rejected' ? result.reason : 'No data')
+                  console.error(` Failed to fetch page ${index + 2}:`, result.status === 'rejected' ? result.reason : 'No data')
                }
             })
          }
          
-         console.log(`✅ Successfully fetched ${allMoods.length} moods from API`)
+         console.log(` Successfully fetched ${allMoods.length} moods from API`)
          return allMoods
          
       } catch (error) {
-         console.error('❌ Error fetching moods from API:', error)
+         console.error(' Error fetching moods from API:', error)
          // Trả về array rỗng thay vì throw error để app không crash
          console.log('🔄 Returning empty array due to API error')
          return []
@@ -59,14 +59,14 @@ export class MoodService {
     */
    private async getMoodsPaginated(page: number = 1, size: number = 10): Promise<MoodListResponse | null> {
       try {
-         console.log(`📡 Fetching moods - Page: ${page}, Size: ${size}`)
+         console.log(` Fetching moods - Page: ${page}, Size: ${size}`)
          
          const response = await apiService.get<MoodListResponse>(
             `${API_ENDPOINTS.MOODS.LIST}?page=${page}&size=${size}`
          )
          
          if (response.status === 200 && response.data) {
-            console.log(`✅ Page ${page} fetched: ${response.data.content.length} moods`)
+            console.log(` Page ${page} fetched: ${response.data.content.length} moods`)
             return response.data
          }
          
@@ -74,7 +74,7 @@ export class MoodService {
          return null
          
       } catch (error) {
-         console.error(`❌ Error fetching page ${page}:`, error)
+         console.error(` Error fetching page ${page}:`, error)
          return null
       }
    }

@@ -67,6 +67,7 @@ export interface PostResponse {
    isOwner: boolean          // Người xem có phải chủ bài viết không
    hasReacted: boolean       // Người xem đã react chưa
    userReactionType?: string // Loại reaction của người xem
+   visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' // Quyền riêng tư của bài đăng
    createdAt: string
    updatedAt: string
 }
@@ -218,4 +219,72 @@ export interface DirectionResult {
    duration: number
    steps: RouteStep[]
    geometry: string
+}
+
+// Payment Types
+export interface CreatePaymentRequest {
+  amount: number
+  description: string
+  currency: string
+  returnUrl?: string
+  cancelUrl?: string
+  items: PaymentItem[]
+}
+
+export interface PaymentItem {
+  name: string
+  quantity: number
+  price: number
+}
+
+export interface PaymentResponse {
+  checkoutUrl: string
+  paymentLinkId: string
+  orderCode: number
+  qrCode?: string
+  status: string
+  createdAt: string
+  message: string
+}
+
+export interface PaymentStatusResponse {
+  transactionId: string
+  orderCode: number
+  status: string
+  amount: number
+  description: string
+  gatewayName: string
+  message: string
+  createdAt: string
+  updatedAt: string
+}
+
+// OTP Types
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface VerifyRegisterRequest {
+  email: string
+  otp: string
+}
+
+export interface VerifyRequest {
+  email: string
+  otp: string
+}
+
+export interface AccountResponse {
+  id: string
+  email: string
+  userName: string
+  role: string
+  token: string
+  active: boolean
+}
+
+export interface ResetPasswordRequest {
+  email: string
+  newPassword: string
+  confirmPassword: string
 }

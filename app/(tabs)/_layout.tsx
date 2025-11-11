@@ -8,8 +8,9 @@ export default function TabLayout() {
    return (
       <Tabs
          screenOptions={({ route }) => ({
-            tabBarIcon: ({ focused, color, size }) => {
+            tabBarIcon: ({ focused, color }) => {
                let iconName: keyof typeof Ionicons.glyphMap
+               const size = 24
 
                if (route.name === 'index') {
                   iconName = focused ? 'home' : 'home-outline'
@@ -20,7 +21,7 @@ export default function TabLayout() {
                } else if (route.name === 'challenge') {
                   iconName = focused ? 'trophy' : 'trophy-outline'
                } else if (route.name === 'profile') {
-                  iconName = focused ? 'person' : 'person-outline'
+                  iconName = 'person'
                } else {
                   iconName = 'home-outline'
                }

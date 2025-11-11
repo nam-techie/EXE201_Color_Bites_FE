@@ -1,19 +1,21 @@
 'use client'
 
+import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-   Alert,
-   SafeAreaView,
-   ScrollView,
-   StatusBar,
-   StyleSheet,
-   Text,
-   TextInput,
-   TouchableOpacity,
-   View
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native'
 
 export default function SignUpFormScreen() {
@@ -41,7 +43,9 @@ export default function SignUpFormScreen() {
       const newErrors: {[key: string]: string} = {}
 
       if (!formData.username.trim()) {
-         newErrors.username = 'Vui lòng nhập họ và tên'
+         newErrors.username = 'Vui lòng nhập Username'
+      } else if (formData.username.trim().length < 6) {
+         newErrors.username = 'Username phải có ít nhất 6 ký tự'
       }
 
       if (!formData.email.trim()) {
@@ -74,33 +78,59 @@ export default function SignUpFormScreen() {
       return Object.keys(newErrors).length === 0
    }
 
+
    const handleSubmit = async () => {
       if (!validateForm()) return
 
       setIsLoading(true)
       try {
-         await register(
-            formData.username, 
-            formData.email, 
-            formData.password, 
-            formData.confirmPassword
-         )
+         // Chỉ gửi email để nhận OTP
+         await register(formData.email)
          
+         // Lưu thông tin user vào AsyncStorage để dùng trong verify-otp
+         const userInfo = {
+            username: formData.username,
+            email: formData.email,
+            password: formData.password,
+            confirmPassword: formData.confirmPassword
+         }
+         await AsyncStorage.setItem('pendingUserInfo', JSON.stringify(userInfo))
+         
+         // Gửi OTP thành công, chuyển đến trang verify OTP
          Alert.alert(
-            'Đăng ký thành công!', 
-            'Tài khoản đã được tạo. Vui lòng đăng nhập để tiếp tục.',
+            'OTP đã được gửi!', 
+            'Mã OTP đã được gửi đến email của bạn. Vui lòng xác thực để tạo tài khoản.',
             [
                {
-                  text: 'Đăng nhập ngay',
-                  onPress: () => router.replace('/auth/login')
+                  text: 'Xác thực OTP',
+                  onPress: () => router.push({
+                     pathname: '/auth/verify-otp',
+                     params: { 
+                        email: formData.email,
+                        type: 'register'
+                     }
+                  })
                }
             ]
          )
       } catch (error) {
          console.error('Register error:', error)
+         const errorMessage = error instanceof Error ? error.message : 'Đã xảy ra lỗi không xác định'
+         
+         // Chỉ hiển thị lỗi cho các vấn đề technical thực sự
+         // KHÔNG hiển thị lỗi cho business logic như "email đã sử dụng"
          Alert.alert(
-            'Đăng ký thất bại',
-            error instanceof Error ? error.message : 'Đã xảy ra lỗi không xác định'
+            'Lỗi đăng ký',
+            errorMessage,
+            [
+               {
+                  text: 'Thử lại',
+                  onPress: () => {
+                     // User có thể thử lại với cùng email hoặc email khác
+                     console.log('User chọn thử lại đăng ký')
+                  }
+               }
+            ]
          )
       } finally {
          setIsLoading(false)
@@ -109,6 +139,7 @@ export default function SignUpFormScreen() {
 
    const isFormValid = () => {
       return formData.username.trim() && 
+             formData.username.trim().length >= 6 &&
              formData.email.trim() && 
              formData.password && 
              formData.confirmPassword &&
@@ -124,7 +155,7 @@ export default function SignUpFormScreen() {
 
    return (
       <SafeAreaView style={styles.container}>
-         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
+         <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
 
          <ScrollView 
             style={styles.scrollView} 
@@ -135,115 +166,143 @@ export default function SignUpFormScreen() {
             <View style={styles.header}>
                <TouchableOpacity 
                   style={styles.backButton}
-                  onPress={() => router.back()}
+                  onPress={() => router.push('/auth/welcome')}
                >
                   <Ionicons name="arrow-back" size={24} color="#111827" />
                </TouchableOpacity>
             </View>
 
-            {/* Title */}
-            <Text style={styles.title}>Tạo tài khoản</Text>
+            {/* Title Section */}
+            <View style={styles.titleSection}>
+               <Text style={styles.title}>Tạo tài khoản</Text>
+               <Text style={styles.subtitle}>Tham gia cộng đồng foodie của chúng tôi</Text>
+            </View>
 
             {/* Content */}
             <View style={styles.content}>
-               {/* Full name */}
-               <View style={styles.inputWrap}>
-                  <TextInput
-                     style={styles.input}
-                     placeholder="Họ và tên"
-                     placeholderTextColor="#9AA4B2"
-                     value={formData.username}
-                     onChangeText={(text) => {
-                        setFormData({ ...formData, username: text })
-                        if (errors.username) setErrors({ ...errors, username: '' })
-                     }}
-                     autoCapitalize="words"
-                     returnKeyType="next"
-                  />
+               {/* Username */}
+               <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Username</Text>
+                  <View style={[styles.inputWrap, errors.username && styles.inputWrapError]}>
+                     <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                     <TextInput
+                        style={styles.input}
+                        placeholder="Nhập username của bạn"
+                        placeholderTextColor="#9CA3AF"
+                        value={formData.username}
+                        onChangeText={(text) => {
+                           setFormData({ ...formData, username: text })
+                           
+                           const newErrors = { ...errors }
+                           if (!text.trim()) {
+                              newErrors.username = 'Vui lòng nhập username'
+                           } else if (text.trim().length < 6) {
+                              newErrors.username = 'Username phải có ít nhất 6 ký tự'
+                           } else {
+                              delete newErrors.username
+                           }
+                           setErrors(newErrors)
+                        }}
+                        autoCapitalize="none"
+                        returnKeyType="next"
+                     />
+                  </View>
+                  {errors.username ? (
+                     <Text style={styles.errorText}>{errors.username}</Text>
+                  ) : null}
                </View>
-               {errors.username ? (
-                  <Text style={styles.errorText}>{errors.username}</Text>
-               ) : null}
 
                {/* Email */}
-               <View style={styles.inputWrap}>
-                  <TextInput
-                     style={styles.input}
-                     placeholder="Email"
-                     placeholderTextColor="#9AA4B2"
-                     value={formData.email}
-                     onChangeText={(text) => {
-                        setFormData({ ...formData, email: text })
-                        if (errors.email) setErrors({ ...errors, email: '' })
-                     }}
-                     autoCapitalize="none"
-                     keyboardType="email-address"
-                     returnKeyType="next"
-                  />
+               <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Email</Text>
+                  <View style={[styles.inputWrap, errors.email && styles.inputWrapError]}>
+                     <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                     <TextInput
+                        style={styles.input}
+                        placeholder="example@email.com"
+                        placeholderTextColor="#9CA3AF"
+                        value={formData.email}
+                        onChangeText={(text) => {
+                           setFormData({ ...formData, email: text })
+                           if (errors.email) setErrors({ ...errors, email: '' })
+                        }}
+                        autoCapitalize="none"
+                        keyboardType="email-address"
+                        returnKeyType="next"
+                     />
+                  </View>
+                  {errors.email ? (
+                     <Text style={styles.errorText}>{errors.email}</Text>
+                  ) : null}
                </View>
-               {errors.email ? (
-                  <Text style={styles.errorText}>{errors.email}</Text>
-               ) : null}
 
                {/* Password */}
-               <View style={styles.inputWrap}>
-                  <TextInput
-                     style={[styles.input, { paddingRight: 44 }]}
-                     placeholder="Mật khẩu"
-                     placeholderTextColor="#9AA4B2"
-                     value={formData.password}
-                     onChangeText={(text) => {
-                        setFormData({ ...formData, password: text })
-                        if (errors.password) setErrors({ ...errors, password: '' })
-                     }}
-                     secureTextEntry={!showPassword}
-                     autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                     style={styles.eyeBtn}
-                     onPress={() => setShowPassword(v => !v)}
-                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                     <Ionicons 
-                        name={showPassword ? 'eye' : 'eye-off'} 
-                        size={20} 
-                        color="#6B7280" 
+               <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Mật khẩu</Text>
+                  <View style={[styles.inputWrap, errors.password && styles.inputWrapError]}>
+                     <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                     <TextInput
+                        style={[styles.input, { paddingRight: 44 }]}
+                        placeholder="Nhập mật khẩu"
+                        placeholderTextColor="#9CA3AF"
+                        value={formData.password}
+                        onChangeText={(text) => {
+                           setFormData({ ...formData, password: text })
+                           if (errors.password) setErrors({ ...errors, password: '' })
+                        }}
+                        secureTextEntry={!showPassword}
+                        autoCapitalize="none"
                      />
-                  </TouchableOpacity>
+                     <TouchableOpacity
+                        style={styles.eyeBtn}
+                        onPress={() => setShowPassword(v => !v)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                     >
+                        <Ionicons 
+                           name={showPassword ? 'eye' : 'eye-off'} 
+                           size={20} 
+                           color="#6B7280" 
+                        />
+                     </TouchableOpacity>
+                  </View>
+                  {errors.password ? (
+                     <Text style={styles.errorText}>{errors.password}</Text>
+                  ) : null}
                </View>
-               {errors.password ? (
-                  <Text style={styles.errorText}>{errors.password}</Text>
-               ) : null}
 
                {/* Confirm Password */}
-               <View style={styles.inputWrap}>
-                  <TextInput
-                     style={[styles.input, { paddingRight: 44 }]}
-                     placeholder="Xác nhận mật khẩu"
-                     placeholderTextColor="#9AA4B2"
-                     value={formData.confirmPassword}
-                     onChangeText={(text) => {
-                        setFormData({ ...formData, confirmPassword: text })
-                        if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' })
-                     }}
-                     secureTextEntry={!showConfirmPassword}
-                     autoCapitalize="none"
-                  />
-                  <TouchableOpacity
-                     style={styles.eyeBtn}
-                     onPress={() => setShowConfirmPassword(v => !v)}
-                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                  >
-                     <Ionicons
-                        name={showConfirmPassword ? 'eye' : 'eye-off'}
-                        size={20}
-                        color="#6B7280"
+               <View style={styles.inputContainer}>
+                  <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
+                  <View style={[styles.inputWrap, errors.confirmPassword && styles.inputWrapError]}>
+                     <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
+                     <TextInput
+                        style={[styles.input, { paddingRight: 44 }]}
+                        placeholder="Nhập lại mật khẩu"
+                        placeholderTextColor="#9CA3AF"
+                        value={formData.confirmPassword}
+                        onChangeText={(text) => {
+                           setFormData({ ...formData, confirmPassword: text })
+                           if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' })
+                        }}
+                        secureTextEntry={!showConfirmPassword}
+                        autoCapitalize="none"
                      />
-                  </TouchableOpacity>
+                     <TouchableOpacity
+                        style={styles.eyeBtn}
+                        onPress={() => setShowConfirmPassword(v => !v)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                     >
+                        <Ionicons
+                           name={showConfirmPassword ? 'eye' : 'eye-off'}
+                           size={20}
+                           color="#6B7280"
+                        />
+                     </TouchableOpacity>
+                  </View>
+                  {errors.confirmPassword ? (
+                     <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                  ) : null}
                </View>
-               {errors.confirmPassword ? (
-                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-               ) : null}
 
                {/* Password checklist */}
                {formData.password.length > 0 && (
@@ -291,14 +350,28 @@ export default function SignUpFormScreen() {
 
                {/* Register button */}
                <TouchableOpacity
-                  activeOpacity={0.9}
-                  style={[styles.registerBtn, isDisabled && styles.registerBtnDisabled]}
+                  activeOpacity={0.85}
                   disabled={isDisabled}
                   onPress={handleSubmit}
                >
-                  <Text style={[styles.registerText, isDisabled && styles.registerTextDisabled]}>
-                     {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
-                  </Text>
+                  {isDisabled ? (
+                     <View style={styles.registerBtnDisabled}>
+                        <Text style={styles.registerTextDisabled}>
+                           {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
+                        </Text>
+                     </View>
+                  ) : (
+                     <CrossPlatformGradient
+                        colors={['#FF6B35', '#FF1493']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 0 }}
+                        style={styles.registerBtn}
+                     >
+                        <Text style={styles.registerText}>
+                           {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
+                        </Text>
+                     </CrossPlatformGradient>
+                  )}
                </TouchableOpacity>
             </View>
          </ScrollView>
@@ -309,7 +382,7 @@ export default function SignUpFormScreen() {
 const styles = StyleSheet.create({
    container: {
       flex: 1,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: '#F9FAFB',
    },
    scrollView: {
       flex: 1,
@@ -320,9 +393,9 @@ const styles = StyleSheet.create({
 
    /* Header */
    header: {
-      paddingHorizontal: 16,
-      paddingTop: 40,
-      paddingBottom: -50,
+      paddingHorizontal: 20,
+      paddingTop: 8,
+      paddingBottom: 12,
    },
    backButton: {
       width: 40,
@@ -331,14 +404,21 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
    },
 
-   /* Title */
+   /* Title Section */
+   titleSection: {
+      paddingHorizontal: 20,
+      marginBottom: 28,
+   },
    title: {
-      fontSize: 40,
+      fontSize: 32,
       fontWeight: '800',
       color: '#111827',
-      paddingHorizontal: 20,
-      marginTop: 12,
-      marginBottom: 24,
+      marginBottom: 8,
+   },
+   subtitle: {
+      fontSize: 15,
+      color: '#6B7280',
+      lineHeight: 22,
    },
 
    /* Content */
@@ -348,24 +428,39 @@ const styles = StyleSheet.create({
    },
 
    /* Inputs */
-   inputWrap: {
-      position: 'relative',
+   inputContainer: {
       marginBottom: 20,
    },
-   input: {
-      backgroundColor: '#F5F7FF',
+   inputLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: '#374151',
+      marginBottom: 8,
+   },
+   inputWrap: {
+      position: 'relative',
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: '#FFFFFF',
       borderRadius: 12,
+      borderWidth: 1.5,
+      borderColor: '#E5E7EB',
+      paddingHorizontal: 16,
+   },
+   inputWrapError: {
+      borderColor: '#EF4444',
+   },
+   inputIcon: {
+      marginRight: 10,
+   },
+   input: {
+      flex: 1,
       paddingVertical: 14,
-      paddingHorizontal: 14,
-      fontSize: 20,
+      fontSize: 15,
       color: '#111827',
    },
    eyeBtn: {
-      position: 'absolute',
-      right: 12,
-      top: 0,
-      bottom: 0,
-      justifyContent: 'center',
+      padding: 8,
    },
 
    /* Error text */
@@ -384,13 +479,13 @@ const styles = StyleSheet.create({
       paddingHorizontal: 4,
    },
    requirementsTitle: {
-      fontSize: 16,
+      fontSize: 14,
       fontWeight: '600',
       color: '#6B7280',
       marginBottom: 6,
    },
    requirement: {
-      fontSize: 14,
+      fontSize: 13,
       color: '#9CA3AF',
       marginBottom: 3,
    },
@@ -400,38 +495,48 @@ const styles = StyleSheet.create({
 
    /* Terms & Privacy */
    legal: {
-      fontSize: 16,
-      lineHeight: 20,
-      color: '#6B6B6B',
+      fontSize: 13,
+      lineHeight: 18,
+      color: '#9CA3AF',
       textAlign: 'center',
       paddingHorizontal: 8,
       marginTop: 16,
       marginBottom: 8,
    },
    link: {
-      color: '#4A90E2',
-      textDecorationLine: 'underline',
+      color: '#FF6B35',
+      fontWeight: '500',
    },
 
    /* Register button */
    registerBtn: {
       marginTop: 20,
-      borderRadius: 28,
-      paddingVertical: 14,
+      height: 52,
+      borderRadius: 26,
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#FFB74D',
+      shadowColor: '#FF1493',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 6,
+      elevation: 4,
    },
    registerBtnDisabled: {
-      backgroundColor: '#DDE3ED',
+      marginTop: 20,
+      height: 52,
+      borderRadius: 26,
+      backgroundColor: '#E5E7EB',
+      alignItems: 'center',
+      justifyContent: 'center',
    },
    registerText: {
-      fontSize: 20,
-      fontWeight: '700',
+      fontSize: 16,
+      fontWeight: '600',
       color: '#FFFFFF',
    },
    registerTextDisabled: {
-      color: '#FFFFFF',
-      opacity: 0.9,
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#9CA3AF',
    },
 }) 

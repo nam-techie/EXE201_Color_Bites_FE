@@ -13,11 +13,11 @@ async function clearAuthData() {
     await AsyncStorage.removeItem('authToken');
     await AsyncStorage.removeItem('user');
     
-    console.log('✅ Auth data cleared successfully');
+    console.log(' Auth data cleared successfully');
     console.log('📱 Restart the app to see changes');
     
   } catch (error) {
-    console.error('❌ Error clearing auth data:', error);
+    console.error(' Error clearing auth data:', error);
   }
 }
 
