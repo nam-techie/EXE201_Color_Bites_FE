@@ -1,13 +1,16 @@
 'use client'
 
 import { CommentModal } from '@/components/common/CommentModal'
+import CreatePostBar from '@/components/common/CreatePostBar'
 import ImageGallery from '@/components/common/ImageGallery'
 import { getDefaultAvatar } from '@/constants/defaultImages'
+import { useAuth } from '@/context/AuthProvider'
 import { postService } from '@/services/PostService'
 import type { PostResponse } from '@/type'
 import { Ionicons } from '@expo/vector-icons'
 import { useFocusEffect } from '@react-navigation/native'
 import { Image } from 'expo-image'
+import { router } from 'expo-router'
 import React, { useCallback, useEffect, useState } from 'react'
 import {
    ActivityIndicator,
@@ -160,6 +163,7 @@ function PrivacyIcon({ visibility }: { visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIV
 }
 
 export default function CommunityScreen() {
+   const { user } = useAuth()
    const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set())
    const [savedPosts, setSavedPosts] = useState<Set<string>>(new Set())
    const [posts, setPosts] = useState<PostResponse[]>([])
@@ -335,6 +339,10 @@ export default function CommunityScreen() {
       setSelectedPostId('')
    }
 
+   const handleCreatePost = () => {
+      router.push('/create-post')
+   }
+
    return (
       <SafeAreaView style={styles.container}>
          {/* Enhanced Header */}
@@ -359,6 +367,13 @@ export default function CommunityScreen() {
                </TouchableOpacity>
             </View>
          </View>
+
+         {/* Create Post Bar */}
+         <CreatePostBar
+            onPress={handleCreatePost}
+            userAvatar={user?.avatar}
+            userName={user?.name}
+         />
 
          <ScrollView
             style={styles.scrollView}
@@ -739,7 +754,6 @@ const styles = StyleSheet.create({
       paddingBottom: 20,
    },
    postsContainer: {
-      marginTop: 24,
       paddingHorizontal: 16,
    },
    postCard: {
