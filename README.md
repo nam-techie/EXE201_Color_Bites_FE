@@ -1,12 +1,12 @@
-<h1 align="center">EXE201_COLOR_BITES_FE</h1> <p align="center"><em>Transforming Ideas into Seamless User Experiences</em></p> <p align="center"> <img src="https://img.shields.io/github/last-commit/nam-techie/EXE201_Color_Bites_FE?style=flat&label=last%20commit" alt="Last Commit" /> <img src="https://img.shields.io/badge/TypeScript-98.0%25-blue?style=flat&logo=typescript&logoColor=white" alt="TypeScript 98%" /> <img src="https://img.shields.io/github/languages/count/nam-techie/EXE201_Color_Bites_FE?style=flat&label=languages" alt="Languages Count" /> </p> <p align="center"><em>Built with the tools and technologies:</em></p> <p align="center"> <img src="https://img.shields.io/badge/JSON-black?style=flat&logo=json&logoColor=white" alt="JSON" /> <img src="https://img.shields.io/badge/Markdown-black?style=flat&logo=markdown&logoColor=white" alt="Markdown" /> <img src="https://img.shields.io/badge/npm-CB3837?style=flat&logo=npm&logoColor=white" alt="npm" /> <img src="https://img.shields.io/badge/Prettier-F7B93E?style=flat&logo=prettier&logoColor=black" alt="Prettier" /> <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=flat&logo=javascript&logoColor=black" alt="JavaScript" /> <img src="https://img.shields.io/badge/React-61DAFB?style=flat&logo=react&logoColor=white" alt="React" /> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white" alt="TypeScript" /> <img src="https://img.shields.io/badge/Expo-000000?style=flat&logo=expo&logoColor=white" alt="Expo" /> <img src="https://img.shields.io/badge/ESLint-4B32C3?style=flat&logo=eslint&logoColor=white" alt="ESLint" /> <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white" alt="Axios" /> </p>
+# 🍎 Mummi - Frontend Application
 
-![MUMII Logo](./assets/images/icon.png)
+![Mummi Logo](./assets/images/icon.png)
 
-**MUMII** là một ứng dụng di động được phát triển bằng React Native và Expo, tập trung vào trải nghiệm người dùng với giao diện hiện đại và hỗ trợ đa nền tảng.
+**Mummi** là một ứng dụng di động được phát triển bằng React Native và Expo, tập trung vào trải nghiệm người dùng với giao diện hiện đại và hỗ trợ đa nền tảng.
 
 ## 📱 Tổng quan dự án
 
-- **Tên dự án**: MUMII (mumii)
+- **Tên dự án**: Mummi (color-bite)
 - **Phiên bản**: 1.0.0
 - **Framework**: Expo SDK 53 với React Native 0.79.5
 - **Ngôn ngữ**: TypeScript
@@ -336,7 +336,7 @@ Dự án này là private và thuộc về team phát triển EXE201_MUMII.
 
 ## 👥 Team
 
-**EXE201 - MUMII Development Team**
+**EXE201 - Mummi Development Team**
 
 ---
 

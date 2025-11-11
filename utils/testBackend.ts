@@ -17,14 +17,14 @@ export const testBackendConnection = async () => {
     
     if (response.ok) {
       const data = await response.text()
-      console.log('✅ Backend is running:', data)
+      console.log(' Backend is running:', data)
       return true
     } else {
       console.log('⚠️ Backend health check failed, but server might be running')
       return false
     }
   } catch (error) {
-    console.error('❌ Backend connection failed:', error)
+    console.error(' Backend connection failed:', error)
     
     // Test if server is reachable at all
     try {
@@ -34,7 +34,7 @@ export const testBackendConnection = async () => {
       })
       console.log('Basic connection test status:', basicTest.status)
     } catch (basicError) {
-      console.error('❌ Server completely unreachable:', basicError)
+      console.error(' Server completely unreachable:', basicError)
     }
     
     return false
@@ -60,7 +60,7 @@ export const testCreatePostEndpoint = async () => {
     
     return response.status !== 404 // Endpoint exists if not 404
   } catch (error) {
-    console.error('❌ Create post endpoint test failed:', error)
+    console.error(' Create post endpoint test failed:', error)
     return false
   }
 }

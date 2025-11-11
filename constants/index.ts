@@ -24,6 +24,18 @@ if (__DEV__) {
   console.log('[ENV DEBUG] Map provider: OpenStreetMap')
 }
    
+// OpenAI Configuration (for client-side prototyping only)
+const openaiEnvKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY
+const openaiExtraKey = (Constants?.expoConfig as any)?.extra?.OPENAI_API_KEY as string | undefined
+export const OPENAI_API_KEY = openaiEnvKey || openaiExtraKey || ''
+export const OPENAI_MODEL =
+  (process.env.EXPO_PUBLIC_OPENAI_MODEL as string | undefined) ||
+  ((Constants?.expoConfig as any)?.extra?.OPENAI_MODEL as string | undefined) ||
+  'gpt-4o-mini'
+if (__DEV__) {
+  console.log('[ENV DEBUG] OpenAI key configured:', OPENAI_API_KEY ? 'yes' : 'no', 'model:', OPENAI_MODEL)
+}
+
 // Backend API Configuration
 // Chọn baseURL theo môi trường chạy để tránh lỗi Network Error
 const getApiBaseUrl = () => {
