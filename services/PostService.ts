@@ -1,9 +1,9 @@
 import { API_BASE_URL, API_ENDPOINTS } from '@/constants'
 import type {
-    CreatePostRequest,
-    PaginatedResponse,
-    PostResponse,
-    UpdatePostRequest
+   CreatePostRequest,
+   PaginatedResponse,
+   PostResponse,
+   UpdatePostRequest
 } from '@/type'
 import { apiService } from './ApiService'
 
@@ -11,11 +11,11 @@ export class PostService {
    /**
     * Tạo bài viết mới với multipart/form-data
     */
-   async createPost(postData: CreatePostRequest, selectedImageUri?: string): Promise<PostResponse> {
+   async createPost(postData: CreatePostRequest, selectedImageUris?: string[]): Promise<PostResponse> {
       try {
          console.log('=== CREATE POST DEBUG ===')
          console.log('API URL:', `${API_BASE_URL}${API_ENDPOINTS.POSTS.CREATE}`)
-         console.log('Request data:', { content: postData.content, moodId: postData.moodId, hasImage: !!selectedImageUri })
+         console.log('Request data:', { content: postData.content, moodId: postData.moodId, imageCount: selectedImageUris?.length || 0 })
          
          // Tạo FormData cho multipart request
          const formData = new FormData()
@@ -28,21 +28,21 @@ export class PostService {
             formData.append('moodId', postData.moodId)
          }
          
-         // Thêm file nếu có
-         if (selectedImageUri) {
-            // Tạo file object từ URI
-            const filename = selectedImageUri.split('/').pop() || 'image.jpg'
-            const match = /\.(\w+)$/.exec(filename)
-            const type = match ? `image/${match[1]}` : 'image/jpeg'
-            
-            const file = {
-               uri: selectedImageUri,
-               type: type,
-               name: filename,
-            } as any
-            
-            formData.append('files', file)
-            console.log('📎 Added image file:', filename, type)
+         // Thêm visibility (optional)
+         if ((postData as any).visibility) {
+            formData.append('visibility', (postData as any).visibility)
+         }
+         
+         // Thêm nhiều files nếu có
+         if (selectedImageUris && selectedImageUris.length > 0) {
+            selectedImageUris.forEach((uri, index) => {
+               const filename = uri.split('/').pop() || `image_${index + 1}.jpg`
+               const match = /\.(\w+)$/.exec(filename)
+               const type = match ? `image/${match[1]}` : 'image/jpeg'
+               const file = { uri, type, name: filename } as any
+               formData.append('files', file)
+               console.log(`📎 Added image file ${index + 1}:`, filename, type)
+            })
          }
          
          const response = await apiService.upload<PostResponse>(
@@ -111,6 +111,41 @@ export class PostService {
          throw new Error(response.message || 'Không thể tải danh sách bài viết')
       } catch (error) {
          console.error('Error fetching posts:', error)
+         // Trả về empty response thay vì throw để app không crash
+         console.log('🔄 Returning empty response due to API error')
+         return {
+            content: [],
+            totalElements: 0,
+            totalPages: 0,
+            size: size,
+            number: page - 1,
+            first: true,
+            last: true
+         }
+      }
+   }
+
+   /**
+    * Lấy bài viết theo quyền riêng tư (có phân trang)
+    */
+   async getPostsByPrivacy(page: number = 1, size: number = 10): Promise<PaginatedResponse<PostResponse>> {
+      try {
+         console.log(`Fetching posts by privacy - page: ${page}, size: ${size}`)
+         const response = await apiService.get<PaginatedResponse<PostResponse>>(
+            `${API_ENDPOINTS.POSTS.BY_PRIVACY}?page=${page}&size=${size}`
+         )
+         
+         if (response.status === 200 && response.data) {
+            console.log('Posts by privacy fetched successfully:', response.data.content?.length, 'posts')
+            console.log('=== RAW API RESPONSE ===')
+            console.log('Full response:', JSON.stringify(response, null, 2))
+            console.log('=== END RAW RESPONSE ===')
+            return response.data
+         }
+         
+         throw new Error(response.message || 'Không thể tải bài viết theo quyền riêng tư')
+      } catch (error) {
+         console.error('Error fetching posts by privacy:', error)
          // Trả về empty response thay vì throw để app không crash
          console.log('🔄 Returning empty response due to API error')
          return {

@@ -14,14 +14,14 @@ import Toast from 'react-native-toast-message'
 
 export default function AccountManagement() {
    const router = useRouter()
-   const { user } = useAuth()
+   const { user, updateUser, updateUserAvatar } = useAuth()
    const { pickImage } = useImagePicker()
 
    const [editView, setEditView] = useState<'menu' | 'avatar' | 'info' | 'password'>('menu')
    const [userInfo, setUserInfo] = useState<any>(null)
-   const [editUsername, setEditUsername] = useState(user?.name || '')
    const [editGender, setEditGender] = useState<'MALE' | 'FEMALE' | null>(null)
    const [editBio, setEditBio] = useState('')
+   const [avatarVersion, setAvatarVersion] = useState(0)
 
    // Load user info on component mount
    useEffect(() => {
@@ -29,7 +29,6 @@ export default function AccountManagement() {
          try {
             const profileData = await userService.getUserInformation()
             setUserInfo(profileData)
-            setEditUsername(profileData.username || user?.name || '')
             setEditGender(profileData.gender || null)
             setEditBio(profileData.bio || '')
          } catch (error) {
@@ -56,7 +55,11 @@ export default function AccountManagement() {
                <View style={styles.menuContainer}>
                   <TouchableOpacity onPress={() => setEditView('avatar')} activeOpacity={0.8} style={styles.menuItem}>
                      <View style={styles.menuItemLeft}>
-                        <Image source={{ uri: userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(user?.name || 'U', user?.email) }} style={styles.avatarImage} />
+                        <Image 
+                           source={{ uri: (userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(user?.name || 'U', user?.email)) + `?v=${avatarVersion}` }} 
+                           style={styles.avatarImage} 
+                           cachePolicy="none"
+                        />
                         <Text style={styles.menuItemText}>Đổi ảnh đại diện</Text>
                      </View>
                      <Ionicons name="chevron-forward" size={18} color="#6B7280" />
@@ -83,8 +86,9 @@ export default function AccountManagement() {
             {editView === 'avatar' && (
                <View style={styles.avatarContainer}>
                   <Image
-                     source={{ uri: userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(user?.name || 'U', user?.email) }}
+                     source={{ uri: (userInfo?.avatarUrl || user?.avatar || getDefaultAvatar(user?.name || 'U', user?.email)) + `?v=${avatarVersion}` }}
                      style={styles.avatarLarge}
+                     cachePolicy="none"
                   />
                   <TouchableOpacity
                      onPress={async () => {
@@ -93,8 +97,11 @@ export default function AccountManagement() {
                         const accountId = userInfo?.accountId || user?.id
                         if (!accountId) return
                         try {
-                           const avatarUrl = await userService.uploadAvatar(accountId, (typeof uri === 'string' ? uri : uri.uri))
+                           const fileUri = typeof uri === 'string' ? uri : uri.uri
+                           const avatarUrl = await userService.uploadAvatar(accountId, fileUri)
                            setUserInfo((prev: any) => (prev ? { ...prev, avatarUrl } : { avatarUrl }))
+                           await updateUserAvatar(avatarUrl)
+                           setAvatarVersion((v) => v + 1)
                            Toast.show({ type: 'success', text1: 'Thành công', text2: 'Đổi avatar thành công' })
                         } catch (error) {
                            console.error('Error uploading avatar:', error)
@@ -111,13 +118,6 @@ export default function AccountManagement() {
 
             {editView === 'info' && (
                <View>
-                  <Text style={styles.formLabel}>Tên hiển thị</Text>
-                  <TextInput
-                     value={editUsername}
-                     onChangeText={setEditUsername}
-                     placeholder="Tên người dùng"
-                     style={styles.textInput}
-                  />
                   <Text style={[styles.formLabel, { marginBottom: 6 }]}>Giới tính</Text>
                   <View style={styles.genderContainer}>
                      <TouchableOpacity
@@ -154,11 +154,11 @@ export default function AccountManagement() {
                         onPress={async () => {
                            try {
                               const updated = await userService.updateUserInformation({
-                                 username: editUsername,
                                  gender: editGender,
                                  bio: editBio,
                               })
                               setUserInfo(updated)
+                              updateUser({ gender: editGender || undefined, bio: editBio })
                               Toast.show({ type: 'success', text1: 'Thành công', text2: 'Cập nhật thông tin thành công' })
                               router.back()
                            } catch (error) {
@@ -188,6 +188,9 @@ function ChangePasswordForm() {
    const [newPassword, setNewPassword] = useState('')
    const [confirmPassword, setConfirmPassword] = useState('')
    const [isSubmitting, setIsSubmitting] = useState(false)
+   const [showOld, setShowOld] = useState(false)
+   const [showNew, setShowNew] = useState(false)
+   const [showConfirm, setShowConfirm] = useState(false)
 
    const handleSubmit = async () => {
       if (!oldPassword || !newPassword || !confirmPassword) {
@@ -218,27 +221,44 @@ function ChangePasswordForm() {
 
    return (
       <View style={styles.passwordForm}>
-         <TextInput 
-            value={oldPassword} 
-            onChangeText={setOldPassword} 
-            placeholder="Mật khẩu hiện tại" 
-            secureTextEntry 
-            style={styles.textInput} 
-         />
-         <TextInput 
-            value={newPassword} 
-            onChangeText={setNewPassword} 
-            placeholder="Mật khẩu mới" 
-            secureTextEntry 
-            style={styles.textInput} 
-         />
-         <TextInput 
-            value={confirmPassword} 
-            onChangeText={setConfirmPassword} 
-            placeholder="Xác nhận mật khẩu mới" 
-            secureTextEntry 
-            style={styles.textInput} 
-         />
+         <View style={styles.passwordInputWrapper}>
+            <TextInput 
+               value={oldPassword} 
+               onChangeText={setOldPassword} 
+               placeholder="Mật khẩu hiện tại" 
+               secureTextEntry={!showOld}
+               style={[styles.textInput, styles.passwordInput]}
+            />
+            <TouchableOpacity onPress={() => setShowOld((v) => !v)} style={styles.eyeIconBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+               <Ionicons name={showOld ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6B7280" />
+            </TouchableOpacity>
+         </View>
+
+         <View style={styles.passwordInputWrapper}>
+            <TextInput 
+               value={newPassword} 
+               onChangeText={setNewPassword} 
+               placeholder="Mật khẩu mới" 
+               secureTextEntry={!showNew}
+               style={[styles.textInput, styles.passwordInput]}
+            />
+            <TouchableOpacity onPress={() => setShowNew((v) => !v)} style={styles.eyeIconBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+               <Ionicons name={showNew ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6B7280" />
+            </TouchableOpacity>
+         </View>
+
+         <View style={styles.passwordInputWrapper}>
+            <TextInput 
+               value={confirmPassword} 
+               onChangeText={setConfirmPassword} 
+               placeholder="Xác nhận mật khẩu mới" 
+               secureTextEntry={!showConfirm}
+               style={[styles.textInput, styles.passwordInput]}
+            />
+            <TouchableOpacity onPress={() => setShowConfirm((v) => !v)} style={styles.eyeIconBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+               <Ionicons name={showConfirm ? 'eye-off-outline' : 'eye-outline'} size={20} color="#6B7280" />
+            </TouchableOpacity>
+         </View>
          <TouchableOpacity 
             onPress={handleSubmit} 
             disabled={isSubmitting} 
@@ -364,18 +384,20 @@ const styles = StyleSheet.create({
       alignItems: 'center',
    },
    genderButtonActive: {
-      borderColor: '#111827',
-      backgroundColor: '#111827',
+      borderColor: '#F97316',
+      backgroundColor: '#FFFFFF',
+      borderWidth: 2,
    },
    genderButtonInactive: {
       borderColor: '#E5E7EB',
       backgroundColor: '#FFFFFF',
+      borderWidth: 1,
    },
    genderButtonText: {
       fontWeight: '600',
    },
    genderButtonTextActive: {
-      color: '#FFFFFF',
+      color: '#F97316',
    },
    genderButtonTextInactive: {
       color: '#111827',
@@ -410,13 +432,24 @@ const styles = StyleSheet.create({
    passwordForm: {
       gap: 10,
    },
+   passwordInputWrapper: {
+      position: 'relative',
+   },
+   passwordInput: {
+      paddingRight: 42,
+   },
+   eyeIconBtn: {
+      position: 'absolute',
+      right: 12,
+      top: 18,
+   },
    passwordButton: {
       paddingVertical: 12,
       borderRadius: 10,
       alignItems: 'center',
    },
    passwordButtonActive: {
-      backgroundColor: '#111827',
+      backgroundColor: '#F97316',
    },
    passwordButtonInactive: {
       backgroundColor: '#9CA3AF',

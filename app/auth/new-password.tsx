@@ -1,11 +1,16 @@
 'use client'
 
+import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
-import { router } from 'expo-router'
+import { router, useLocalSearchParams } from 'expo-router'
 import { useState } from 'react'
 import { Alert, SafeAreaView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 
 export default function NewPasswordScreen() {
+   const { resetPassword } = useAuth()
+   const params = useLocalSearchParams()
+   const email = params.email as string
+   
    const [newPassword, setNewPassword] = useState('')
    const [confirmPassword, setConfirmPassword] = useState('')
    const [isLoading, setIsLoading] = useState(false)
@@ -65,22 +70,30 @@ export default function NewPasswordScreen() {
          return
       }
 
+      if (!email) {
+         Alert.alert('Lỗi', 'Thiếu thông tin email')
+         return
+      }
+
       setIsLoading(true)
       try {
-         // Simulate API call to set new password
-         await new Promise(resolve => setTimeout(resolve, 2000))
+         await resetPassword(email, newPassword, confirmPassword)
          Alert.alert(
             'Thành công', 
             'Mật khẩu đã được đặt lại thành công!',
             [
                {
-                  text: 'OK',
+                  text: 'Đăng nhập',
                   onPress: () => router.replace('/auth/login')
                }
             ]
          )
       } catch (error) {
-         Alert.alert('Lỗi', 'Không thể đặt lại mật khẩu. Vui lòng thử lại.')
+         console.error('Reset password error:', error)
+         Alert.alert(
+            'Lỗi', 
+            error instanceof Error ? error.message : 'Không thể đặt lại mật khẩu. Vui lòng thử lại.'
+         )
       } finally {
          setIsLoading(false)
       }
@@ -106,7 +119,7 @@ export default function NewPasswordScreen() {
          <View style={styles.header}>
             <TouchableOpacity 
                style={styles.backButton}
-               onPress={() => router.back()}
+               onPress={() => router.push('/auth/login')}
             >
                <Ionicons name="arrow-back" size={24} color="#000" />
             </TouchableOpacity>

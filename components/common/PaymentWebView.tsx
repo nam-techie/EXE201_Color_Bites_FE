@@ -4,15 +4,15 @@ import { paymentService } from '@/services/PaymentService'
 import { Ionicons } from '@expo/vector-icons'
 import { useCallback, useEffect, useState } from 'react'
 import {
-    ActivityIndicator,
-    Alert,
-    BackHandler,
-    Modal,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  Alert,
+  BackHandler,
+  Modal,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native'
 import Toast from 'react-native-toast-message'
 import { WebView } from 'react-native-webview'
@@ -491,7 +491,7 @@ export default function PaymentWebView({
                 const amountElements = document.querySelectorAll('[data-amount], .amount, #amount');
                 amountElements.forEach(element => {
                   const amount = element.textContent || element.value;
-                  if (amount && amount.includes('36000')) {
+                  if (amount && amount.includes('5000')) {
                     orderInfo.amount = amount;
                   }
                 });
