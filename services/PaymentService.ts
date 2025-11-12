@@ -227,13 +227,13 @@ export class PaymentService {
   createPremiumPaymentRequest(): CreatePaymentRequest {
     return {
       amount: 36000, // 36,000 VND
-      description: 'Premium Color Bites', // Giảm xuống dưới 25 ký tự
+      description: 'Premium Mumii', // Giảm xuống dưới 25 ký tự
       currency: 'VND',
       returnUrl: 'https://color-bites.app/payment/success',
       cancelUrl: 'https://color-bites.app/payment/cancel',
       items: [
         {
-          name: 'Gói Premium - Color Bites',
+          name: 'Gói Premium - Mumii',
           quantity: 1,
           price: 36000
         }
