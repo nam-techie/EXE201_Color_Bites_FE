@@ -10,6 +10,7 @@ import {
    TouchableOpacity,
    View,
 } from 'react-native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 export interface Suggestion {
    place_id: string
@@ -45,6 +46,10 @@ export default function RestaurantSearchBar({
    onSelectSuggestion,
    loading = false,
 }: RestaurantSearchBarProps) {
+   // Get safe area insets to avoid camera notch
+   const insets = useSafeAreaInsets()
+   const topPadding = Math.max(50, insets.top + 8)
+
    // Handle suggestion selection
    const handleSelectSuggestion = (suggestion: Suggestion) => {
       Keyboard.dismiss()
@@ -82,7 +87,7 @@ export default function RestaurantSearchBar({
    const showSuggestions = suggestions.length > 0 && searchQuery.length >= 2
 
    return (
-      <View style={styles.container}>
+      <View style={[styles.container, { top: topPadding }]}>
          <View style={styles.searchContainer}>
             {/* Hamburger Menu Icon */}
             <TouchableOpacity

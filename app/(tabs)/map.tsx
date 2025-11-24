@@ -1,5 +1,4 @@
 'use client'
-import FilterButtons from '@/components/common/FilterButtons'
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
 import CustomMarker from '@/components/map/CustomMapMarker'
@@ -30,6 +29,7 @@ import {
   View
 } from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface RouteStop {
   restaurant: Restaurant
@@ -87,7 +87,6 @@ export default function MapScreen() {
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState('all')
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
   
@@ -259,7 +258,7 @@ export default function MapScreen() {
     return 2
   }
 
-  const handleMarkerPress = (restaurant: Restaurant) => {
+  const handleMarkerPress = async (restaurant: Restaurant) => {
     if (routePlanningMode) {
       const isAlreadyAdded = routeStops.some((stop) => stop.restaurant.id === restaurant.id)
       if (!isAlreadyAdded) {
@@ -268,8 +267,70 @@ export default function MapScreen() {
         calculateRouteForStops(newStops)
       }
     } else {
-      setSelectedRestaurant(restaurant)
-      setModalVisible(true)
+      // Enrich restaurant data từ Goong
+      try {
+        // Bước 1: Reverse Geocode để lấy địa chỉ chính xác từ lat/lon
+        const reverseGeocodeResult = await GoongService.reverseGeocode(
+          restaurant.lat,
+          restaurant.lon,
+        )
+
+        // Bước 2: Tìm restaurant trong Goong database (nếu có)
+        const goongPlace = await GoongService.findRestaurantInGoong(
+          restaurant.name,
+          restaurant.lat,
+          restaurant.lon,
+          500, // 500m radius
+        )
+
+        // Merge thông tin: ưu tiên Goong Place Detail, fallback Reverse Geocode, cuối cùng là OSM
+        const enrichedRestaurant: Restaurant = {
+          ...restaurant,
+          // Ưu tiên formatted_address từ Goong Place Detail
+          formatted_address:
+            goongPlace?.formatted_address ||
+            reverseGeocodeResult.results[0]?.formatted_address ||
+            restaurant.formatted_address,
+          place_id: goongPlace?.place_id || restaurant.place_id,
+          tags: {
+            ...restaurant.tags,
+            // Ưu tiên Goong data, fallback về OSM
+            phone: goongPlace?.phone || restaurant.tags.phone,
+            website: goongPlace?.website || restaurant.tags.website,
+            rating: goongPlace?.rating || restaurant.tags.rating,
+            opening_hours: goongPlace?.opening_hours || restaurant.tags.opening_hours,
+          },
+        }
+
+        setSelectedRestaurant(enrichedRestaurant)
+        setModalVisible(true)
+      } catch (error) {
+        // Nếu Goong fail, thử reverse geocode đơn giản
+        try {
+          const reverseGeocodeResult = await GoongService.reverseGeocode(
+            restaurant.lat,
+            restaurant.lon,
+          )
+          if (reverseGeocodeResult.results && reverseGeocodeResult.results.length > 0) {
+            const enrichedRestaurant: Restaurant = {
+              ...restaurant,
+              formatted_address:
+                reverseGeocodeResult.results[0].formatted_address || restaurant.formatted_address,
+            }
+            setSelectedRestaurant(enrichedRestaurant)
+            setModalVisible(true)
+          } else {
+            // Fallback về OSM data
+            setSelectedRestaurant(restaurant)
+            setModalVisible(true)
+          }
+        } catch (reverseError) {
+          console.error('Error reverse geocoding:', reverseError)
+          // Cuối cùng fallback về OSM data
+          setSelectedRestaurant(restaurant)
+          setModalVisible(true)
+        }
+      }
     }
   }
 
@@ -402,13 +463,8 @@ export default function MapScreen() {
     Alert.alert('Voice Search', 'Tính năng tìm kiếm bằng giọng nói sắp ra mắt!')
   }
 
-  const handleFilterChange = (filter: string) => {
-    setSelectedFilter(filter)
-    // TODO: Implement filter logic for restaurants
-  }
-
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -451,12 +507,6 @@ export default function MapScreen() {
         suggestions={suggestions}
         onSelectSuggestion={handleSelectSuggestion}
         loading={isSearching}
-      />
-
-      {/* Filter Buttons */}
-      <FilterButtons
-        selectedFilter={selectedFilter}
-        onFilterChange={handleFilterChange}
       />
 
       {/* Side Menu */}
@@ -556,7 +606,7 @@ export default function MapScreen() {
         }}
         onNavigateToRestaurant={handleNavigateToRestaurant}
       />
-    </View>
+    </SafeAreaView>
   )
 }
 
