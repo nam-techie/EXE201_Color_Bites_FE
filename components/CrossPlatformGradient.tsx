@@ -20,7 +20,7 @@ interface CrossPlatformGradientProps {
    className?: string
 }
 
-export function CrossPlatformGradient({
+function CrossPlatformGradient({
    colors,
    start = { x: 0, y: 0 },
    end = { x: 1, y: 0 },
@@ -61,3 +61,10 @@ export function CrossPlatformGradient({
       </View>
    )
 }
+
+// Set displayName for debugging
+CrossPlatformGradient.displayName = 'CrossPlatformGradient'
+
+// Export both named and default for compatibility
+export { CrossPlatformGradient }
+export default CrossPlatformGradient

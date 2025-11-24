@@ -1,14 +1,10 @@
-import { GOONG_API_KEY, GOONG_MAPTILES_KEY } from '@/config/env'
+import { OPENROUTE_API_KEY } from '@/constants'
 
 export function validateEnvironment(): { isValid: boolean; errors: string[] } {
    const errors: string[] = []
 
-   if (!GOONG_API_KEY || GOONG_API_KEY === '') {
-      errors.push('EXPO_PUBLIC_GOONG_API_KEY is not configured')
-   }
-
-   if (!GOONG_MAPTILES_KEY || GOONG_MAPTILES_KEY === '') {
-      errors.push('EXPO_PUBLIC_GOONG_MAPTILES_KEY is not configured')
+   if (!OPENROUTE_API_KEY || OPENROUTE_API_KEY === '') {
+      errors.push('EXPO_PUBLIC_OPENROUTE_API_KEY is not configured')
    }
 
    return {

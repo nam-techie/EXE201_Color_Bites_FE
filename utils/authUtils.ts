@@ -16,13 +16,13 @@ export async function clearAllAuthData() {
     const remainingToken = await AsyncStorage.getItem('authToken')
     const remainingUser = await AsyncStorage.getItem('user')
     
-    console.log('✅ Auth data cleared successfully')
+    console.log(' Auth data cleared successfully')
     console.log('Remaining token:', remainingToken ? 'ERROR - Still exists!' : 'None')
     console.log('Remaining user:', remainingUser ? 'ERROR - Still exists!' : 'None')
     
     return true
   } catch (error) {
-    console.error('❌ Error clearing auth data:', error)
+    console.error(' Error clearing auth data:', error)
     return false
   }
 }
@@ -41,7 +41,7 @@ export async function checkAuthData() {
     
     return { token, user: user ? JSON.parse(user) : null }
   } catch (error) {
-    console.error('❌ Error checking auth data:', error)
+    console.error(' Error checking auth data:', error)
     return { token: null, user: null }
   }
 }

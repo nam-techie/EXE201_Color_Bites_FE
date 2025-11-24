@@ -1,34 +1,32 @@
 /**
- * Map Provider - Goong Maps Service
+ * Map Provider - OpenStreetMap Service
  * 
  * Service này sử dụng:
- * - Goong Maps API - Tìm nhà hàng và địa điểm
- * - Goong Direction API - Chỉ đường
+ * - OpenStreetMap (Overpass API) - Tìm nhà hàng
+ * - OpenRouteService - Chỉ đường
  * 
  * @example
  * import { MapProvider } from '@/services/MapProvider'
  * const restaurants = await MapProvider.fetchRestaurants(lat, lon)
  */
 
-import { GOONG_API_KEY, GOONG_MAPTILES_KEY } from '@/constants'
 import type { Restaurant } from '@/type/location'
-import type { DirectionResult } from './GoongDirectionService'
+import type { DirectionResult } from './DirectionService'
 
-// Import Goong services
-import * as GoongDirectionService from './GoongDirectionService'
-import type { GoongAutocompletePrediction } from './GoongMapService'
-import * as GoongMapService from './GoongMapService'
+// Import OpenStreetMap services
+import * as OpenRouteService from './DirectionService'
+import * as OpenStreetMapService from './MapService'
 
 if (__DEV__) {
-  console.log('[MapProvider] Using Goong Maps + Goong Direction API')
+  console.log('[MapProvider] Using OpenStreetMap + OpenRouteService')
 }
 
 /**
- * MapProvider - Interface for Goong Maps services
+ * MapProvider - Interface for OpenStreetMap services
  */
 export const MapProvider = {
   /**
-   * Fetch restaurants nearby using Goong Maps
+   * Fetch restaurants nearby using OpenStreetMap
    * 
    * @param latitude - Vĩ độ
    * @param longitude - Kinh độ
@@ -40,11 +38,11 @@ export const MapProvider = {
     longitude: number,
     radius: number = 2000,
   ): Promise<Restaurant[]> {
-    return GoongMapService.fetchRestaurantsNearby(latitude, longitude, radius)
+    return OpenStreetMapService.fetchRestaurantsNearby(latitude, longitude, radius)
   },
 
   /**
-   * Get directions using Goong Direction API
+   * Get directions using OpenRouteService
    * 
    * @param origin - Điểm xuất phát {lat, lon}
    * @param destination - Điểm đến {lat, lon}
@@ -54,9 +52,9 @@ export const MapProvider = {
   async getDirections(
     origin: { lat: number; lon: number },
     destination: { lat: number; lon: number },
-    profile: string = 'car',
+    profile: string = 'driving-car',
   ): Promise<DirectionResult | null> {
-    return GoongDirectionService.getDirections(origin, destination, profile)
+    return OpenRouteService.getDirections(origin, destination, profile)
   },
 
   /**
@@ -68,9 +66,9 @@ export const MapProvider = {
    */
   async getOptimizedRoute(
     waypoints: { lat: number; lon: number }[],
-    profile: string = 'car',
+    profile: string = 'driving-car',
   ): Promise<DirectionResult | null> {
-    return GoongDirectionService.getOptimizedRoute(waypoints, profile)
+    return OpenRouteService.getOptimizedRoute(waypoints, profile)
   },
 
   /**
@@ -85,10 +83,10 @@ export const MapProvider = {
   async getRouteAlternatives(
     origin: { lat: number; lon: number },
     destination: { lat: number; lon: number },
-    profile: string = 'car',
+    profile: string = 'driving-car',
     alternativeRoutes: number = 2,
   ): Promise<DirectionResult[] | null> {
-    return GoongDirectionService.getRouteAlternatives(
+    return OpenRouteService.getRouteAlternatives(
       origin,
       destination,
       profile,
@@ -111,64 +109,61 @@ export const MapProvider = {
     longitude?: number,
     radius: number = 5000,
   ): Promise<Restaurant[]> {
-    // Use Goong Autocomplete API
+    // OpenStreetMap: filter trên kết quả nearby
     if (latitude !== undefined && longitude !== undefined) {
-      return GoongMapService.searchPlaces(query, { lat: latitude, lng: longitude })
+      const restaurants = await OpenStreetMapService.fetchRestaurantsNearby(
+        latitude,
+        longitude,
+        radius,
+      )
+      return restaurants.filter(
+        (r) =>
+          r.name.toLowerCase().includes(query.toLowerCase()) ||
+          r.tags.cuisine?.toLowerCase().includes(query.toLowerCase()),
+      )
     }
-    return GoongMapService.searchPlaces(query)
-  },
-
-  /**
-   * Get autocomplete predictions for suggestion dropdown
-   */
-  async searchAutocomplete(
-    query: string,
-    latitude?: number,
-    longitude?: number,
-  ): Promise<GoongAutocompletePrediction[]> {
-    if (latitude !== undefined && longitude !== undefined) {
-      return GoongMapService.getAutocompletePredictions(query, { lat: latitude, lng: longitude })
-    }
-    return GoongMapService.getAutocompletePredictions(query)
+    return []
   },
 
   /**
    * Get available route profiles
    */
   getRouteProfiles() {
-    return GoongDirectionService.ROUTE_PROFILES
+    return OpenRouteService.ROUTE_PROFILES
   },
 }
 
 /**
  * Utility functions - Provider agnostic
- * Re-export từ GoongMapService và GoongDirectionService
+ * Re-export từ MapService (cả 2 provider đều dùng chung)
  */
 export {
   calculateDistance, formatOpeningHours, getCuisineIcon, getPriceRange, getRestaurantRating, isRestaurantOpen
-} from './GoongMapService'
+} from './MapService'
 
 export {
   calculateEstimatedCost, convertCoordinatesToMapFormat, formatCost, formatDistance,
   formatDuration, getEstimatedTimeWithTraffic, getInstructionIcon
-} from './GoongDirectionService'
+} from './DirectionService'
 
 /**
- * Provider status check for Goong Maps
+ * Provider status check for OpenStreetMap
  */
 export function checkProviderStatus(): {
   provider: string
   configured: boolean
   message: string
 } {
-  const configured = GOONG_API_KEY.length > 0 && GOONG_MAPTILES_KEY.length > 0
-  
+  // OpenStreetMap không cần API key cho Overpass API
+  // Nhưng cần key cho OpenRouteService
+  const orsKey = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY || ''
+  const configured = orsKey.length > 0
   return {
-    provider: 'Goong Maps',
+    provider: 'OpenStreetMap',
     configured,
     message: configured
-      ? 'Goong Maps + Goong Direction API configured'
-      : 'Goong API keys not found. Please check app.json or .env configuration',
+      ? 'OpenStreetMap + OpenRouteService configured'
+      : 'OpenRouteService API key not found. Please set EXPO_PUBLIC_OPENROUTE_API_KEY in .env',
   }
 }
 

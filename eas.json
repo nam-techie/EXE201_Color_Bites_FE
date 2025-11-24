@@ -6,25 +6,13 @@
    "build": {
       "development": {
          "developmentClient": true,
-         "distribution": "internal",
-         "env": {
-            "NODE_VERSION": "20.19.4",
-            "EXPO_USE_NPM": "1"
-         }
+         "distribution": "internal"
       },
       "preview": {
-         "distribution": "internal",
-         "env": {
-            "NODE_VERSION": "20.19.4",
-            "EXPO_USE_NPM": "1"
-         }
+         "distribution": "internal"
       },
       "production": {
-         "autoIncrement": true,
-         "env": {
-            "NODE_VERSION": "20.19.4",
-            "EXPO_USE_NPM": "1"
-         }
+         "autoIncrement": true
       }
    },
    "submit": {

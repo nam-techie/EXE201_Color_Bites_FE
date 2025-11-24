@@ -23,6 +23,31 @@ import {
 } from 'react-native'
 import { WebView } from 'react-native-webview'
 
+// Privacy icon component
+function PrivacyIcon({ visibility }: { visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' }) {
+   const getPrivacyIcon = () => {
+      switch (visibility) {
+         case 'PUBLIC':
+            return { name: 'globe-outline', color: '#6B7280', size: 14 }
+         case 'FRIENDS':
+            return { name: 'people-outline', color: '#6B7280', size: 14 }
+         case 'PRIVATE':
+            return { name: 'lock-closed-outline', color: '#6B7280', size: 14 }
+         default:
+            return { name: 'globe-outline', color: '#6B7280', size: 14 }
+      }
+   }
+
+   const icon = getPrivacyIcon()
+   
+   return (
+      <Ionicons 
+         name={icon.name as any} 
+         size={icon.size} 
+         color={icon.color} 
+      />
+   )
+}
 
 type ExtendedUserInfo = UserInformationResponse & {
    subscriptionPlan?: 'FREE' | 'PREMIUM'

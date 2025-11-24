@@ -1,7 +1,6 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import { memo } from 'react'
-import { FlatList, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
 
 interface RestaurantSearchBarProps {
    searchQuery: string
@@ -11,11 +10,9 @@ interface RestaurantSearchBarProps {
    onAvatarPress?: () => void
    onMicPress?: () => void
    avatarUrl?: string | null
-   suggestions?: { place_id: string; description: string }[]
-   onSelectSuggestion?: (item: { place_id: string; description: string }) => void
 }
 
-function RestaurantSearchBar({
+export default function RestaurantSearchBar({
    searchQuery,
    onSearchChange,
    onClearSearch,
@@ -23,8 +20,6 @@ function RestaurantSearchBar({
    onAvatarPress,
    onMicPress,
    avatarUrl,
-   suggestions = [],
-   onSelectSuggestion,
 }: RestaurantSearchBarProps) {
    return (
       <View style={styles.container}>
@@ -46,12 +41,6 @@ function RestaurantSearchBar({
                   value={searchQuery}
                   onChangeText={onSearchChange}
                   placeholderTextColor="#9CA3AF"
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                  autoComplete="off"
-                  importantForAutofill="no"
-                  blurOnSubmit={false}
-                  disableFullscreenUI={Platform.OS === 'android'}
                />
                {searchQuery.length > 0 && (
                   <TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
@@ -88,25 +77,6 @@ function RestaurantSearchBar({
                )}
             </TouchableOpacity>
          </View>
-
-         {suggestions && suggestions.length > 0 && (
-            <View style={styles.dropdown}>
-               <FlatList
-                  keyboardShouldPersistTaps="always"
-                  data={suggestions}
-                  keyExtractor={(item) => item.place_id}
-                  renderItem={({ item }) => (
-                     <TouchableOpacity
-                        style={styles.dropdownItem}
-                        onPress={() => onSelectSuggestion && onSelectSuggestion(item)}
-                     >
-                        <Ionicons name="location-outline" size={16} color="#6B7280" />
-                        <Text style={styles.dropdownText} numberOfLines={2}>{item.description}</Text>
-                     </TouchableOpacity>
-                  )}
-               />
-            </View>
-         )}
       </View>
    )
 }
@@ -134,29 +104,6 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       paddingHorizontal: 16,
       height: 56,
-   },
-   dropdown: {
-      marginTop: 8,
-      backgroundColor: '#ffffff',
-      borderRadius: 12,
-      maxHeight: 220,
-      paddingVertical: 8,
-      shadowColor: '#000',
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
-      elevation: 4,
-   },
-   dropdownItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      paddingHorizontal: 12,
-      paddingVertical: 10,
-      gap: 8,
-   },
-   dropdownText: {
-      flex: 1,
-      color: '#111827',
-      fontSize: 14,
    },
    menuButton: {
       marginRight: 12,
@@ -195,5 +142,3 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
    },
 })
-
-export default memo(RestaurantSearchBar)

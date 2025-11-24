@@ -6,10 +6,10 @@ export const setMockAuthToken = async () => {
   
   try {
     await AsyncStorage.setItem('authToken', mockToken)
-    console.log('✅ Mock auth token set successfully')
+    console.log(' Mock auth token set successfully')
     return true
   } catch (error) {
-    console.error('❌ Error setting mock auth token:', error)
+    console.error(' Error setting mock auth token:', error)
     return false
   }
 }
@@ -17,10 +17,10 @@ export const setMockAuthToken = async () => {
 export const clearAuthToken = async () => {
   try {
     await AsyncStorage.removeItem('authToken')
-    console.log('✅ Auth token cleared')
+    console.log(' Auth token cleared')
     return true
   } catch (error) {
-    console.error('❌ Error clearing auth token:', error)
+    console.error(' Error clearing auth token:', error)
     return false
   }
 }
@@ -31,7 +31,7 @@ export const checkAuthToken = async () => {
     console.log('🔑 Current auth token:', token ? 'Present' : 'Not found')
     return token
   } catch (error) {
-    console.error('❌ Error checking auth token:', error)
+    console.error(' Error checking auth token:', error)
     return null
   }
 }
