@@ -4,13 +4,13 @@
      "slug": "mumii",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.jpg",
+    "icon": "./assets/images/icon.png",
     "scheme": "mumii",
     "userInterfaceStyle": "automatic",
     "android": {
       "package": "com.phuongnam.mumii",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/icon.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
@@ -20,21 +20,14 @@
       ]
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/icon.png"
     },
     "plugins": [
       "expo-router",
       [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsDownloadToken": "pk.eyJ1IjoicHduYW0iLCJhIjoiY21nN3l6dGJ5MDIwazJrb2NpZHV0MTRydyJ9.F93cqvzJul7ItypzDIvrxQ",
-          "RNMapboxMapsImpl": "mapbox"
-        }
-      ],
-      [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
@@ -43,17 +36,15 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "We need your location to show it on the map!"
+          "locationWhenInUsePermission": "We need your location to show it on the map!"                                                                          
         }
       ]
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "b0e31c11-8020-4fba-97bc-4e7c853787e8"
+      ],
+      "extra": {
+        "eas": {
+          "projectId": "c29c07da-27fc-4c9c-8d03-dc4b8f31de9e"
+        }
       },
-      "API_BASE_URL": "https://mumii-be.namtechie.id.vn",
-      "OPENROUTE_API_KEY": "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImFiMWU5ZjI3MzkzYjRhZTJhOGY5MWNjMDU1OTk4M2E3IiwiaCI6Im11cm11cjY0In0="
-    },
-    "owner": "namphun"
+    "owner": "namphw"
   }
 }

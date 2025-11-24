@@ -1,16 +1,20 @@
 'use client'
-import FilterButtons from '@/components/common/FilterButtons'
+// Removed FilterButtons - no longer needed
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
-import CustomMarker from '@/components/map/CustomMapMarker'
+import MapLibreView from '@/components/map/MapLibreView'
 import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
+import { GOONG_API_KEY } from '@/constants'
 import { getDefaultAvatar } from '@/constants/defaultImages'
 import { useAuth } from '@/context/AuthProvider'
+import { buildGoongStyleDataUrl, type GoongStyleId } from '@/services/goong-style'
+// MapLibre configuration is handled in services/GoongMapConfig.ts
+import { GoongService, debounce } from '@/services/GoongService'
 import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
-import type { MapRegion, Restaurant } from '@/type/location'
+import type { Restaurant } from '@/type/location'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
 import { useRouter } from 'expo-router'
@@ -23,10 +27,10 @@ import {
   PanResponderGestureState,
   Pressable,
   StyleSheet,
+  Text,
   TouchableOpacity,
   View
 } from 'react-native'
-import MapView, { Polyline } from 'react-native-maps'
 
 interface RouteStop {
   restaurant: Restaurant
@@ -69,24 +73,24 @@ export default function MapScreen() {
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null)
-  const [mapRegion, setMapRegion] = useState<MapRegion>({
-    latitude: 0,
-    longitude: 0,
-    latitudeDelta: 0.08,
-    longitudeDelta: 0.08,
-  })
   const [routePlanningMode, setRoutePlanningMode] = useState(false)
-  const [selectedProfile, setSelectedProfile] = useState('cycling-regular')
+  const [selectedProfile, setSelectedProfile] = useState('car')
   const [routeStops, setRouteStops] = useState<RouteStop[]>([])
   const [routeCoordinates, setRouteCoordinates] = useState<{ latitude: number; longitude: number }[]>([])
   const [showProfileSelector, setShowProfileSelector] = useState(false)
-  const mapRef = useRef<MapView>(null)
+  const [styleURL, setStyleURL] = useState<string | undefined>()
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState('all')
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
+  const [currentAddress, setCurrentAddress] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<{ place_id: string; description: string }[]>([])
+  const [currentStyle, setCurrentStyle] = useState<GoongStyleId>('web')
+
+  // Race condition protection for search
+  const reqId = useRef(0)
+  const latestQueryRef = useRef('')
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -124,6 +128,25 @@ export default function MapScreen() {
         return null
       }
       const location = await Location.getCurrentPositionAsync({})
+      
+      // Reverse geocoding to get address
+      try {
+        const addressData = await Location.reverseGeocodeAsync({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        })
+        
+        const address = addressData[0]
+          ? `${addressData[0].name || ''} ${addressData[0].street || ''}, ${addressData[0].city || ''}`.trim()
+          : null
+        
+        setCurrentAddress(address)
+        console.log('Current address:', address)
+      } catch (geocodingError) {
+        console.log('Geocoding error:', geocodingError)
+        setCurrentAddress(null)
+      }
+      
       return location
     } catch (error) {
       console.log('Lỗi khi lấy vị trí:', error)
@@ -149,9 +172,9 @@ export default function MapScreen() {
         const directions = await MapProvider.getDirections(origin, destination, selectedProfile)
         if (!directions || !directions.geometry) continue
 
-        const routeCoords = directions.geometry.map(([lon, lat]) => ({
-          latitude: lat,
-          longitude: lon,
+        const routeCoords = directions.geometry.map((coord: number[]) => ({
+          latitude: coord[1],
+          longitude: coord[0],
         }))
         if (routeCoords.length > 0) allCoordinates.push(...routeCoords)
 
@@ -184,13 +207,7 @@ export default function MapScreen() {
     setRouteStops(newStops)
     calculateRouteForStops(newStops)
     
-    // Di chuyển map đến vị trí nhà hàng
-    setMapRegion({
-      latitude: restaurant.lat,
-      longitude: restaurant.lon,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    })
+    // Di chuyển map đến vị trí nhà hàng - handled by MapLibreView
   }
 
   // Load user avatar from API
@@ -212,19 +229,26 @@ export default function MapScreen() {
   }, [user])
 
   useEffect(() => {
+    // Load style URL when currentStyle changes
+    let mounted = true
+    buildGoongStyleDataUrl(currentStyle)
+      .then(url => mounted && setStyleURL(url))
+      .catch(e => console.warn('[MAP DEBUG] Load style error:', e))
+    return () => { mounted = false }
+  }, [currentStyle])
+
+  useEffect(() => {
+    // Debug API keys
+    console.log('[MAP DEBUG] API Keys Status:')
+    console.log('[MAP DEBUG] GOONG_API_KEY:', GOONG_API_KEY ? 'configured' : 'missing')
+
     const fetchInitialData = async () => {
       try {
         const location = await getCurrentUserLocation()
         if (!location) return
         setUserLocation(location)
-        const { latitude, longitude } = location.coords
-        setMapRegion({
-          latitude,
-          longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
-        })
-        const data = await MapProvider.fetchRestaurants(latitude, longitude)
+        // Camera movement handled by MapLibreView
+        const data = await MapProvider.fetchRestaurants(location.coords.latitude, location.coords.longitude)
         setRestaurants(data)
       } catch {
         Alert.alert('Lỗi', 'Không thể tải dữ liệu hoặc vị trí')
@@ -241,13 +265,14 @@ export default function MapScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProfile])
 
-  const getResponsiveStrokeWidth = () => {
-    const zoom = mapRegion.latitudeDelta
-    if (zoom < 0.01) return 8
-    if (zoom < 0.03) return 6
-    if (zoom < 0.08) return 4
-    return 2
-  }
+  // Remove unused function
+  // const getResponsiveStrokeWidth = () => {
+  //   const zoom = mapRegion.latitudeDelta
+  //   if (zoom < 0.01) return 8
+  //   if (zoom < 0.03) return 6
+  //   if (zoom < 0.08) return 4
+  //   return 2
+  // }
 
   const handleMarkerPress = (restaurant: Restaurant) => {
     if (routePlanningMode) {
@@ -267,13 +292,7 @@ export default function MapScreen() {
     const location = await getCurrentUserLocation()
     if (location) {
       setUserLocation(location)
-      const { latitude, longitude } = location.coords
-      setMapRegion({
-        latitude,
-        longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      })
+      // Camera movement handled by MapLibreView
     }
   }
 
@@ -293,15 +312,76 @@ export default function MapScreen() {
     calculateRouteForStops(updatedStops)
   }
 
-  // Handler functions for search bar and menu
+  // Handler functions for search bar và menu
+  // Debounce chỉ phần gọi API; cập nhật text hiển thị ngay lập tức
+  const autocompleteFunction = async (query: string) => {
+    if (query.trim().length < 3) {
+      setSuggestions([])
+      return
+    }
+
+    const thisReq = ++reqId.current
+    latestQueryRef.current = query
+
+    try {
+      const result = await GoongService.autocomplete(query)
+      
+      // CHỈ nhận kết quả của request MỚI NHẤT
+      if (thisReq === reqId.current && latestQueryRef.current === query) {
+        if (result.predictions) {
+          const mapped = result.predictions.map((pred) => ({
+            place_id: pred.place_id,
+            description: pred.description,
+          }))
+          setSuggestions(mapped)
+        }
+      }
+    } catch (e) {
+      if (thisReq === reqId.current) {
+        console.log('Autocomplete error', e)
+        setSuggestions([])
+      }
+    }
+  }
+
+  const debouncedAutocomplete = debounce(autocompleteFunction, 400)
+
   const handleSearchChange = (query: string) => {
     setSearchQuery(query)
-    // TODO: Implement search functionality with backend API
-    // This will search both restaurants and places
+    debouncedAutocomplete(query)
   }
 
   const handleClearSearch = () => {
     setSearchQuery('')
+    setSuggestions([])
+  }
+
+  const handleSelectSuggestion = async (item: { place_id: string; description: string }) => {
+    try {
+      // Fetch place detail to get accurate coordinates
+      const result = await GoongService.placeDetail(item.place_id)
+      setSuggestions([])
+      if (result.result) {
+        const place = result.result
+        const restaurant: Restaurant = {
+          id: Math.abs(place.place_id.split('').reduce((a, b) => a + b.charCodeAt(0), 0)),
+          name: place.name,
+          lat: place.geometry.location.lat,
+          lon: place.geometry.location.lng,
+          tags: {
+            cuisine: place.types?.[0] || 'restaurant',
+            'addr:street': place.formatted_address
+          }
+        }
+        
+        // Add restaurant to map or handle selection
+        console.log('Selected place:', restaurant)
+        
+        // Move camera to selected place - handled by MapLibreView
+      }
+    } catch (e) {
+      console.log('Place detail error', e)
+    }
   }
 
   const handleMenuPress = () => {
@@ -317,42 +397,33 @@ export default function MapScreen() {
     Alert.alert('Voice Search', 'Tính năng tìm kiếm bằng giọng nói sắp ra mắt!')
   }
 
-  const handleFilterChange = (filter: string) => {
-    setSelectedFilter(filter)
-    // TODO: Implement filter logic for restaurants
+  // Removed filter functionality - no longer needed
+  
+  // Toggle map style
+  const toggleMapStyle = () => {
+    const styles: GoongStyleId[] = ['web', 'light', 'dark', 'satellite', 'highlight']
+    const currentIndex = styles.indexOf(currentStyle)
+    const nextIndex = (currentIndex + 1) % styles.length
+    const newStyle = styles[nextIndex]
+    setCurrentStyle(newStyle)
   }
 
   return (
     <View style={styles.container}>
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        region={mapRegion}
-        onRegionChangeComplete={setMapRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={false}
-        showsCompass={false}
-        showsScale={false}
-      >
-        {/* Restaurant markers */}
-        {(restaurants || []).map((restaurant) => (
-          <CustomMarker
-            key={restaurant.id}
-            restaurant={restaurant}
-            onPress={handleMarkerPress}
-            isSelected={routeStops.some((stop) => stop.restaurant.id === restaurant.id)}
-          />
-        ))}
-
-        {/* Route polyline */}
-        {routeCoordinates.length > 0 && (
-          <Polyline
-            coordinates={routeCoordinates}
-            strokeColor="#4285F4"
-            strokeWidth={getResponsiveStrokeWidth()}
-          />
-        )}
-      </MapView>
+      {styleURL ? (
+        <MapLibreView 
+          styleURL={styleURL}
+          restaurants={restaurants}
+          selectedRestaurant={selectedRestaurant}
+          onMarkerPress={handleMarkerPress}
+          userLocation={userLocation ? { latitude: userLocation.coords.latitude, longitude: userLocation.coords.longitude } : null}
+          routeCoordinates={routeCoordinates}
+        />
+      ) : (
+        <View style={styles.map}>
+          {/* Loading placeholder while style is being fetched */}
+        </View>
+      )}
 
       {/* Search Bar - Google Maps Style */}
       <RestaurantSearchBar
@@ -363,13 +434,19 @@ export default function MapScreen() {
         onAvatarPress={handleAvatarPress}
         onMicPress={handleMicPress}
         avatarUrl={userAvatar}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSelectSuggestion}
       />
 
-      {/* Filter Buttons */}
-      <FilterButtons
-        selectedFilter={selectedFilter}
-        onFilterChange={handleFilterChange}
-      />
+      {/* Current Address Display */}
+      {currentAddress && (
+        <View style={styles.currentAddressContainer}>
+          <Ionicons name="location" size={16} color="#3B82F6" />
+          <Text style={styles.currentAddressText}>{currentAddress}</Text>
+        </View>
+      )}
+
+      {/* Removed Filter Buttons - no longer needed */}
 
       {/* Side Menu */}
       <MapSideMenu
@@ -456,13 +533,10 @@ export default function MapScreen() {
         <Ionicons name="locate" size={24} color="#5F6368" />
       </TouchableOpacity>
 
-      {/* Layers Button - bottom right */}
+      {/* Map Style Toggle Button - bottom right */}
       <TouchableOpacity
         style={styles.layersButton}
-        onPress={() => {
-          // TODO: Implement map layers (satellite, terrain, traffic)
-          Alert.alert('Layers', 'Chọn loại bản đồ')
-        }}
+        onPress={toggleMapStyle}
       >
         <Ionicons name="layers" size={24} color="#5F6368" />
       </TouchableOpacity>
@@ -555,5 +629,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 10,
     elevation: 10,
+  },
+  
+  // Current address display
+  currentAddressContainer: {
+    position: 'absolute',
+    top: 120,
+    left: 16,
+    right: 16,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 3,
+    zIndex: 10,
+  },
+  currentAddressText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
   },
 })

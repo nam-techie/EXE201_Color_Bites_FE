@@ -128,7 +128,7 @@ export class AuthService {
         // Chỉ lưu token, để AuthProvider lưu user info
         await AsyncStorage.setItem('authToken', userData.token)
         
-        console.log(' Login successful - token and user saved')
+        console.log('✅ Login successful - token saved')
         console.log('🔑 Token:', userData.token.substring(0, 50) + '...')
         console.log('👤 User:', userData.userName, userData.email, userData.role)
         
@@ -147,7 +147,7 @@ export class AuthService {
       throw new Error(response.data.message || 'Đăng nhập thất bại')
       
     } catch (error: any) {
-      console.error(' Login error:', error)
+      console.error('❌ Login error:', error)
       
       // Nếu có response từ BE (không phải network error)
       if (error.response?.data) {
@@ -193,10 +193,10 @@ export class AuthService {
       return response.data.data || 'OTP đã được gửi'
       
     } catch (error: any) {
-      console.error('Register error:', error)
-      console.error('Error response:', error.response?.data)
-      console.error('Error status:', error.response?.status)
-      console.error('Error headers:', error.response?.headers)
+      console.error('❌ Register error:', error)
+      console.error('❌ Error response:', error.response?.data)
+      console.error('❌ Error status:', error.response?.status)
+      console.error('❌ Error headers:', error.response?.headers)
       
       // Nếu có response từ BE - chỉ throw error cho các lỗi technical thực sự
       if (error.response?.data) {
@@ -229,9 +229,9 @@ export class AuthService {
     try {
       await AsyncStorage.removeItem('authToken')
       await AsyncStorage.removeItem('user')
-      console.log(' Logout successful - cleared local data')
+      console.log('✅ Logout successful - cleared local data')
     } catch (error) {
-      console.error(' Logout error:', error)
+      console.error('❌ Logout error:', error)
       throw error
     }
   }
@@ -254,7 +254,7 @@ export class AuthService {
 
       return response.data.status === 200
     } catch (error) {
-      console.error(' Token validation error:', error)
+      console.error('❌ Token validation error:', error)
       return false
     }
   }
@@ -280,7 +280,7 @@ export class AuthService {
 
       throw new Error('Cannot get user info')
     } catch (error) {
-      console.error(' Get current user error:', error)
+      console.error('❌ Get current user error:', error)
       throw error
     }
   }

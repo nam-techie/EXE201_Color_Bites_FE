@@ -1,20 +1,19 @@
 'use client'
 
-import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-  KeyboardAvoidingView,
-  Platform,
-  SafeAreaView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native'
 
 export default function LoginScreen() {
@@ -46,7 +45,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+      <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
       
       <KeyboardAvoidingView 
         style={styles.keyboardView}
@@ -55,64 +54,50 @@ export default function LoginScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => router.push('/auth/welcome')}
-          >
+          <TouchableOpacity style={styles.backButton} onPress={() => router.push('/auth/welcome')}>
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </TouchableOpacity>
         </View>
 
-        {/* Title Section */}
-        <View style={styles.titleSection}>
-          <Text style={styles.title}>Đăng nhập</Text>
-          <Text style={styles.subtitle}>Chào mừng trở lại! Nhập thông tin của bạn</Text>
-        </View>
+        {/* Title */}
+        <Text style={styles.title}>Đăng nhập</Text>
 
         {/* Content */}
         <View style={styles.content}>
           {/* Email */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email hoặc Username</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="Nhập email hoặc username"
-                placeholderTextColor="#9CA3AF"
-                value={email}
-                onChangeText={setEmail}
-                autoCapitalize="none"
-                keyboardType="email-address"
-              />
-            </View>
+          <View style={styles.inputWrap}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email hoặc tên người dùng"
+              placeholderTextColor="#9AA4B2"
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+            />
           </View>
 
-          {/* Password */}
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Mật khẩu</Text>
-            <View style={styles.inputWrap}>
-              <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-              <TextInput
-                style={[styles.input, { paddingRight: 44 }]}
-                placeholder="Nhập mật khẩu"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPwd}
+          {/* Password with eye */}
+          <View style={styles.inputWrap}>
+            <TextInput
+              style={[styles.input, { paddingRight: 44 }]}
+              placeholder="Mật khẩu"
+              placeholderTextColor="#9AA4B2"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPwd}
+            />
+            <TouchableOpacity
+              style={styles.eyeBtn}
+              onPress={() => setShowPwd((v) => !v)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Ionicons
+                name={showPwd ? 'eye' : 'eye-off'}
+                size={20}
+                color="#6B7280"
               />
-              <TouchableOpacity
-                style={styles.eyeBtn}
-                onPress={() => setShowPwd((v) => !v)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons
-                  name={showPwd ? 'eye' : 'eye-off'}
-                  size={20}
-                  color="#6B7280"
-                />
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           </View>
 
           {/* Error */}
@@ -125,28 +110,16 @@ export default function LoginScreen() {
 
           {/* Login button */}
           <TouchableOpacity
-            activeOpacity={0.85}
+            activeOpacity={0.9}
+            style={[styles.loginBtn, isDisabled && styles.loginBtnDisabled]}
             disabled={isDisabled}
             onPress={handleLogin}
           >
-            {isDisabled ? (
-              <View style={styles.loginBtnDisabled}>
-                <Text style={styles.loginTextDisabled}>
-                  {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
-                </Text>
-              </View>
-            ) : (
-              <CrossPlatformGradient
-                colors={['#FF6B35', '#FF1493']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.loginBtn}
-              >
-                <Text style={styles.loginText}>
-                  {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
-                </Text>
-              </CrossPlatformGradient>
-            )}
+            <Text
+              style={[styles.loginText, isDisabled && styles.loginTextDisabled]}
+            >
+              {isLoading ? 'Đang xử lý...' : 'Đăng nhập'}
+            </Text>
           </TouchableOpacity>
 
           {/* Forgot password */}
@@ -154,29 +127,22 @@ export default function LoginScreen() {
             style={styles.forgotWrap}
             onPress={() => router.push('/auth/forgot-password')}
           >
-            <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+            <Text style={styles.forgotText}>Quên mật khẩu</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Bottom Google button (pinned at bottom) */}
+        <View style={styles.bottomBar}>
+          <TouchableOpacity
+            style={styles.googleBtn}
+            activeOpacity={0.9}
+            onPress={() => console.log('Google OAuth')}
+          >
+            <Ionicons name="logo-google" size={20} color="#FFFFFF" />
+            <Text style={styles.googleText}>Tiếp tục với Google</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-
-      {/* Bottom Google button (fixed at bottom, outside keyboard view) */}
-      <View style={styles.bottomBar}>
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>hoặc</Text>
-          <View style={styles.dividerLine} />
-        </View>
-        
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => console.log('Google OAuth')}
-        >
-          <View style={styles.googleBtn}>
-            <Ionicons name="logo-google" size={18} color="#FF6B35" />
-            <Text style={styles.googleText}>Tiếp tục với Google</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   )
 }
@@ -186,7 +152,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#FFFFFF',
   },
   keyboardView: {
     flex: 1,
@@ -194,9 +160,9 @@ const styles = StyleSheet.create({
 
   /* Header */
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
+    paddingHorizontal: 16,
+    paddingTop: 40,
+    paddingBottom: -50,
   },
   backButton: {
     width: 40,
@@ -205,21 +171,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  /* Title Section */
-  titleSection: {
-    paddingHorizontal: 20,
-    marginBottom: 28,
-  },
+  /* Title */
   title: {
-    fontSize: 32,
+    fontSize: 40,           
     fontWeight: '800',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#6B7280',
-    lineHeight: 22,
+    color: '#111827',     
+    paddingHorizontal: 20,
+    marginTop: 12,
+    marginBottom: 24,
   },
 
   /* Content */
@@ -229,39 +188,24 @@ const styles = StyleSheet.create({
   },
 
   /* Inputs */
-  inputContainer: {
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
   inputWrap: {
     position: 'relative',
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-    paddingHorizontal: 16,
-  },
-  inputWrapError: {
-    borderColor: '#EF4444',
-  },
-  inputIcon: {
-    marginRight: 10,
+    marginBottom: 20,
   },
   input: {
-    flex: 1,
+    backgroundColor: '#F5F7FF', // tím nhạt
+    borderRadius: 12,
     paddingVertical: 14,
-    fontSize: 15,
+    paddingHorizontal: 14,
+    fontSize: 20,
     color: '#111827',
   },
   eyeBtn: {
-    padding: 8,
+    position: 'absolute',
+    right: 12,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
   },
 
   /* Error */
@@ -275,7 +219,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#FECACA',
     marginTop: 4,
-    marginBottom: 8,
+    marginBottom: 4,
     gap: 8,
   },
   errorText: {
@@ -288,88 +232,55 @@ const styles = StyleSheet.create({
   /* Login */
   loginBtn: {
     marginTop: 8,
-    height: 52,
-    borderRadius: 26,
+    borderRadius: 28,
+    paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#FF1493',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
+    backgroundColor: '#FFB74D', // sẽ bị override trạng thái disabled
   },
   loginBtnDisabled: {
-    marginTop: 8,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#E5E7EB',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#DDE3ED', // xám nhạt như mock
   },
   loginText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 20,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   loginTextDisabled: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#9CA3AF',
+    color: '#FFFFFF',
+    opacity: 0.9,
   },
 
   /* Forgot */
   forgotWrap: {
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 10,
   },
   forgotText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FF6B35',
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FB8C00', // black
   },
 
-  /* Bottom Section */
+  /* Bottom Google button */
   bottomBar: {
     paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 12,
-    backgroundColor: '#F9FAFB',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '500',
+    paddingBottom: 30,
+    paddingTop: 6,
   },
   googleBtn: {
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#FF6B35',
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FB8C00',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    gap: 10,
+
   },
   googleText: {
-    fontSize: 15,
+    fontSize: 20,
     fontWeight: '700',
-    color: '#FF6B35',
+    color: '#FFFFFF',
   },
 })

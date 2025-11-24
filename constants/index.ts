@@ -1,86 +1,12 @@
 // API Configuration
-// Read from multiple sources to be robust on Expo (env/app.json extra)
-import Constants from 'expo-constants'
-import { Platform } from 'react-native'
+// Import from centralized config
+import { API_BASE_URL, GOONG_API_KEY, GOONG_MAPTILES_KEY } from '@/config/env'
 
-const envKey = process.env.EXPO_PUBLIC_OPENROUTE_API_KEY
-const extraKey = (Constants?.expoConfig as any)?.extra?.OPENROUTE_API_KEY as
-  | string
-  | undefined
+// Goong Map Style URL
+export const GOONG_MAP_STYLE = `https://tiles.goong.io/assets/goong_map_web.json?api_key=${GOONG_MAPTILES_KEY}`
 
-export const OPENROUTE_API_KEY = envKey || extraKey || ''
-
-// Dev diagnostics: verify env is loaded (will NOT print actual key)
-if (__DEV__) {
-  const hasEnv = !!envKey
-  const hasExtra = !!extraKey
-  const len = (envKey || extraKey || '').length
-  // This helps diagnose "not configured" vs "expired" quickly without leaking the key
-  console.log('[ENV DEBUG] ORS key source:', hasEnv ? 'env' : hasExtra ? 'extra' : 'none', 'length:', len)
-}
-
-// Map Provider - OpenStreetMap only
-if (__DEV__) {
-  console.log('[ENV DEBUG] Map provider: OpenStreetMap')
-}
-   
-// OpenAI Configuration (for client-side prototyping only)
-const openaiEnvKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY
-const openaiExtraKey = (Constants?.expoConfig as any)?.extra?.OPENAI_API_KEY as string | undefined
-export const OPENAI_API_KEY = openaiEnvKey || openaiExtraKey || ''
-export const OPENAI_MODEL =
-  (process.env.EXPO_PUBLIC_OPENAI_MODEL as string | undefined) ||
-  ((Constants?.expoConfig as any)?.extra?.OPENAI_MODEL as string | undefined) ||
-  'gpt-4o-mini'
-if (__DEV__) {
-  console.log('[ENV DEBUG] OpenAI key configured:', OPENAI_API_KEY ? 'yes' : 'no', 'model:', OPENAI_MODEL)
-}
-
-// Backend API Configuration
-// Chọn baseURL theo môi trường chạy để tránh lỗi Network Error
-const getApiBaseUrl = () => {
-  // Ưu tiên biến môi trường nếu được cấu hình
-  const envUrl = process.env.EXPO_PUBLIC_API_BASE_URL
-  console.log('[ENV DEBUG] process.env.EXPO_PUBLIC_API_BASE_URL:', envUrl)
-  if (envUrl && envUrl.trim().length > 0) return envUrl
-
-  // Cho phép cấu hình qua app.json -> expo.extra.API_BASE_URL
-  const extraUrl = (Constants?.expoConfig as any)?.extra?.API_BASE_URL as string | undefined
-  if (extraUrl && extraUrl.trim().length > 0) return extraUrl
-
-  // Mặc định theo nền tảng dev
-  // - Android Emulator dùng 10.0.2.2 để trỏ về localhost của máy host
-  // - iOS Simulator và Web có thể dùng localhost trực tiếp
-  // - Thiết bị thật: cố gắng suy ra IP LAN từ expo manifest nếu có, nếu không nhắc cấu hình .env
-  if (Platform.OS === 'android') {
-    return 'http://10.0.2.2:8080'
-  }
-
-  if (Platform.OS === 'ios' || Platform.OS === 'web') {
-    return 'http://localhost:8080'
-  }
-
-  // Fallback cuối cùng: cố gắng lấy IP LAN từ expo dev server
-  const manifestHost = (Constants?.expoConfig as any)?.hostUri as string | undefined
-  if (manifestHost) {
-    const host = manifestHost.split(':')[0]
-    return `http://${host}:8080`
-  }
-
-  // Nếu không thể đoán, trả về localhost và ghi log cảnh báo
-  if (__DEV__) {
-    console.warn('[ENV WARN] API base URL không được cấu hình. Dùng mặc định http://localhost:8080. Hãy đặt EXPO_PUBLIC_API_BASE_URL trong .env để tránh lỗi kết nối trên thiết bị thật.')
-  }
-  return 'http://localhost:8080'
-}
-
-export const API_BASE_URL = getApiBaseUrl()
-// export const API_BASE_URL = 'https://api-mumii.namtechie.id.vn'
-if (__DEV__) {
-  console.log('[ENV DEBUG] API base URL:', API_BASE_URL)
-  console.log('[ENV DEBUG] Platform.OS:', Platform.OS)
-  console.log('[ENV DEBUG] All process.env keys:', Object.keys(process.env).filter(k => k.startsWith('EXPO_PUBLIC')))
-}
+// Re-export from centralized config for backward compatibility
+export { API_BASE_URL, GOONG_API_KEY, GOONG_MAPTILES_KEY }
 export const API_ENDPOINTS = {
    // Post endpoints
    POSTS: {
@@ -145,6 +71,15 @@ export const DEFAULT_MAP_REGION = {
 }
 
 export const DEFAULT_SEARCH_RADIUS = 2000 // meters
+
+
+// Goong Map Styles
+export const GOONG_STYLE_BASE = 'https://tiles.goong.io/assets/goong_map_web.json'
+export const GOONG_STYLE_SATELLITE = 'https://tiles.goong.io/assets/goong_satellite.json'
+export const GOONG_STYLE_HIGHLIGHT = 'https://tiles.goong.io/assets/goong_map_highlight.json'
+
+// Default map center (Ho Chi Minh City)
+export const DEFAULT_MAP_CENTER = [106.6297, 10.8231] // [lng, lat]
 
 // Route Configuration
 export const DEFAULT_ROUTE_ALTERNATIVES = 2

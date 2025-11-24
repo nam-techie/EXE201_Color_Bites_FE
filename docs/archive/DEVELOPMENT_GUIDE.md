@@ -1,8 +1,4 @@
-<<<<<<< HEAD:DEVELOPMENT_GUIDE.md
-# 🚀 Hướng dẫn chạy dự án Mummi
-=======
 # 🚀 Hướng dẫn chạy dự án MUMII
->>>>>>> develop:docs/archive/DEVELOPMENT_GUIDE.md
 
 ## 📱 Phương pháp 1: Sử dụng Expo Go (Khuyến nghị cho beginners)
 

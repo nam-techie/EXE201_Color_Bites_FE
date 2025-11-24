@@ -491,7 +491,7 @@ export default function PaymentWebView({
                 const amountElements = document.querySelectorAll('[data-amount], .amount, #amount');
                 amountElements.forEach(element => {
                   const amount = element.textContent || element.value;
-                  if (amount && amount.includes('36000')) {
+                  if (amount && amount.includes('5000')) {
                     orderInfo.amount = amount;
                   }
                 });

@@ -25,7 +25,7 @@ class ApiService {
                
                if (token) {
                   config.headers.Authorization = `Bearer ${token}`
-                  console.log(' Authorization header added')
+                  console.log('✅ Authorization header added')
                } else {
                   console.warn('⚠️ No auth token found - API call may fail if auth required')
                }
@@ -34,12 +34,12 @@ class ApiService {
                console.log('📤 Request URL:', config.url)
                console.log('📤 Request Method:', config.method)
             } catch (error) {
-               console.error(' Error getting auth token:', error)
+               console.error('❌ Error getting auth token:', error)
             }
             return config
          },
          (error) => {
-            console.error(' Request interceptor error:', error)
+            console.error('❌ Request interceptor error:', error)
             return Promise.reject(error)
          },
       )

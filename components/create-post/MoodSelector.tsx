@@ -31,7 +31,7 @@ export function MoodSelector({ moods, selectedMoodId, onMoodSelected, isLoading 
       <View style={commonStyles.section}>
         <Text style={commonStyles.label}>Cảm xúc về món ăn?</Text>
         <View style={styles.emptyContainer}>
-          <Text style={styles.errorText}> Không thể tải danh sách cảm xúc</Text>
+          <Text style={styles.errorText}>❌ Không thể tải danh sách cảm xúc</Text>
           <Text style={styles.errorSubText}>Vui lòng kiểm tra kết nối mạng</Text>
         </View>
       </View>

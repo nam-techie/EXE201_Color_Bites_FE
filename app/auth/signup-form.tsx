@@ -1,21 +1,20 @@
 'use client'
 
-import { CrossPlatformGradient } from '@/components/CrossPlatformGradient'
 import { useAuth } from '@/context/AuthProvider'
 import { Ionicons } from '@expo/vector-icons'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { router } from 'expo-router'
 import React, { useState } from 'react'
 import {
-    Alert,
-    SafeAreaView,
-    ScrollView,
-    StatusBar,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+   Alert,
+   SafeAreaView,
+   ScrollView,
+   StatusBar,
+   StyleSheet,
+   Text,
+   TextInput,
+   TouchableOpacity,
+   View
 } from 'react-native'
 
 export default function SignUpFormScreen() {
@@ -155,7 +154,7 @@ export default function SignUpFormScreen() {
 
    return (
       <SafeAreaView style={styles.container}>
-         <StatusBar barStyle="dark-content" backgroundColor="#F9FAFB" />
+         <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
          <ScrollView 
             style={styles.scrollView} 
@@ -172,137 +171,119 @@ export default function SignUpFormScreen() {
                </TouchableOpacity>
             </View>
 
-            {/* Title Section */}
-            <View style={styles.titleSection}>
-               <Text style={styles.title}>Tạo tài khoản</Text>
-               <Text style={styles.subtitle}>Tham gia cộng đồng foodie của chúng tôi</Text>
-            </View>
+            {/* Title */}
+            <Text style={styles.title}>Tạo tài khoản</Text>
 
             {/* Content */}
             <View style={styles.content}>
-               {/* Username */}
-               <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Username</Text>
-                  <View style={[styles.inputWrap, errors.username && styles.inputWrapError]}>
-                     <Ionicons name="person-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-                     <TextInput
-                        style={styles.input}
-                        placeholder="Nhập username của bạn"
-                        placeholderTextColor="#9CA3AF"
-                        value={formData.username}
-                        onChangeText={(text) => {
-                           setFormData({ ...formData, username: text })
-                           
-                           const newErrors = { ...errors }
-                           if (!text.trim()) {
-                              newErrors.username = 'Vui lòng nhập username'
-                           } else if (text.trim().length < 6) {
-                              newErrors.username = 'Username phải có ít nhất 6 ký tự'
-                           } else {
-                              delete newErrors.username
-                           }
-                           setErrors(newErrors)
-                        }}
-                        autoCapitalize="none"
-                        returnKeyType="next"
-                     />
-                  </View>
-                  {errors.username ? (
-                     <Text style={styles.errorText}>{errors.username}</Text>
-                  ) : null}
+               {/* Full name */}
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={styles.input}
+                     placeholder="Username"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.username}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, username: text })
+                        
+                        // Real-time validation
+                        const newErrors = { ...errors }
+                        if (!text.trim()) {
+                           newErrors.username = 'Vui lòng nhập họ và tên'
+                        } else if (text.trim().length < 6) {
+                           newErrors.username = 'Họ và tên phải có ít nhất 6 ký tự'
+                        } else {
+                           delete newErrors.username
+                        }
+                        setErrors(newErrors)
+                     }}
+                     autoCapitalize="words"
+                     returnKeyType="next"
+                  />
                </View>
+               {errors.username ? (
+                  <Text style={styles.errorText}>{errors.username}</Text>
+               ) : null}
 
                {/* Email */}
-               <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Email</Text>
-                  <View style={[styles.inputWrap, errors.email && styles.inputWrapError]}>
-                     <Ionicons name="mail-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-                     <TextInput
-                        style={styles.input}
-                        placeholder="example@email.com"
-                        placeholderTextColor="#9CA3AF"
-                        value={formData.email}
-                        onChangeText={(text) => {
-                           setFormData({ ...formData, email: text })
-                           if (errors.email) setErrors({ ...errors, email: '' })
-                        }}
-                        autoCapitalize="none"
-                        keyboardType="email-address"
-                        returnKeyType="next"
-                     />
-                  </View>
-                  {errors.email ? (
-                     <Text style={styles.errorText}>{errors.email}</Text>
-                  ) : null}
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={styles.input}
+                     placeholder="Email"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.email}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, email: text })
+                        if (errors.email) setErrors({ ...errors, email: '' })
+                     }}
+                     autoCapitalize="none"
+                     keyboardType="email-address"
+                     returnKeyType="next"
+                  />
                </View>
+               {errors.email ? (
+                  <Text style={styles.errorText}>{errors.email}</Text>
+               ) : null}
 
                {/* Password */}
-               <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Mật khẩu</Text>
-                  <View style={[styles.inputWrap, errors.password && styles.inputWrapError]}>
-                     <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-                     <TextInput
-                        style={[styles.input, { paddingRight: 44 }]}
-                        placeholder="Nhập mật khẩu"
-                        placeholderTextColor="#9CA3AF"
-                        value={formData.password}
-                        onChangeText={(text) => {
-                           setFormData({ ...formData, password: text })
-                           if (errors.password) setErrors({ ...errors, password: '' })
-                        }}
-                        secureTextEntry={!showPassword}
-                        autoCapitalize="none"
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={[styles.input, { paddingRight: 44 }]}
+                     placeholder="Mật khẩu"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.password}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, password: text })
+                        if (errors.password) setErrors({ ...errors, password: '' })
+                     }}
+                     secureTextEntry={!showPassword}
+                     autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                     style={styles.eyeBtn}
+                     onPress={() => setShowPassword(v => !v)}
+                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                     <Ionicons 
+                        name={showPassword ? 'eye' : 'eye-off'} 
+                        size={20} 
+                        color="#6B7280" 
                      />
-                     <TouchableOpacity
-                        style={styles.eyeBtn}
-                        onPress={() => setShowPassword(v => !v)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                     >
-                        <Ionicons 
-                           name={showPassword ? 'eye' : 'eye-off'} 
-                           size={20} 
-                           color="#6B7280" 
-                        />
-                     </TouchableOpacity>
-                  </View>
-                  {errors.password ? (
-                     <Text style={styles.errorText}>{errors.password}</Text>
-                  ) : null}
+                  </TouchableOpacity>
                </View>
+               {errors.password ? (
+                  <Text style={styles.errorText}>{errors.password}</Text>
+               ) : null}
 
                {/* Confirm Password */}
-               <View style={styles.inputContainer}>
-                  <Text style={styles.inputLabel}>Xác nhận mật khẩu</Text>
-                  <View style={[styles.inputWrap, errors.confirmPassword && styles.inputWrapError]}>
-                     <Ionicons name="lock-closed-outline" size={20} color="#9CA3AF" style={styles.inputIcon} />
-                     <TextInput
-                        style={[styles.input, { paddingRight: 44 }]}
-                        placeholder="Nhập lại mật khẩu"
-                        placeholderTextColor="#9CA3AF"
-                        value={formData.confirmPassword}
-                        onChangeText={(text) => {
-                           setFormData({ ...formData, confirmPassword: text })
-                           if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' })
-                        }}
-                        secureTextEntry={!showConfirmPassword}
-                        autoCapitalize="none"
+               <View style={styles.inputWrap}>
+                  <TextInput
+                     style={[styles.input, { paddingRight: 44 }]}
+                     placeholder="Xác nhận mật khẩu"
+                     placeholderTextColor="#9AA4B2"
+                     value={formData.confirmPassword}
+                     onChangeText={(text) => {
+                        setFormData({ ...formData, confirmPassword: text })
+                        if (errors.confirmPassword) setErrors({ ...errors, confirmPassword: '' })
+                     }}
+                     secureTextEntry={!showConfirmPassword}
+                     autoCapitalize="none"
+                  />
+                  <TouchableOpacity
+                     style={styles.eyeBtn}
+                     onPress={() => setShowConfirmPassword(v => !v)}
+                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                     <Ionicons
+                        name={showConfirmPassword ? 'eye' : 'eye-off'}
+                        size={20}
+                        color="#6B7280"
                      />
-                     <TouchableOpacity
-                        style={styles.eyeBtn}
-                        onPress={() => setShowConfirmPassword(v => !v)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                     >
-                        <Ionicons
-                           name={showConfirmPassword ? 'eye' : 'eye-off'}
-                           size={20}
-                           color="#6B7280"
-                        />
-                     </TouchableOpacity>
-                  </View>
-                  {errors.confirmPassword ? (
-                     <Text style={styles.errorText}>{errors.confirmPassword}</Text>
-                  ) : null}
+                  </TouchableOpacity>
                </View>
+               {errors.confirmPassword ? (
+                  <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+               ) : null}
 
                {/* Password checklist */}
                {formData.password.length > 0 && (
@@ -350,28 +331,14 @@ export default function SignUpFormScreen() {
 
                {/* Register button */}
                <TouchableOpacity
-                  activeOpacity={0.85}
+                  activeOpacity={0.9}
+                  style={[styles.registerBtn, isDisabled && styles.registerBtnDisabled]}
                   disabled={isDisabled}
                   onPress={handleSubmit}
                >
-                  {isDisabled ? (
-                     <View style={styles.registerBtnDisabled}>
-                        <Text style={styles.registerTextDisabled}>
-                           {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
-                        </Text>
-                     </View>
-                  ) : (
-                     <CrossPlatformGradient
-                        colors={['#FF6B35', '#FF1493']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 0 }}
-                        style={styles.registerBtn}
-                     >
-                        <Text style={styles.registerText}>
-                           {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
-                        </Text>
-                     </CrossPlatformGradient>
-                  )}
+                  <Text style={[styles.registerText, isDisabled && styles.registerTextDisabled]}>
+                     {isLoading ? 'Đang xử lý...' : 'Đăng ký'}
+                  </Text>
                </TouchableOpacity>
             </View>
          </ScrollView>
@@ -382,7 +349,7 @@ export default function SignUpFormScreen() {
 const styles = StyleSheet.create({
    container: {
       flex: 1,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: '#FFFFFF',
    },
    scrollView: {
       flex: 1,
@@ -393,9 +360,9 @@ const styles = StyleSheet.create({
 
    /* Header */
    header: {
-      paddingHorizontal: 20,
-      paddingTop: 8,
-      paddingBottom: 12,
+      paddingHorizontal: 16,
+      paddingTop: 40,
+      paddingBottom: -50,
    },
    backButton: {
       width: 40,
@@ -404,21 +371,14 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
    },
 
-   /* Title Section */
-   titleSection: {
-      paddingHorizontal: 20,
-      marginBottom: 28,
-   },
+   /* Title */
    title: {
-      fontSize: 32,
+      fontSize: 40,
       fontWeight: '800',
       color: '#111827',
-      marginBottom: 8,
-   },
-   subtitle: {
-      fontSize: 15,
-      color: '#6B7280',
-      lineHeight: 22,
+      paddingHorizontal: 20,
+      marginTop: 12,
+      marginBottom: 24,
    },
 
    /* Content */
@@ -428,39 +388,24 @@ const styles = StyleSheet.create({
    },
 
    /* Inputs */
-   inputContainer: {
-      marginBottom: 20,
-   },
-   inputLabel: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: '#374151',
-      marginBottom: 8,
-   },
    inputWrap: {
       position: 'relative',
-      flexDirection: 'row',
-      alignItems: 'center',
-      backgroundColor: '#FFFFFF',
-      borderRadius: 12,
-      borderWidth: 1.5,
-      borderColor: '#E5E7EB',
-      paddingHorizontal: 16,
-   },
-   inputWrapError: {
-      borderColor: '#EF4444',
-   },
-   inputIcon: {
-      marginRight: 10,
+      marginBottom: 20,
    },
    input: {
-      flex: 1,
+      backgroundColor: '#F5F7FF',
+      borderRadius: 12,
       paddingVertical: 14,
-      fontSize: 15,
+      paddingHorizontal: 14,
+      fontSize: 20,
       color: '#111827',
    },
    eyeBtn: {
-      padding: 8,
+      position: 'absolute',
+      right: 12,
+      top: 0,
+      bottom: 0,
+      justifyContent: 'center',
    },
 
    /* Error text */
@@ -479,13 +424,13 @@ const styles = StyleSheet.create({
       paddingHorizontal: 4,
    },
    requirementsTitle: {
-      fontSize: 14,
+      fontSize: 16,
       fontWeight: '600',
       color: '#6B7280',
       marginBottom: 6,
    },
    requirement: {
-      fontSize: 13,
+      fontSize: 14,
       color: '#9CA3AF',
       marginBottom: 3,
    },
@@ -495,48 +440,38 @@ const styles = StyleSheet.create({
 
    /* Terms & Privacy */
    legal: {
-      fontSize: 13,
-      lineHeight: 18,
-      color: '#9CA3AF',
+      fontSize: 16,
+      lineHeight: 20,
+      color: '#6B6B6B',
       textAlign: 'center',
       paddingHorizontal: 8,
       marginTop: 16,
       marginBottom: 8,
    },
    link: {
-      color: '#FF6B35',
-      fontWeight: '500',
+      color: '#4A90E2',
+      textDecorationLine: 'underline',
    },
 
    /* Register button */
    registerBtn: {
       marginTop: 20,
-      height: 52,
-      borderRadius: 26,
+      borderRadius: 28,
+      paddingVertical: 14,
       alignItems: 'center',
       justifyContent: 'center',
-      shadowColor: '#FF1493',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.25,
-      shadowRadius: 6,
-      elevation: 4,
+      backgroundColor: '#FFB74D',
    },
    registerBtnDisabled: {
-      marginTop: 20,
-      height: 52,
-      borderRadius: 26,
-      backgroundColor: '#E5E7EB',
-      alignItems: 'center',
-      justifyContent: 'center',
+      backgroundColor: '#DDE3ED',
    },
    registerText: {
-      fontSize: 16,
-      fontWeight: '600',
+      fontSize: 20,
+      fontWeight: '700',
       color: '#FFFFFF',
    },
    registerTextDisabled: {
-      fontSize: 16,
-      fontWeight: '600',
-      color: '#9CA3AF',
+      color: '#FFFFFF',
+      opacity: 0.9,
    },
 }) 
