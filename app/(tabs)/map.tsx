@@ -3,6 +3,7 @@ import FilterButtons from '@/components/common/FilterButtons'
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
 import CustomMarker from '@/components/map/CustomMapMarker'
+import MapFABGroup from '@/components/map/MapFABGroup'
 import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
@@ -11,6 +12,8 @@ import { useAuth } from '@/context/AuthProvider'
 import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
 import type { MapRegion, Restaurant } from '@/type/location'
+import { GoongService, debounce, type GoongAutocompletePrediction } from '@/services/GoongService'
+import type { Suggestion as SearchBarSuggestion } from '@/components/common/SearchBar'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
 import { useRouter } from 'expo-router'
@@ -87,6 +90,13 @@ export default function MapScreen() {
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
+  
+  // Autocomplete states
+  const [suggestions, setSuggestions] = useState<SearchBarSuggestion[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  
+  // FAB Group state
+  const [fabExpanded, setFabExpanded] = useState(false)
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -224,7 +234,7 @@ export default function MapScreen() {
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         })
-        const data = await MapProvider.fetchRestaurants(latitude, longitude)
+        const data = await MapProvider.fetchRestaurants(latitude, longitude, 10000)
         setRestaurants(data)
       } catch {
         Alert.alert('Lỗi', 'Không thể tải dữ liệu hoặc vị trí')
@@ -293,15 +303,90 @@ export default function MapScreen() {
     calculateRouteForStops(updatedStops)
   }
 
+  // Debounced autocomplete function
+  const debouncedAutocomplete = useRef(
+    debounce(async (query: string) => {
+      if (!query || query.trim().length < 2) {
+        setSuggestions([])
+        setIsSearching(false)
+        return
+      }
+
+      try {
+        setIsSearching(true)
+        const location = userLocation
+          ? {
+              lat: userLocation.coords.latitude,
+              lng: userLocation.coords.longitude,
+            }
+          : undefined
+
+        const response = await GoongService.autocomplete(query, location, 10000)
+        setSuggestions(response.predictions || [])
+      } catch (error) {
+        console.error('Autocomplete error:', error)
+        setSuggestions([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 400),
+  ).current
+
   // Handler functions for search bar and menu
   const handleSearchChange = (query: string) => {
     setSearchQuery(query)
-    // TODO: Implement search functionality with backend API
-    // This will search both restaurants and places
+    debouncedAutocomplete(query)
   }
 
   const handleClearSearch = () => {
     setSearchQuery('')
+    setSuggestions([])
+    setIsSearching(false)
+  }
+
+  // Handle suggestion selection
+  const handleSelectSuggestion = async (suggestion: SearchBarSuggestion) => {
+    try {
+      const placeDetail = await GoongService.getPlaceDetail(suggestion.place_id)
+      if (!placeDetail || !placeDetail.geometry) {
+        Alert.alert('Lỗi', 'Không thể lấy thông tin địa điểm')
+        return
+      }
+
+      const { lat, lng } = placeDetail.geometry.location
+
+      // Di chuyển map đến vị trí được chọn
+      setMapRegion({
+        latitude: lat,
+        longitude: lng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      })
+
+      // Animate map to location
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(
+          {
+            latitude: lat,
+            longitude: lng,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          500,
+        )
+      }
+
+      // Fetch restaurants near the selected location
+      const nearbyRestaurants = await MapProvider.fetchRestaurants(lat, lng, 10000)
+      setRestaurants(nearbyRestaurants)
+
+      // Clear search
+      setSearchQuery('')
+      setSuggestions([])
+    } catch (error) {
+      console.error('Error getting place detail:', error)
+      Alert.alert('Lỗi', 'Không thể lấy thông tin địa điểm')
+    }
   }
 
   const handleMenuPress = () => {
@@ -363,6 +448,9 @@ export default function MapScreen() {
         onAvatarPress={handleAvatarPress}
         onMicPress={handleMicPress}
         avatarUrl={userAvatar}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSelectSuggestion}
+        loading={isSearching}
       />
 
       {/* Filter Buttons */}
@@ -448,24 +536,16 @@ export default function MapScreen() {
         </>
       )}
 
-      {/* My Location Button - Google Maps style */}
-      <TouchableOpacity
-        onPress={handleMyLocation}
-        style={styles.myLocationButton}
-      >
-        <Ionicons name="locate" size={24} color="#5F6368" />
-      </TouchableOpacity>
-
-      {/* Layers Button - bottom right */}
-      <TouchableOpacity
-        style={styles.layersButton}
-        onPress={() => {
+      {/* FAB Group - My Location & Layers */}
+      <MapFABGroup
+        onMyLocationPress={handleMyLocation}
+        onLayersPress={() => {
           // TODO: Implement map layers (satellite, terrain, traffic)
           Alert.alert('Layers', 'Chọn loại bản đồ')
         }}
-      >
-        <Ionicons name="layers" size={24} color="#5F6368" />
-      </TouchableOpacity>
+        expanded={fabExpanded}
+        onToggle={() => setFabExpanded(!fabExpanded)}
+      />
 
       <RestaurantDetailModal
         restaurant={selectedRestaurant}
@@ -483,48 +563,6 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-  
-  // Google Maps style buttons
-  myLocationButton: {
-    position: 'absolute',
-    bottom: 200,
-    right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
-    zIndex: 10,
-  },
-  layersButton: {
-    position: 'absolute',
-    bottom: 140,
-    right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
-    zIndex: 10,
-  },
   
   // Route planning buttons (keep existing)
   routePlanningButton: {

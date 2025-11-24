@@ -1,6 +1,24 @@
 import { Ionicons } from '@expo/vector-icons'
 import { Image } from 'expo-image'
-import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native'
+import {
+   ActivityIndicator,
+   FlatList,
+   Keyboard,
+   StyleSheet,
+   Text,
+   TextInput,
+   TouchableOpacity,
+   View,
+} from 'react-native'
+
+export interface Suggestion {
+   place_id: string
+   description: string
+   structured_formatting?: {
+      main_text: string
+      secondary_text: string
+   }
+}
 
 interface RestaurantSearchBarProps {
    searchQuery: string
@@ -10,6 +28,9 @@ interface RestaurantSearchBarProps {
    onAvatarPress?: () => void
    onMicPress?: () => void
    avatarUrl?: string | null
+   suggestions?: Suggestion[]
+   onSelectSuggestion?: (suggestion: Suggestion) => void
+   loading?: boolean
 }
 
 export default function RestaurantSearchBar({
@@ -20,7 +41,46 @@ export default function RestaurantSearchBar({
    onAvatarPress,
    onMicPress,
    avatarUrl,
+   suggestions = [],
+   onSelectSuggestion,
+   loading = false,
 }: RestaurantSearchBarProps) {
+   // Handle suggestion selection
+   const handleSelectSuggestion = (suggestion: Suggestion) => {
+      Keyboard.dismiss()
+      if (onSelectSuggestion) {
+         onSelectSuggestion(suggestion)
+      }
+   }
+
+   // Render suggestion item
+   const renderSuggestion = ({ item }: { item: Suggestion }) => {
+      const mainText = item.structured_formatting?.main_text || item.description
+      const secondaryText = item.structured_formatting?.secondary_text
+
+      return (
+         <TouchableOpacity
+            style={styles.suggestionItem}
+            onPress={() => handleSelectSuggestion(item)}
+            activeOpacity={0.7}
+         >
+            <Ionicons name="location" size={20} color="#5F6368" style={styles.suggestionIcon} />
+            <View style={styles.suggestionTextContainer}>
+               <Text style={styles.suggestionMainText} numberOfLines={1}>
+                  {mainText}
+               </Text>
+               {secondaryText && (
+                  <Text style={styles.suggestionSecondaryText} numberOfLines={1}>
+                     {secondaryText}
+                  </Text>
+               )}
+            </View>
+         </TouchableOpacity>
+      )
+   }
+
+   const showSuggestions = suggestions.length > 0 && searchQuery.length >= 2
+
    return (
       <View style={styles.container}>
          <View style={styles.searchContainer}>
@@ -42,10 +102,14 @@ export default function RestaurantSearchBar({
                   onChangeText={onSearchChange}
                   placeholderTextColor="#9CA3AF"
                />
-               {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
-                     <Ionicons name="close-circle" size={20} color="#9CA3AF" />
-                  </TouchableOpacity>
+               {loading ? (
+                  <ActivityIndicator size="small" color="#9CA3AF" style={styles.loadingIndicator} />
+               ) : (
+                  searchQuery.length > 0 && (
+                     <TouchableOpacity onPress={onClearSearch} style={styles.clearButton}>
+                        <Ionicons name="close-circle" size={20} color="#9CA3AF" />
+                     </TouchableOpacity>
+                  )
                )}
             </View>
 
@@ -77,6 +141,20 @@ export default function RestaurantSearchBar({
                )}
             </TouchableOpacity>
          </View>
+
+         {/* Suggestions Dropdown */}
+         {showSuggestions && (
+            <View style={styles.suggestionsContainer}>
+               <FlatList
+                  data={suggestions}
+                  renderItem={renderSuggestion}
+                  keyExtractor={(item) => item.place_id}
+                  style={styles.suggestionsList}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={true}
+               />
+            </View>
+         )}
       </View>
    )
 }
@@ -84,7 +162,7 @@ export default function RestaurantSearchBar({
 const styles = StyleSheet.create({
    container: {
       position: 'absolute',
-      top: 48,
+      top: 8,
       left: 16,
       right: 16,
       zIndex: 10,
@@ -140,5 +218,51 @@ const styles = StyleSheet.create({
       backgroundColor: '#FFF7ED',
       alignItems: 'center',
       justifyContent: 'center',
+   },
+   // Suggestions dropdown styles
+   suggestionsContainer: {
+      marginTop: 8,
+      backgroundColor: '#ffffff',
+      borderRadius: 12,
+      shadowColor: '#000',
+      shadowOffset: {
+         width: 0,
+         height: 4,
+      },
+      shadowOpacity: 0.15,
+      shadowRadius: 8,
+      elevation: 8,
+      maxHeight: 300,
+      overflow: 'hidden',
+   },
+   suggestionsList: {
+      flexGrow: 0,
+   },
+   suggestionItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6',
+   },
+   suggestionIcon: {
+      marginRight: 12,
+   },
+   suggestionTextContainer: {
+      flex: 1,
+   },
+   suggestionMainText: {
+      fontSize: 15,
+      color: '#111827',
+      fontWeight: '500',
+   },
+   suggestionSecondaryText: {
+      fontSize: 13,
+      color: '#6B7280',
+      marginTop: 2,
+   },
+   loadingIndicator: {
+      marginLeft: 8,
    },
 })

@@ -23,6 +23,17 @@ if (__DEV__) {
 if (__DEV__) {
   console.log('[ENV DEBUG] Map provider: OpenStreetMap')
 }
+
+// Goong API Configuration
+const goongEnvKey = process.env.EXPO_PUBLIC_GOONG_API_KEY
+const goongExtraKey = (Constants?.expoConfig as any)?.extra?.GOONG_API_KEY as string | undefined
+export const GOONG_API_KEY = goongEnvKey || goongExtraKey || 'ZBpYUzDG5EsrTKY0WQL3yYknnIGclL9boJvNV2Xm'
+if (__DEV__) {
+  const hasGoongEnv = !!goongEnvKey
+  const hasGoongExtra = !!goongExtraKey
+  const goongLen = (goongEnvKey || goongExtraKey || GOONG_API_KEY).length
+  console.log('[ENV DEBUG] Goong key source:', hasGoongEnv ? 'env' : hasGoongExtra ? 'extra' : 'hardcoded', 'length:', goongLen)
+}
    
 // OpenAI Configuration (for client-side prototyping only)
 const openaiEnvKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY
@@ -144,7 +155,7 @@ export const DEFAULT_MAP_REGION = {
    longitudeDelta: 0.05,
 }
 
-export const DEFAULT_SEARCH_RADIUS = 2000 // meters
+export const DEFAULT_SEARCH_RADIUS = 10000 // meters (10km)
 
 // Route Configuration
 export const DEFAULT_ROUTE_ALTERNATIVES = 2

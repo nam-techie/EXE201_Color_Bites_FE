@@ -25,13 +25,6 @@
     "plugins": [
       "expo-router",
       [
-        "@rnmapbox/maps",
-        {
-          "RNMapboxMapsDownloadToken": "pk.eyJ1IjoicHduYW0iLCJhIjoiY21nN3l6dGJ5MDIwazJrb2NpZHV0MTRydyJ9.F93cqvzJul7ItypzDIvrxQ",
-          "RNMapboxMapsImpl": "mapbox"
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
