@@ -34,17 +34,14 @@ if (__DEV__) {
   const goongLen = (goongEnvKey || goongExtraKey || GOONG_API_KEY).length
   console.log('[ENV DEBUG] Goong key source:', hasGoongEnv ? 'env' : hasGoongExtra ? 'extra' : 'hardcoded', 'length:', goongLen)
 }
-   
-// OpenAI Configuration (for client-side prototyping only)
-const openaiEnvKey = process.env.EXPO_PUBLIC_OPENAI_API_KEY
-const openaiExtraKey = (Constants?.expoConfig as any)?.extra?.OPENAI_API_KEY as string | undefined
-export const OPENAI_API_KEY = openaiEnvKey || openaiExtraKey || ''
-export const OPENAI_MODEL =
-  (process.env.EXPO_PUBLIC_OPENAI_MODEL as string | undefined) ||
-  ((Constants?.expoConfig as any)?.extra?.OPENAI_MODEL as string | undefined) ||
-  'gpt-4o-mini'
+
+// Gemini Configuration
+const geminiEnvKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY
+const geminiExtraKey = (Constants?.expoConfig as any)?.extra?.GEMINI_API_KEY as string | undefined
+export const GEMINI_API_KEY = geminiEnvKey || geminiExtraKey || 'AIzaSyBZvlgYVcB_3_TUIVWydsqe_IizB4OFZJM'
+
 if (__DEV__) {
-  console.log('[ENV DEBUG] OpenAI key configured:', OPENAI_API_KEY ? 'yes' : 'no', 'model:', OPENAI_MODEL)
+  console.log('[ENV DEBUG] Gemini key configured:', GEMINI_API_KEY ? 'yes' : 'no')
 }
 
 // Backend API Configuration
@@ -93,66 +90,66 @@ if (__DEV__) {
   console.log('[ENV DEBUG] All process.env keys:', Object.keys(process.env).filter(k => k.startsWith('EXPO_PUBLIC')))
 }
 export const API_ENDPOINTS = {
-   // Post endpoints
-   POSTS: {
-      CREATE: '/api/posts/create',
-      LIST: '/api/posts/list',
-      BY_ID: '/api/posts/read',
-      BY_USER: '/api/posts/read/user',
-      BY_MOOD: '/api/posts/read/mood',
-      BY_PRIVACY: '/api/posts/read/privacy',
-      SEARCH: '/api/posts/search',
-      UPDATE: '/api/posts/edit',
-      DELETE: '/api/posts/delete',
-      REACT: '/api/posts/react',
-      TOGGLE_REACTION: '/api/reactions/toggle',
-      COUNT_USER: '/api/posts/count/user',
-   },
-   // Comment endpoints  
-   COMMENTS: {
-      CREATE: '/api/comments/create/posts',
-      LIST: '/api/comments/read/posts',
-   },
-   // Mood endpoints
-   MOODS: {
-      LIST: '/api/moods/list',
-   },
-   // Auth endpoints
-   AUTH: {
-      LOGIN: '/api/auth/login',
-      REGISTER: '/api/auth/register',
-      LOGOUT: '/api/auth/logout',
-      REFRESH: '/api/auth/refresh',
-      VERIFY_TOKEN: '/api/auth/verify',
-      CHANGE_PASSWORD: '/api/auth/change-password',
-      FORGOT_PASSWORD: '/api/auth/forgot-password',
-      RESET_PASSWORD: '/api/auth/reset-password',
-      ME: '/api/auth/me',
-   },
-   // OTP endpoints
-   OTP: {
-      VERIFY_REGISTER: '/api/otp/verify-register',
-      VERIFY_RESET_PASSWORD: '/api/otp/verify-reset-password',
-   },
-   // User Information endpoints
-   USER_INFO: {
-      GET: '/api/user-info',
-      UPDATE: '/api/user-info',
-      UPLOAD_AVATAR: '/api/user-info/uploadAvatar', // usage: `${UPLOAD_AVATAR}/${accountId}`
-   },
+  // Post endpoints
+  POSTS: {
+    CREATE: '/api/posts/create',
+    LIST: '/api/posts/list',
+    BY_ID: '/api/posts/read',
+    BY_USER: '/api/posts/read/user',
+    BY_MOOD: '/api/posts/read/mood',
+    BY_PRIVACY: '/api/posts/read/privacy',
+    SEARCH: '/api/posts/search',
+    UPDATE: '/api/posts/edit',
+    DELETE: '/api/posts/delete',
+    REACT: '/api/posts/react',
+    TOGGLE_REACTION: '/api/reactions/toggle',
+    COUNT_USER: '/api/posts/count/user',
+  },
+  // Comment endpoints  
+  COMMENTS: {
+    CREATE: '/api/comments/create/posts',
+    LIST: '/api/comments/read/posts',
+  },
+  // Mood endpoints
+  MOODS: {
+    LIST: '/api/moods/list',
+  },
+  // Auth endpoints
+  AUTH: {
+    LOGIN: '/api/auth/login',
+    REGISTER: '/api/auth/register',
+    LOGOUT: '/api/auth/logout',
+    REFRESH: '/api/auth/refresh',
+    VERIFY_TOKEN: '/api/auth/verify',
+    CHANGE_PASSWORD: '/api/auth/change-password',
+    FORGOT_PASSWORD: '/api/auth/forgot-password',
+    RESET_PASSWORD: '/api/auth/reset-password',
+    ME: '/api/auth/me',
+  },
+  // OTP endpoints
+  OTP: {
+    VERIFY_REGISTER: '/api/otp/verify-register',
+    VERIFY_RESET_PASSWORD: '/api/otp/verify-reset-password',
+  },
+  // User Information endpoints
+  USER_INFO: {
+    GET: '/api/user-info',
+    UPDATE: '/api/user-info',
+    UPLOAD_AVATAR: '/api/user-info/uploadAvatar', // usage: `${UPLOAD_AVATAR}/${accountId}`
+  },
   // Payment endpoints
   PAYMENT: {
-     CREATE: '/api/payment/subscription/create',
-     STATUS: '/api/payment/subscription/status',
-     CONFIRM: '/api/payment/subscription/confirm',
-     HISTORY: '/api/payment/history',
+    CREATE: '/api/payment/subscription/create',
+    STATUS: '/api/payment/subscription/status',
+    CONFIRM: '/api/payment/subscription/confirm',
+    HISTORY: '/api/payment/history',
   },
 }
 
 // Map Configuration
 export const DEFAULT_MAP_REGION = {
-   latitudeDelta: 0.05,
-   longitudeDelta: 0.05,
+  latitudeDelta: 0.05,
+  longitudeDelta: 0.05,
 }
 
 export const DEFAULT_SEARCH_RADIUS = 10000 // meters (10km)
@@ -160,14 +157,14 @@ export const DEFAULT_SEARCH_RADIUS = 10000 // meters (10km)
 // Route Configuration
 export const DEFAULT_ROUTE_ALTERNATIVES = 2
 export const ROUTE_OPTIMIZATION_PARAMS = {
-   weight_factor: 1.4,
-   share_factor: 0.6,
+  weight_factor: 1.4,
+  share_factor: 0.6,
 }
 
 // Cost Configuration (VND per km)
 export const TRANSPORT_COSTS = {
-   'driving-car': 3000,
-   'driving-hgv': 5000,
-   'cycling-regular': 0,
-   'foot-walking': 0,
+  'driving-car': 3000,
+  'driving-hgv': 5000,
+  'cycling-regular': 0,
+  'foot-walking': 0,
 } as const
