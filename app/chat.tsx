@@ -1,8 +1,10 @@
 import { GEMINI_API_KEY } from '@/constants'
 import RestaurantCard from '@/components/chat/RestaurantCard'
+import InteractiveOptions from '@/components/chat/InteractiveOptions'
 import { useLocation } from '@/hooks/useLocation'
 import { aiChatService, type ChatMessage } from '@/services/AIChatService'
 import { GoongService } from '@/services/GoongService'
+import { buildPromptFromSelections, getFindByTypeOptions } from '@/utils/chatOptions'
 import { formatAIText, parseAITextToLines } from '@/utils/formatAIText'
 import { Ionicons } from '@expo/vector-icons'
 import MaskedView from '@react-native-masked-view/masked-view'
@@ -11,11 +13,26 @@ import React, { useMemo, useRef, useState } from 'react'
 import { FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import Toast from 'react-native-toast-message'
 
+export type OptionType = 'radio' | 'checkbox'
+
+export interface ChatOption {
+  id: string
+  label: string
+  type: OptionType
+  options: {
+    value: string
+    label: string
+  }[]
+  selected?: string | string[] // string cho radio, string[] cho checkbox
+}
+
 type UiMessage = {
   id: string
   role: 'user' | 'assistant'
   content: string
   restaurants?: string[] // Danh sách restaurants để render cards
+  options?: ChatOption[] // Interactive options
+  isInteractive?: boolean // Flag để biết message có options không
 }
 
 export default function ChatScreen() {
@@ -77,6 +94,27 @@ export default function ChatScreen() {
       return
     }
 
+    // Special handling for "Tìm theo loại"
+    if (messageText.includes('Tìm theo loại') || messageText.includes('tìm theo loại')) {
+      const userMsg: UiMessage = { id: `${Date.now()}-user`, role: 'user', content: messageText }
+      setMessages((prev) => [...prev, userMsg])
+      scrollToEnd()
+
+      // Trả về message với interactive options
+      const options = getFindByTypeOptions()
+      const aiMsg: UiMessage = {
+        id: `${Date.now()}-ai`,
+        role: 'assistant',
+        content: 'Chào bạn! Để Mumi có thể giúp bạn tìm quán ăn phù hợp nhất theo loại món, bạn vui lòng cho Mumi biết thêm một vài thông tin nhé:',
+        options: options,
+        isInteractive: true,
+      }
+      setMessages((prev) => [...prev, aiMsg])
+      scrollToEnd()
+      return
+    }
+
+    // Normal flow cho các quick actions khác
     const userMsg: UiMessage = { id: `${Date.now()}-user`, role: 'user', content: messageText }
     setMessages((prev) => [...prev, userMsg])
     setIsSending(true)
@@ -211,6 +249,75 @@ export default function ChatScreen() {
     }
   }
 
+  const handleOptionSelection = (messageId: string, optionId: string, value: string | string[]) => {
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id === messageId && msg.options) {
+          return {
+            ...msg,
+            options: msg.options.map((opt) =>
+              opt.id === optionId ? { ...opt, selected: value } : opt
+            ),
+          }
+        }
+        return msg
+      })
+    )
+  }
+
+  const handleSubmitOptions = async (messageId: string) => {
+    const message = messages.find((m) => m.id === messageId)
+    if (!message || !message.options) return
+
+    // Collect selections
+    const selections: Record<string, string | string[]> = {}
+    message.options.forEach((opt) => {
+      if (opt.selected !== undefined) {
+        selections[opt.id] = opt.selected
+      }
+    })
+
+    // Build prompt từ selections
+    const prompt = buildPromptFromSelections(selections)
+
+    // Gửi user message với selections
+    const userMsg: UiMessage = {
+      id: `${Date.now()}-user`,
+      role: 'user',
+      content: prompt,
+    }
+    setMessages((prev) => [...prev, userMsg])
+    setIsSending(true)
+    scrollToEnd()
+
+    try {
+      const history: ChatMessage[] = [
+        {
+          role: 'system',
+          content:
+            'Bạn là chuyên gia gợi ý nhà hàng dựa trên các tiêu chí cụ thể. Hãy gợi ý các quán ăn phù hợp với yêu cầu của người dùng, kèm theo lý do tại sao phù hợp.',
+        },
+        ...messages
+          .filter((m) => m.role === 'assistant' && !m.isInteractive)
+          .map((m) => ({ role: m.role, content: m.content } as ChatMessage)),
+        { role: 'user', content: prompt },
+      ]
+
+      const reply = await aiChatService.sendChat(history)
+      const aiMsg: UiMessage = {
+        id: `${Date.now()}-ai`,
+        role: 'assistant',
+        content: reply || 'Mình chưa nghe rõ, bạn nói lại được không?',
+      }
+      setMessages((prev) => [...prev, aiMsg])
+      scrollToEnd()
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Lỗi chat', text2: err?.message || 'Vui lòng thử lại.' })
+    } finally {
+      setIsSending(false)
+    }
+  }
+
   const renderItem = ({ item }: { item: UiMessage }) => {
     const isUser = item.role === 'user'
     
@@ -232,6 +339,15 @@ export default function ChatScreen() {
                 {index < lines.length - 1 && '\n'}
               </Text>
             ))}
+            {/* Render interactive options nếu có */}
+            {item.options && item.options.length > 0 && (
+              <InteractiveOptions
+                options={item.options}
+                onSelectionChange={(optionId, value) => handleOptionSelection(item.id, optionId, value)}
+                onSubmit={() => handleSubmitOptions(item.id)}
+                canSubmit={!isSending}
+              />
+            )}
             {/* Render restaurant cards nếu có */}
             {item.restaurants && item.restaurants.length > 0 && (
               <View style={styles.restaurantsContainer}>
