@@ -1,7 +1,9 @@
 import { GEMINI_API_KEY } from '@/constants'
+import RestaurantCard from '@/components/chat/RestaurantCard'
 import { useLocation } from '@/hooks/useLocation'
 import { aiChatService, type ChatMessage } from '@/services/AIChatService'
 import { GoongService } from '@/services/GoongService'
+import { formatAIText, parseAITextToLines } from '@/utils/formatAIText'
 import { Ionicons } from '@expo/vector-icons'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { LinearGradient } from 'expo-linear-gradient'
@@ -13,6 +15,7 @@ type UiMessage = {
   id: string
   role: 'user' | 'assistant'
   content: string
+  restaurants?: string[] // Danh sách restaurants để render cards
 }
 
 export default function ChatScreen() {
@@ -151,18 +154,15 @@ export default function ChatScreen() {
         }
       }
 
-      // Format kết quả
-      let resultText = '🍽️ **Các quán ăn xung quanh bạn:**\n\n'
-      if (allResults.length > 0) {
-        // Giới hạn 10 quán đầu tiên
-        const topResults = allResults.slice(0, 10)
-        topResults.forEach((result, index) => {
-          resultText += `${index + 1}. ${result}\n`
-        })
+      // Format kết quả - Chỉ lấy đúng 10 quán đầu tiên
+      const topResults = allResults.slice(0, 10)
+      let resultText = '🍽️ Các quán ăn xung quanh bạn:\n\n'
+      if (topResults.length > 0) {
         if (allResults.length > 10) {
-          resultText += `\n... và ${allResults.length - 10} quán khác nữa!`
+          resultText += `Tìm thấy ${allResults.length} quán trong bán kính 5km. Hiển thị 10 quán gần nhất:\n\n`
+        } else {
+          resultText += `Tìm thấy ${allResults.length} quán trong bán kính 5km:\n\n`
         }
-        resultText += `\n\n📍 Tìm thấy ${allResults.length} quán trong bán kính 5km từ vị trí của bạn.`
       } else {
         resultText = 'Không tìm thấy quán ăn nào trong bán kính 5km. Bạn thử mở rộng phạm vi tìm kiếm nhé!'
       }
@@ -173,7 +173,8 @@ export default function ChatScreen() {
         const aiMsg: UiMessage = { 
           id: `${Date.now()}-ai`, 
           role: 'assistant', 
-          content: resultText 
+          content: resultText,
+          restaurants: topResults.length > 0 ? topResults : undefined
         }
         return [...filtered, aiMsg]
       })
@@ -212,6 +213,11 @@ export default function ChatScreen() {
 
   const renderItem = ({ item }: { item: UiMessage }) => {
     const isUser = item.role === 'user'
+    
+    // Format AI response text
+    const formattedContent = isUser ? item.content : formatAIText(item.content)
+    const lines = isUser ? [item.content] : parseAITextToLines(item.content)
+    
     return (
       <View style={[styles.messageRow, isUser ? styles.messageRowUser : styles.messageRowAssistant]}>
         {isUser ? (
@@ -220,7 +226,20 @@ export default function ChatScreen() {
           </LinearGradient>
         ) : (
           <View style={styles.aiBubble}>
-            <Text style={styles.aiText}>{item.content}</Text>
+            {lines.map((line, index) => (
+              <Text key={index} style={styles.aiText}>
+                {line}
+                {index < lines.length - 1 && '\n'}
+              </Text>
+            ))}
+            {/* Render restaurant cards nếu có */}
+            {item.restaurants && item.restaurants.length > 0 && (
+              <View style={styles.restaurantsContainer}>
+                {item.restaurants.map((restaurant, index) => (
+                  <RestaurantCard key={index} restaurantName={restaurant} index={index} />
+                ))}
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -353,6 +372,7 @@ const styles = StyleSheet.create({
   userText: { color: '#fff', fontSize: 15 },
   aiBubble: { maxWidth: '85%', backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#E5E7EB' },
   aiText: { color: '#111827', fontSize: 15 },
+  restaurantsContainer: { marginTop: 12, gap: 8 },
 
   quickActionsContainer: { backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10 },
   quickActionsContent: { paddingHorizontal: 12, gap: 8, alignItems: 'center' },

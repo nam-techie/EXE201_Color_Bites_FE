@@ -15,7 +15,7 @@ import { GoongService, debounce, type GoongAutocompletePrediction } from '@/serv
 import type { Suggestion as SearchBarSuggestion } from '@/components/common/SearchBar'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Alert,
@@ -68,6 +68,7 @@ const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
 export default function MapScreen() {
   const { user } = useAuth()
   const router = useRouter()
+  const params = useLocalSearchParams<{ search?: string }>()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
@@ -249,6 +250,16 @@ export default function MapScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProfile])
+
+  // Handle search query from chat
+  useEffect(() => {
+    if (params.search) {
+      const decodedSearch = decodeURIComponent(params.search)
+      setSearchQuery(decodedSearch)
+      // Trigger autocomplete search
+      debouncedAutocomplete(decodedSearch)
+    }
+  }, [params.search])
 
   const getResponsiveStrokeWidth = () => {
     const zoom = mapRegion.latitudeDelta
