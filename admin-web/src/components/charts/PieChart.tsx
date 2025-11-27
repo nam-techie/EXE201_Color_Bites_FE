@@ -12,7 +12,7 @@ interface PieChartProps {
   data: Array<{
     name: string
     value: number
-    color: string
+    color?: string
   }>
   height?: number
   showLegend?: boolean
@@ -22,6 +22,8 @@ interface PieChartProps {
   innerRadius?: number
   outerRadius?: number
 }
+
+const fallbackColors = ['#3b82f6', '#10b981', '#f97316', '#8b5cf6', '#ec4899', '#14b8a6']
 
 const PieChart: React.FC<PieChartProps> = ({
   data,
@@ -72,7 +74,10 @@ const PieChart: React.FC<PieChartProps> = ({
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell
+                key={`cell-${index}`}
+                fill={entry.color ?? fallbackColors[index % fallbackColors.length]}
+              />
             ))}
           </Pie>
           <Tooltip
