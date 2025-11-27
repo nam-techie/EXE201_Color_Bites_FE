@@ -54,6 +54,9 @@ A: Xem phần "Lấy Google Maps API Key" trong [TOM_TAT_DU_AN.md](./TOM_TAT_DU_
 **Q: Gặp lỗi "API key not configured"?**  
 A: Xem phần "Xử lý lỗi thường gặp" trong [TOM_TAT_DU_AN.md](./TOM_TAT_DU_AN.md)
 
+**Q: AI chat báo lỗi khóa Gemini?**  
+A: Đảm bảo bạn đã đặt `EXPO_PUBLIC_GEMINI_API_KEY` trong `.env` (và không commit khóa này lên repo).
+
 **Q: Muốn đổi từ Google Maps sang OpenStreetMap?**  
 A: Xem phần "Chuyển đổi Provider" trong [TOM_TAT_DU_AN.md](./TOM_TAT_DU_AN.md)
 

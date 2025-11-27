@@ -38,10 +38,18 @@ if (__DEV__) {
 // Gemini Configuration
 const geminiEnvKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY
 const geminiExtraKey = (Constants?.expoConfig as any)?.extra?.GEMINI_API_KEY as string | undefined
-export const GEMINI_API_KEY = geminiEnvKey || geminiExtraKey || 'AIzaSyBZvlgYVcB_3_TUIVWydsqe_IizB4OFZJM'
+export const GEMINI_API_KEY = geminiEnvKey || geminiExtraKey || ''
 
-if (__DEV__) {
-  console.log('[ENV DEBUG] Gemini key configured:', GEMINI_API_KEY ? 'yes' : 'no')
+if (!GEMINI_API_KEY) {
+  const message =
+    '[ENV CONFIG] GEMINI_API_KEY chưa được cấu hình. Hãy đặt EXPO_PUBLIC_GEMINI_API_KEY trong .env hoặc expo.extra.GEMINI_API_KEY trong app.json.'
+  if (__DEV__) {
+    throw new Error(message)
+  } else {
+    console.error(message)
+  }
+} else if (__DEV__) {
+  console.log('[ENV DEBUG] Gemini key source:', geminiEnvKey ? 'env' : 'extra', 'length:', GEMINI_API_KEY.length)
 }
 
 // Backend API Configuration
