@@ -15,30 +15,30 @@
 
 @layer components {
   .sidebar-link {
-    @apply flex items-center px-4 py-3 text-gray-700 hover:bg-primary-50 hover:text-primary-700 transition-colors duration-200 rounded-lg mx-2;
+    @apply flex items-center px-4 py-3 text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition-all duration-200 rounded-xl mx-3 mb-1 font-medium;
   }
   
   .sidebar-link.active {
-    @apply bg-primary-100 text-primary-700 font-medium;
+    @apply bg-primary-50 text-primary-600 shadow-sm;
   }
   
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    @apply bg-white rounded-xl shadow-card border border-gray-100/50 transition-all duration-300 hover:shadow-lg;
   }
   
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+    @apply bg-primary-600 hover:bg-primary-700 text-white px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md active:scale-95;
   }
   
   .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors duration-200;
+    @apply bg-white hover:bg-gray-50 text-gray-700 border border-gray-200 px-5 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-sm hover:shadow-md active:scale-95;
   }
   
-  .btn-success {
-    @apply bg-success-500 hover:bg-success-600 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200;
+  .btn-ghost {
+    @apply text-gray-600 hover:bg-gray-100 px-4 py-2 rounded-lg font-medium transition-colors duration-200;
   }
   
-  .btn-error {
-    @apply bg-error-500 hover:bg-error-600 text-white px-3 py-1 rounded-md text-sm font-medium transition-colors duration-200;
+  .input-field {
+    @apply w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-primary-500 transition-all duration-200;
   }
 }

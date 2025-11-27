@@ -1,21 +1,44 @@
-import { OPENAI_API_KEY } from '@/constants'
+import { GEMINI_API_KEY } from '@/constants'
+import RestaurantCard from '@/components/chat/RestaurantCard'
+import InteractiveOptions from '@/components/chat/InteractiveOptions'
+import { useLocation } from '@/hooks/useLocation'
 import { aiChatService, type ChatMessage } from '@/services/AIChatService'
+import { GoongService } from '@/services/GoongService'
+import { buildPromptFromSelections, getFindByTypeOptions } from '@/utils/chatOptions'
+import { formatAIText, parseAITextToLines } from '@/utils/formatAIText'
 import { Ionicons } from '@expo/vector-icons'
 import MaskedView from '@react-native-masked-view/masked-view'
 import { LinearGradient } from 'expo-linear-gradient'
 import React, { useMemo, useRef, useState } from 'react'
-import { FlatList, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
+import { FlatList, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'
 import Toast from 'react-native-toast-message'
+
+export type OptionType = 'radio' | 'checkbox'
+
+export interface ChatOption {
+  id: string
+  label: string
+  type: OptionType
+  options: {
+    value: string
+    label: string
+  }[]
+  selected?: string | string[] // string cho radio, string[] cho checkbox
+}
 
 type UiMessage = {
   id: string
   role: 'user' | 'assistant'
   content: string
+  restaurants?: string[] // Danh sách restaurants để render cards
+  options?: ChatOption[] // Interactive options
+  isInteractive?: boolean // Flag để biết message có options không
 }
 
 export default function ChatScreen() {
   const [inputText, setInputText] = useState('')
   const [isSending, setIsSending] = useState(false)
+  const [isFindingNearby, setIsFindingNearby] = useState(false)
   const [messages, setMessages] = useState<UiMessage[]>([
     {
       id: 'welcome',
@@ -24,8 +47,9 @@ export default function ChatScreen() {
     },
   ])
   const listRef = useRef<FlatList<UiMessage>>(null)
+  const { getCurrentLocation, isLoading: isLocationLoading } = useLocation()
 
-  const canSend = useMemo(() => inputText.trim().length > 0 && !isSending && !!OPENAI_API_KEY, [inputText, isSending])
+  const canSend = useMemo(() => inputText.trim().length > 0 && !isSending && !!GEMINI_API_KEY, [inputText, isSending])
 
   const scrollToEnd = () => {
     requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }))
@@ -34,8 +58,8 @@ export default function ChatScreen() {
   const handleSend = async () => {
     const text = inputText.trim()
     if (!text || isSending) return
-    if (!OPENAI_API_KEY) {
-      Toast.show({ type: 'error', text1: 'Thiếu API Key', text2: 'Hãy cấu hình OPENAI_API_KEY trước khi chat.' })
+    if (!GEMINI_API_KEY) {
+      Toast.show({ type: 'error', text1: 'Thiếu API Key', text2: 'Hãy cấu hình GEMINI_API_KEY trước khi chat.' })
       return
     }
 
@@ -63,8 +87,244 @@ export default function ChatScreen() {
     }
   }
 
+  const handleQuickAction = async (messageText: string) => {
+    if (isSending || isFindingNearby) return
+    if (!GEMINI_API_KEY) {
+      Toast.show({ type: 'error', text1: 'Thiếu API Key', text2: 'Hãy cấu hình GEMINI_API_KEY trước khi chat.' })
+      return
+    }
+
+    // Special handling for "Tìm theo loại"
+    if (messageText.includes('Tìm theo loại') || messageText.includes('tìm theo loại')) {
+      const userMsg: UiMessage = { id: `${Date.now()}-user`, role: 'user', content: messageText }
+      setMessages((prev) => [...prev, userMsg])
+      scrollToEnd()
+
+      // Trả về message với interactive options
+      const options = getFindByTypeOptions()
+      const aiMsg: UiMessage = {
+        id: `${Date.now()}-ai`,
+        role: 'assistant',
+        content: 'Chào bạn! Để Mumi có thể giúp bạn tìm quán ăn phù hợp nhất theo loại món, bạn vui lòng cho Mumi biết thêm một vài thông tin nhé:',
+        options: options,
+        isInteractive: true,
+      }
+      setMessages((prev) => [...prev, aiMsg])
+      scrollToEnd()
+      return
+    }
+
+    // Normal flow cho các quick actions khác
+    const userMsg: UiMessage = { id: `${Date.now()}-user`, role: 'user', content: messageText }
+    setMessages((prev) => [...prev, userMsg])
+    setIsSending(true)
+    scrollToEnd()
+
+    try {
+      const history: ChatMessage[] = [
+        { role: 'system', content: 'Bạn là trợ lí gợi ý món ăn và địa điểm cho ứng dụng Mumi.' },
+        ...messages.map((m) => ({ role: m.role, content: m.content } as ChatMessage)),
+        { role: 'user', content: messageText },
+      ]
+
+      const reply = await aiChatService.sendChat(history)
+      const aiMsg: UiMessage = { id: `${Date.now()}-ai`, role: 'assistant', content: reply || 'Mình chưa nghe rõ, bạn nói lại được không?' }
+      setMessages((prev) => [...prev, aiMsg])
+      scrollToEnd()
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Lỗi chat', text2: err?.message || 'Vui lòng thử lại.' })
+    } finally {
+      setIsSending(false)
+    }
+  }
+
+  const handleFindNearbyRestaurants = async () => {
+    if (isFindingNearby || isLocationLoading) return
+
+    setIsFindingNearby(true)
+    scrollToEnd()
+    const loadingId = `loading-${Date.now()}` // Khai báo ở đây để có thể dùng trong catch
+
+    try {
+      // Lấy vị trí hiện tại
+      const location = await getCurrentLocation()
+      if (!location) {
+        Toast.show({ type: 'error', text1: 'Không lấy được vị trí', text2: 'Vui lòng cho phép truy cập vị trí để tìm quán xung quanh.' })
+        setIsFindingNearby(false)
+        return
+      }
+
+      // Thêm user message
+      const userMsg: UiMessage = { 
+        id: `${Date.now()}-user`, 
+        role: 'user', 
+        content: '📍 Tìm quán xung quanh' 
+      }
+      setMessages((prev) => [...prev, userMsg])
+      scrollToEnd()
+
+      // Thêm loading message
+      const loadingMsg: UiMessage = { 
+        id: loadingId, 
+        role: 'assistant', 
+        content: 'Đang tìm quán xung quanh bạn...' 
+      }
+      setMessages((prev) => [...prev, loadingMsg])
+      scrollToEnd()
+
+      // Tìm quán xung quanh
+      const searchQueries = ['nhà hàng', 'quán ăn', 'restaurant']
+      const allResults: string[] = []
+
+      for (const query of searchQueries) {
+        const response = await GoongService.autocomplete(
+          query,
+          { lat: location.latitude, lng: location.longitude },
+          5000 // 5km radius
+        )
+
+        if (response.predictions && response.predictions.length > 0) {
+          response.predictions.forEach((prediction) => {
+            if (!allResults.some(r => r.includes(prediction.description))) {
+              allResults.push(prediction.description)
+            }
+          })
+        }
+      }
+
+      // Format kết quả - Chỉ lấy đúng 10 quán đầu tiên
+      const topResults = allResults.slice(0, 10)
+      let resultText = '🍽️ Các quán ăn xung quanh bạn:\n\n'
+      if (topResults.length > 0) {
+        if (allResults.length > 10) {
+          resultText += `Tìm thấy ${allResults.length} quán trong bán kính 5km. Hiển thị 10 quán gần nhất:\n\n`
+        } else {
+          resultText += `Tìm thấy ${allResults.length} quán trong bán kính 5km:\n\n`
+        }
+      } else {
+        resultText = 'Không tìm thấy quán ăn nào trong bán kính 5km. Bạn thử mở rộng phạm vi tìm kiếm nhé!'
+      }
+
+      // Xóa loading message và thêm kết quả
+      setMessages((prev) => {
+        const filtered = prev.filter(m => m.id !== loadingId)
+        const aiMsg: UiMessage = { 
+          id: `${Date.now()}-ai`, 
+          role: 'assistant', 
+          content: resultText,
+          restaurants: topResults.length > 0 ? topResults : undefined
+        }
+        return [...filtered, aiMsg]
+      })
+      scrollToEnd()
+
+    } catch (error: any) {
+      console.error('Error finding nearby restaurants:', error)
+      
+      // Xóa loading message nếu có
+      setMessages((prev) => {
+        const filtered = prev.filter(m => m.id !== loadingId)
+        const errorMsg: UiMessage = { 
+          id: `${Date.now()}-ai`, 
+          role: 'assistant', 
+          content: 'Xin lỗi, mình không thể tìm quán xung quanh lúc này. Bạn thử lại sau nhé!' 
+        }
+        return [...filtered, errorMsg]
+      })
+      scrollToEnd()
+      
+      // Hiển thị toast error
+      const errorMessage = error?.message || 'Vui lòng thử lại sau.'
+      if (errorMessage.includes('permission') || errorMessage.includes('Permission')) {
+        Toast.show({ 
+          type: 'error', 
+          text1: 'Cần quyền truy cập vị trí', 
+          text2: 'Vui lòng cho phép ứng dụng truy cập vị trí để tìm quán xung quanh.' 
+        })
+      } else {
+        Toast.show({ type: 'error', text1: 'Lỗi tìm quán', text2: errorMessage })
+      }
+    } finally {
+      setIsFindingNearby(false)
+    }
+  }
+
+  const handleOptionSelection = (messageId: string, optionId: string, value: string | string[]) => {
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id === messageId && msg.options) {
+          return {
+            ...msg,
+            options: msg.options.map((opt) =>
+              opt.id === optionId ? { ...opt, selected: value } : opt
+            ),
+          }
+        }
+        return msg
+      })
+    )
+  }
+
+  const handleSubmitOptions = async (messageId: string) => {
+    const message = messages.find((m) => m.id === messageId)
+    if (!message || !message.options) return
+
+    // Collect selections
+    const selections: Record<string, string | string[]> = {}
+    message.options.forEach((opt) => {
+      if (opt.selected !== undefined) {
+        selections[opt.id] = opt.selected
+      }
+    })
+
+    // Build prompt từ selections
+    const prompt = buildPromptFromSelections(selections)
+
+    // Gửi user message với selections
+    const userMsg: UiMessage = {
+      id: `${Date.now()}-user`,
+      role: 'user',
+      content: prompt,
+    }
+    setMessages((prev) => [...prev, userMsg])
+    setIsSending(true)
+    scrollToEnd()
+
+    try {
+      const history: ChatMessage[] = [
+        {
+          role: 'system',
+          content:
+            'Bạn là chuyên gia gợi ý nhà hàng dựa trên các tiêu chí cụ thể. Hãy gợi ý các quán ăn phù hợp với yêu cầu của người dùng, kèm theo lý do tại sao phù hợp.',
+        },
+        ...messages
+          .filter((m) => m.role === 'assistant' && !m.isInteractive)
+          .map((m) => ({ role: m.role, content: m.content } as ChatMessage)),
+        { role: 'user', content: prompt },
+      ]
+
+      const reply = await aiChatService.sendChat(history)
+      const aiMsg: UiMessage = {
+        id: `${Date.now()}-ai`,
+        role: 'assistant',
+        content: reply || 'Mình chưa nghe rõ, bạn nói lại được không?',
+      }
+      setMessages((prev) => [...prev, aiMsg])
+      scrollToEnd()
+    } catch (err: any) {
+      Toast.show({ type: 'error', text1: 'Lỗi chat', text2: err?.message || 'Vui lòng thử lại.' })
+    } finally {
+      setIsSending(false)
+    }
+  }
+
   const renderItem = ({ item }: { item: UiMessage }) => {
     const isUser = item.role === 'user'
+    
+    // Format AI response text
+    const formattedContent = isUser ? item.content : formatAIText(item.content)
+    const lines = isUser ? [item.content] : parseAITextToLines(item.content)
+    
     return (
       <View style={[styles.messageRow, isUser ? styles.messageRowUser : styles.messageRowAssistant]}>
         {isUser ? (
@@ -73,7 +333,29 @@ export default function ChatScreen() {
           </LinearGradient>
         ) : (
           <View style={styles.aiBubble}>
-            <Text style={styles.aiText}>{item.content}</Text>
+            {lines.map((line, index) => (
+              <Text key={index} style={styles.aiText}>
+                {line}
+                {index < lines.length - 1 && '\n'}
+              </Text>
+            ))}
+            {/* Render interactive options nếu có */}
+            {item.options && item.options.length > 0 && (
+              <InteractiveOptions
+                options={item.options}
+                onSelectionChange={(optionId, value) => handleOptionSelection(item.id, optionId, value)}
+                onSubmit={() => handleSubmitOptions(item.id)}
+                canSubmit={!isSending}
+              />
+            )}
+            {/* Render restaurant cards nếu có */}
+            {item.restaurants && item.restaurants.length > 0 && (
+              <View style={styles.restaurantsContainer}>
+                {item.restaurants.map((restaurant, index) => (
+                  <RestaurantCard key={index} restaurantName={restaurant} index={index} />
+                ))}
+              </View>
+            )}
           </View>
         )}
       </View>
@@ -91,7 +373,7 @@ export default function ChatScreen() {
             <LinearGradient colors={['#FF6B35', '#FF1493']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={{ flex: 1 }} />
           </MaskedView>
           <Text style={styles.headerTitle}>Trợ lí Mumi</Text>
-          {!OPENAI_API_KEY && (
+          {!GEMINI_API_KEY && (
             <View style={styles.keyBadgePlain}>
               <Text style={styles.keyBadgePlainText}>Hãy cấu hình API Key</Text>
             </View>
@@ -109,15 +391,69 @@ export default function ChatScreen() {
           onContentSizeChange={scrollToEnd}
         />
 
+        {/* Quick Actions */}
+        <View style={styles.quickActionsContainer}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.quickActionsContent}
+          >
+            <TouchableOpacity
+              style={[styles.quickActionButton, (isFindingNearby || isLocationLoading) && styles.quickActionButtonDisabled]}
+              onPress={handleFindNearbyRestaurants}
+              disabled={isFindingNearby || isLocationLoading}
+            >
+              <LinearGradient 
+                colors={['#FF6B35', '#FF1493']} 
+                start={{ x: 0, y: 0 }} 
+                end={{ x: 1, y: 0 }} 
+                style={styles.quickActionGradient}
+              >
+                <Ionicons 
+                  name={isFindingNearby ? 'hourglass' : 'location'} 
+                  size={16} 
+                  color="#ffffff" 
+                  style={styles.quickActionIcon}
+                />
+                <Text style={styles.quickActionText}>
+                  {isFindingNearby ? 'Đang tìm...' : 'Tìm quán xung quanh'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => handleQuickAction('Gợi ý món ăn hôm nay')}
+              disabled={isSending || isFindingNearby}
+            >
+              <View style={styles.quickActionButtonPlain}>
+                <Ionicons name="restaurant" size={16} color="#6B7280" style={styles.quickActionIcon} />
+                <Text style={styles.quickActionTextPlain}>Gợi ý món ăn</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.quickActionButton}
+              onPress={() => handleQuickAction('Tìm quán theo loại món')}
+              disabled={isSending || isFindingNearby}
+            >
+              <View style={styles.quickActionButtonPlain}>
+                <Ionicons name="search" size={16} color="#6B7280" style={styles.quickActionIcon} />
+                <Text style={styles.quickActionTextPlain}>Tìm theo loại</Text>
+              </View>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+
         <View style={styles.inputBar}>
           <TextInput
             style={styles.input}
-            placeholder={OPENAI_API_KEY ? 'Nhập tin nhắn...' : 'Vui lòng cấu hình OPENAI_API_KEY trước'}
+            placeholder={GEMINI_API_KEY ? 'Nhập tin nhắn...' : 'Vui lòng cấu hình GEMINI_API_KEY trước'}
             placeholderTextColor="#9CA3AF"
             value={inputText}
             onChangeText={setInputText}
             multiline
-            editable={!!OPENAI_API_KEY && !isSending}
+            editable={!!GEMINI_API_KEY && !isSending && !isFindingNearby}
           />
           <TouchableOpacity style={[styles.sendButton, (!canSend) && styles.sendButtonDisabled]} onPress={handleSend} disabled={!canSend}>
             <LinearGradient colors={['#FF6B35', '#FF1493']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.sendButtonGradient}>
@@ -152,6 +488,17 @@ const styles = StyleSheet.create({
   userText: { color: '#fff', fontSize: 15 },
   aiBubble: { maxWidth: '85%', backgroundColor: '#FFFFFF', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 16, borderBottomLeftRadius: 4, borderWidth: 1, borderColor: '#E5E7EB' },
   aiText: { color: '#111827', fontSize: 15 },
+  restaurantsContainer: { marginTop: 12, gap: 8 },
+
+  quickActionsContainer: { backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#E5E7EB', paddingVertical: 10 },
+  quickActionsContent: { paddingHorizontal: 12, gap: 8, alignItems: 'center' },
+  quickActionButton: { borderRadius: 20, overflow: 'hidden' },
+  quickActionButtonPlain: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', gap: 6 },
+  quickActionGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, gap: 6 },
+  quickActionIcon: { marginRight: 0 },
+  quickActionText: { color: '#FFFFFF', fontSize: 13, fontWeight: '600' },
+  quickActionTextPlain: { color: '#6B7280', fontSize: 13, fontWeight: '600' },
+  quickActionButtonDisabled: { opacity: 0.6 },
 
   inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 12, paddingVertical: 10, borderTopWidth: 1, borderTopColor: '#E5E7EB', gap: 8, backgroundColor: '#FFFFFF' },
   input: { flex: 1, maxHeight: 120, minHeight: 44, paddingHorizontal: 12, paddingVertical: 10, borderWidth: 1, borderColor: '#E5E7EB', borderRadius: 12, fontSize: 15, color: '#111827', backgroundColor: '#FFFFFF' },

@@ -22,6 +22,9 @@ EXPO_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_api_key_here
 
 # OpenRouteService API Key (Tùy chọn - dùng khi muốn dùng OpenStreetMap)
 EXPO_PUBLIC_OPENROUTE_API_KEY=your_openroute_key_here
+
+# Gemini API Key (Bắt buộc cho AI chat)
+EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_key_here
 ```
 
 ### 3. Lấy Google Maps API Key

@@ -36,7 +36,7 @@ export const MapProvider = {
   async fetchRestaurants(
     latitude: number,
     longitude: number,
-    radius: number = 2000,
+    radius: number = 5000,
   ): Promise<Restaurant[]> {
     return OpenStreetMapService.fetchRestaurantsNearby(latitude, longitude, radius)
   },

@@ -1,8 +1,8 @@
 'use client'
-import FilterButtons from '@/components/common/FilterButtons'
 import RestaurantDetailModal from '@/components/common/RestaurantDetailModal'
 import RestaurantSearchBar from '@/components/common/SearchBar'
 import CustomMarker from '@/components/map/CustomMapMarker'
+import MapFABGroup from '@/components/map/MapFABGroup'
 import MapSideMenu from '@/components/map/MapSideMenu'
 import RoutePlanningPanel from '@/components/map/RoutePlanningPanel'
 import RouteProfileSelector from '@/components/map/RouteProfileSelector'
@@ -11,9 +11,11 @@ import { useAuth } from '@/context/AuthProvider'
 import { MapProvider } from '@/services/MapProvider'
 import { userService } from '@/services/UserService'
 import type { MapRegion, Restaurant } from '@/type/location'
+import { GoongService, debounce, type GoongAutocompletePrediction } from '@/services/GoongService'
+import type { Suggestion as SearchBarSuggestion } from '@/components/common/SearchBar'
 import { Ionicons } from '@expo/vector-icons'
 import * as Location from 'expo-location'
-import { useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Alert,
@@ -27,6 +29,7 @@ import {
   View
 } from 'react-native'
 import MapView, { Polyline } from 'react-native-maps'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface RouteStop {
   restaurant: Restaurant
@@ -65,6 +68,7 @@ const ScaleButton = ({ onPress, style, iconName, iconColor }: any) => {
 export default function MapScreen() {
   const { user } = useAuth()
   const router = useRouter()
+  const params = useLocalSearchParams<{ search?: string }>()
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null)
   const [modalVisible, setModalVisible] = useState(false)
@@ -84,9 +88,15 @@ export default function MapScreen() {
 
   // New states for search bar and menu
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState('all')
   const [menuVisible, setMenuVisible] = useState(false)
   const [userAvatar, setUserAvatar] = useState<string | null>(null)
+  
+  // Autocomplete states
+  const [suggestions, setSuggestions] = useState<SearchBarSuggestion[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  
+  // FAB Group state
+  const [fabExpanded, setFabExpanded] = useState(false)
 
   const panelY = useRef(new Animated.Value(0)).current
   const panResponder = useRef(
@@ -224,7 +234,7 @@ export default function MapScreen() {
           latitudeDelta: 0.05,
           longitudeDelta: 0.05,
         })
-        const data = await MapProvider.fetchRestaurants(latitude, longitude)
+        const data = await MapProvider.fetchRestaurants(latitude, longitude, 10000)
         setRestaurants(data)
       } catch {
         Alert.alert('Lỗi', 'Không thể tải dữ liệu hoặc vị trí')
@@ -241,6 +251,16 @@ export default function MapScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProfile])
 
+  // Handle search query from chat
+  useEffect(() => {
+    if (params.search) {
+      const decodedSearch = decodeURIComponent(params.search)
+      setSearchQuery(decodedSearch)
+      // Trigger autocomplete search
+      debouncedAutocomplete(decodedSearch)
+    }
+  }, [params.search])
+
   const getResponsiveStrokeWidth = () => {
     const zoom = mapRegion.latitudeDelta
     if (zoom < 0.01) return 8
@@ -249,7 +269,7 @@ export default function MapScreen() {
     return 2
   }
 
-  const handleMarkerPress = (restaurant: Restaurant) => {
+  const handleMarkerPress = async (restaurant: Restaurant) => {
     if (routePlanningMode) {
       const isAlreadyAdded = routeStops.some((stop) => stop.restaurant.id === restaurant.id)
       if (!isAlreadyAdded) {
@@ -258,8 +278,70 @@ export default function MapScreen() {
         calculateRouteForStops(newStops)
       }
     } else {
-      setSelectedRestaurant(restaurant)
-      setModalVisible(true)
+      // Enrich restaurant data từ Goong
+      try {
+        // Bước 1: Reverse Geocode để lấy địa chỉ chính xác từ lat/lon
+        const reverseGeocodeResult = await GoongService.reverseGeocode(
+          restaurant.lat,
+          restaurant.lon,
+        )
+
+        // Bước 2: Tìm restaurant trong Goong database (nếu có)
+        const goongPlace = await GoongService.findRestaurantInGoong(
+          restaurant.name,
+          restaurant.lat,
+          restaurant.lon,
+          500, // 500m radius
+        )
+
+        // Merge thông tin: ưu tiên Goong Place Detail, fallback Reverse Geocode, cuối cùng là OSM
+        const enrichedRestaurant: Restaurant = {
+          ...restaurant,
+          // Ưu tiên formatted_address từ Goong Place Detail
+          formatted_address:
+            goongPlace?.formatted_address ||
+            reverseGeocodeResult.results[0]?.formatted_address ||
+            restaurant.formatted_address,
+          place_id: goongPlace?.place_id || restaurant.place_id,
+          tags: {
+            ...restaurant.tags,
+            // Ưu tiên Goong data, fallback về OSM
+            phone: goongPlace?.phone || restaurant.tags.phone,
+            website: goongPlace?.website || restaurant.tags.website,
+            rating: goongPlace?.rating || restaurant.tags.rating,
+            opening_hours: goongPlace?.opening_hours || restaurant.tags.opening_hours,
+          },
+        }
+
+        setSelectedRestaurant(enrichedRestaurant)
+        setModalVisible(true)
+      } catch (error) {
+        // Nếu Goong fail, thử reverse geocode đơn giản
+        try {
+          const reverseGeocodeResult = await GoongService.reverseGeocode(
+            restaurant.lat,
+            restaurant.lon,
+          )
+          if (reverseGeocodeResult.results && reverseGeocodeResult.results.length > 0) {
+            const enrichedRestaurant: Restaurant = {
+              ...restaurant,
+              formatted_address:
+                reverseGeocodeResult.results[0].formatted_address || restaurant.formatted_address,
+            }
+            setSelectedRestaurant(enrichedRestaurant)
+            setModalVisible(true)
+          } else {
+            // Fallback về OSM data
+            setSelectedRestaurant(restaurant)
+            setModalVisible(true)
+          }
+        } catch (reverseError) {
+          console.error('Error reverse geocoding:', reverseError)
+          // Cuối cùng fallback về OSM data
+          setSelectedRestaurant(restaurant)
+          setModalVisible(true)
+        }
+      }
     }
   }
 
@@ -293,15 +375,90 @@ export default function MapScreen() {
     calculateRouteForStops(updatedStops)
   }
 
+  // Debounced autocomplete function
+  const debouncedAutocomplete = useRef(
+    debounce(async (query: string) => {
+      if (!query || query.trim().length < 2) {
+        setSuggestions([])
+        setIsSearching(false)
+        return
+      }
+
+      try {
+        setIsSearching(true)
+        const location = userLocation
+          ? {
+              lat: userLocation.coords.latitude,
+              lng: userLocation.coords.longitude,
+            }
+          : undefined
+
+        const response = await GoongService.autocomplete(query, location, 10000)
+        setSuggestions(response.predictions || [])
+      } catch (error) {
+        console.error('Autocomplete error:', error)
+        setSuggestions([])
+      } finally {
+        setIsSearching(false)
+      }
+    }, 400),
+  ).current
+
   // Handler functions for search bar and menu
   const handleSearchChange = (query: string) => {
     setSearchQuery(query)
-    // TODO: Implement search functionality with backend API
-    // This will search both restaurants and places
+    debouncedAutocomplete(query)
   }
 
   const handleClearSearch = () => {
     setSearchQuery('')
+    setSuggestions([])
+    setIsSearching(false)
+  }
+
+  // Handle suggestion selection
+  const handleSelectSuggestion = async (suggestion: SearchBarSuggestion) => {
+    try {
+      const placeDetail = await GoongService.getPlaceDetail(suggestion.place_id)
+      if (!placeDetail || !placeDetail.geometry) {
+        Alert.alert('Lỗi', 'Không thể lấy thông tin địa điểm')
+        return
+      }
+
+      const { lat, lng } = placeDetail.geometry.location
+
+      // Di chuyển map đến vị trí được chọn
+      setMapRegion({
+        latitude: lat,
+        longitude: lng,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      })
+
+      // Animate map to location
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(
+          {
+            latitude: lat,
+            longitude: lng,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          500,
+        )
+      }
+
+      // Fetch restaurants near the selected location
+      const nearbyRestaurants = await MapProvider.fetchRestaurants(lat, lng, 10000)
+      setRestaurants(nearbyRestaurants)
+
+      // Clear search
+      setSearchQuery('')
+      setSuggestions([])
+    } catch (error) {
+      console.error('Error getting place detail:', error)
+      Alert.alert('Lỗi', 'Không thể lấy thông tin địa điểm')
+    }
   }
 
   const handleMenuPress = () => {
@@ -317,13 +474,8 @@ export default function MapScreen() {
     Alert.alert('Voice Search', 'Tính năng tìm kiếm bằng giọng nói sắp ra mắt!')
   }
 
-  const handleFilterChange = (filter: string) => {
-    setSelectedFilter(filter)
-    // TODO: Implement filter logic for restaurants
-  }
-
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -363,12 +515,9 @@ export default function MapScreen() {
         onAvatarPress={handleAvatarPress}
         onMicPress={handleMicPress}
         avatarUrl={userAvatar}
-      />
-
-      {/* Filter Buttons */}
-      <FilterButtons
-        selectedFilter={selectedFilter}
-        onFilterChange={handleFilterChange}
+        suggestions={suggestions}
+        onSelectSuggestion={handleSelectSuggestion}
+        loading={isSearching}
       />
 
       {/* Side Menu */}
@@ -448,24 +597,16 @@ export default function MapScreen() {
         </>
       )}
 
-      {/* My Location Button - Google Maps style */}
-      <TouchableOpacity
-        onPress={handleMyLocation}
-        style={styles.myLocationButton}
-      >
-        <Ionicons name="locate" size={24} color="#5F6368" />
-      </TouchableOpacity>
-
-      {/* Layers Button - bottom right */}
-      <TouchableOpacity
-        style={styles.layersButton}
-        onPress={() => {
+      {/* FAB Group - My Location & Layers */}
+      <MapFABGroup
+        onMyLocationPress={handleMyLocation}
+        onLayersPress={() => {
           // TODO: Implement map layers (satellite, terrain, traffic)
           Alert.alert('Layers', 'Chọn loại bản đồ')
         }}
-      >
-        <Ionicons name="layers" size={24} color="#5F6368" />
-      </TouchableOpacity>
+        expanded={fabExpanded}
+        onToggle={() => setFabExpanded(!fabExpanded)}
+      />
 
       <RestaurantDetailModal
         restaurant={selectedRestaurant}
@@ -476,55 +617,13 @@ export default function MapScreen() {
         }}
         onNavigateToRestaurant={handleNavigateToRestaurant}
       />
-    </View>
+    </SafeAreaView>
   )
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-  
-  // Google Maps style buttons
-  myLocationButton: {
-    position: 'absolute',
-    bottom: 200,
-    right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
-    zIndex: 10,
-  },
-  layersButton: {
-    position: 'absolute',
-    bottom: 140,
-    right: 16,
-    width: 48,
-    height: 48,
-    backgroundColor: '#ffffff',
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
-    zIndex: 10,
-  },
   
   // Route planning buttons (keep existing)
   routePlanningButton: {

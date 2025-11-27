@@ -33,8 +33,8 @@ export interface DashboardData {
   loading: boolean
   error: string | null
   kpis: DashboardKpi[]
-  contentDistribution: Array<{ name: string; value: number; color: string }>
-  userStatus: Array<{ name: string; value: number; color: string }>
+  contentDistribution: Array<{ name: string; value: number; color?: string }>
+  userStatus: Array<{ name: string; value: number; color?: string }>
   userPostGrowth: Array<{ month: string; users: number; posts: number }>
   revenueSeries: Array<{ label: string; revenue: number }>
   topPosts: DashboardTopItem[]
@@ -61,6 +61,13 @@ export function useDashboardStats(filters: DashboardFilters): DashboardData {
     try {
       setLoading(true)
       setError(null)
+
+      const params = {
+        period: filters.period,
+        startDate: filters.dateRange?.start,
+        endDate: filters.dateRange?.end
+      }
+
       const [
         sysRes,
         userRes,
@@ -68,11 +75,11 @@ export function useDashboardStats(filters: DashboardFilters): DashboardData {
         restRes,
         revRes
       ] = await Promise.all([
-        statisticsApi.getSystemStatistics() as Promise<ApiResponse<any>>,
-        statisticsApi.getUserStatistics() as Promise<ApiResponse<any>>,
-        statisticsApi.getPostStatistics() as Promise<ApiResponse<any>>,
-        statisticsApi.getRestaurantStatistics() as Promise<ApiResponse<any>>,
-        statisticsApi.getRevenueStatistics() as Promise<ApiResponse<any>>
+        statisticsApi.getSystemStatistics(params) as Promise<ApiResponse<any>>,
+        statisticsApi.getUserStatistics(params) as Promise<ApiResponse<any>>,
+        statisticsApi.getPostStatistics(params) as Promise<ApiResponse<any>>,
+        statisticsApi.getRestaurantStatistics(params) as Promise<ApiResponse<any>>,
+        statisticsApi.getRevenueStatistics(params) as Promise<ApiResponse<any>>
       ])
 
       setSystem(sysRes.data)
@@ -85,7 +92,7 @@ export function useDashboardStats(filters: DashboardFilters): DashboardData {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [filters.period, filters.dateRange?.start, filters.dateRange?.end])
 
   useEffect(() => {
     fetchAll()
@@ -175,10 +182,10 @@ export function useDashboardStats(filters: DashboardFilters): DashboardData {
     const list = system?.topPosts || []
     return Array.isArray(list)
       ? list.slice(0, 5).map((it: any) => ({
-          id: String(it.id ?? it.postId ?? it.slug ?? it.name),
-          name: it.title ?? it.name ?? `#${it.id}`,
-          value: toSafeNumber(it.score ?? it.views ?? it.reactions ?? it.count)
-        }))
+        id: String(it.id ?? it.postId ?? it.slug ?? it.name),
+        name: it.title ?? it.name ?? `#${it.id}`,
+        value: toSafeNumber(it.score ?? it.views ?? it.reactions ?? it.count)
+      }))
       : []
   }, [system])
 
@@ -186,10 +193,10 @@ export function useDashboardStats(filters: DashboardFilters): DashboardData {
     const list = system?.topRestaurants || []
     return Array.isArray(list)
       ? list.slice(0, 5).map((it: any) => ({
-          id: String(it.id ?? it.restaurantId ?? it.slug ?? it.name),
-          name: it.name ?? `#${it.id}`,
-          value: toSafeNumber(it.rating ?? it.score ?? it.count)
-        }))
+        id: String(it.id ?? it.restaurantId ?? it.slug ?? it.name),
+        name: it.name ?? `#${it.id}`,
+        value: toSafeNumber(it.rating ?? it.score ?? it.count)
+      }))
       : []
   }, [system])
 
@@ -197,10 +204,10 @@ export function useDashboardStats(filters: DashboardFilters): DashboardData {
     const list = system?.topUsers || []
     return Array.isArray(list)
       ? list.slice(0, 5).map((it: any) => ({
-          id: String(it.id ?? it.userId ?? it.username),
-          name: it.username ?? it.name ?? `#${it.id}`,
-          value: toSafeNumber(it.activityScore ?? it.count)
-        }))
+        id: String(it.id ?? it.userId ?? it.username),
+        name: it.username ?? it.name ?? `#${it.id}`,
+        value: toSafeNumber(it.activityScore ?? it.count)
+      }))
       : []
   }, [system])
 
