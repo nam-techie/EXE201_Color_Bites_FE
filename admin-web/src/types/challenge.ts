@@ -83,22 +83,22 @@ export interface ChallengeStats {
 export const CHALLENGE_TYPE_CONFIG = {
   FOOD_CHALLENGE: {
     label: 'Thử thách ăn uống',
-    icon: '🍽️',
+    icon: 'utensils',
     color: '#52c41a'
   },
   PHOTO_CHALLENGE: {
     label: 'Thử thách chụp ảnh',
-    icon: '📸',
+    icon: 'camera',
     color: '#1890ff'
   },
   REVIEW_CHALLENGE: {
     label: 'Thử thách đánh giá',
-    icon: '⭐',
+    icon: 'star',
     color: '#faad14'
   },
   SOCIAL_CHALLENGE: {
     label: 'Thử thách xã hội',
-    icon: '👥',
+    icon: 'users',
     color: '#722ed1'
   }
 }

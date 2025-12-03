@@ -1,13 +1,13 @@
 import {
-    DeleteOutlined,
-    EditOutlined,
-    EyeOutlined,
-    PlusOutlined,
-    PoweroffOutlined,
-    TrophyOutlined
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  PlusOutlined,
+  PoweroffOutlined,
+  TrophyOutlined
 } from '@ant-design/icons'
-import { Download } from 'lucide-react'
 import { Button, Card, message, Tag } from 'antd'
+import { Download } from 'lucide-react'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import DataTable, { DataTableAction, DataTableColumn } from '../../components/common/DataTable'
@@ -101,12 +101,9 @@ const ChallengesList: React.FC = () => {
       key: 'type',
       title: 'Loại',
       render: (_, record) => {
-        const config = CHALLENGE_TYPE_CONFIG[record.type] || { icon: '📋', label: record.challengeType || 'N/A', color: '#666' }
+        const config = CHALLENGE_TYPE_CONFIG[record.type] || { label: record.challengeType || 'N/A', color: '#666' }
         return (
-          <div className="flex items-center space-x-2">
-            <span className="text-lg">{config.icon}</span>
-            <span className="font-medium">{config.label}</span>
-          </div>
+          <span className="font-medium">{config.label}</span>
         )
       }
     },
