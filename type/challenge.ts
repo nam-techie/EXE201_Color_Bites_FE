@@ -87,6 +87,20 @@ export interface ChallengeEntryResponse {
    accountId?: string
 }
 
+// Request tạo thử thách (POST /api/challenges)
+export interface CreateChallengeRequest {
+   title: string
+   description?: string
+   challengeType: ChallengeType
+   restaurantId?: string // Required if PARTNER_LOCATION
+   typeObjId?: string // Required if THEME_COUNT
+   images?: ImageObject[]
+   targetCount: number
+   startDate: string // ISO 8601 format
+   durationDay: number
+   rewardDescription?: string
+}
+
 // Request nộp bài thử thách (POST /api/challenges/participations/{challengeId}/entries)
 export interface SubmitChallengeEntryRequest {
    restaurantId: string

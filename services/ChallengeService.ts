@@ -5,6 +5,7 @@ import type {
    ChallengeEntryResponse,
    ChallengeParticipationResponse,
    ChallengeType,
+   CreateChallengeRequest,
    PaginatedEntryResponse,
    PaginatedParticipationResponse,
    ParticipationStatus,
@@ -102,6 +103,44 @@ export class ChallengeService {
       } catch (error) {
          console.error('Error fetching challenges by restaurant:', error)
          return []
+      }
+   }
+
+   /**
+    * Tạo thử thách mới
+    * POST /api/challenges
+    * Yêu cầu: User phải có quyền (Premium/Partner)
+    */
+   async createChallenge(data: CreateChallengeRequest): Promise<ChallengeDefinitionResponse> {
+      try {
+         console.log('Creating new challenge:', data.title)
+         const response = await apiService.post<ChallengeDefinitionResponse>(
+            API_ENDPOINTS.CHALLENGES.LIST,
+            data
+         )
+
+         if (response.status === 201 && response.data) {
+            console.log('Challenge created successfully:', response.data.id)
+            return response.data
+         }
+
+         // Xử lý lỗi từ server
+         const errorMessage = response.message || 'Không thể tạo thử thách'
+         throw new Error(errorMessage)
+      } catch (error: any) {
+         console.error('Error creating challenge:', error)
+         
+         // Kiểm tra lỗi 403 Forbidden hoặc lỗi quyền
+         if (error?.response?.status === 403 || 
+             error?.message?.includes('403') ||
+             error?.message?.includes('permission') ||
+             error?.message?.includes('quyền') ||
+             error?.message?.includes('Premium') ||
+             error?.message?.includes('upgrade')) {
+            throw new Error('UPGRADE_REQUIRED')
+         }
+         
+         throw error
       }
    }
 
