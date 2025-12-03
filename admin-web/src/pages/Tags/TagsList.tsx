@@ -1,12 +1,12 @@
 import {
-    DeleteOutlined,
-    EditOutlined,
-    PlusOutlined,
-    TagOutlined,
-    UndoOutlined
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  TagOutlined,
+  UndoOutlined
 } from '@ant-design/icons'
-import { Download } from 'lucide-react'
 import { Button, Card, message } from 'antd'
+import { Download } from 'lucide-react'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import DataTable, { DataTableAction, DataTableColumn } from '../../components/common/DataTable'
@@ -120,8 +120,8 @@ const TagsList: React.FC = () => {
       title: 'Thống kê',
       render: (_, record) => (
         <div style={{ fontSize: '12px' }}>
-          <div>📝 {displayNumber(record.postCount, '0')} bài viết</div>
-          <div>🍽️ {displayNumber(record.restaurantCount, '0')} nhà hàng</div>
+          <div>{displayNumber(record.postCount, '0')} bài viết</div>
+          <div>{displayNumber(record.restaurantCount, '0')} nhà hàng</div>
         </div>
       )
     },

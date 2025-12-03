@@ -143,17 +143,27 @@ export interface ChallengeStats {
   rejectedEntries: number
 }
 
-// Challenge type configurations - theo backend
-export const CHALLENGE_TYPE_CONFIG: Record<ChallengeType, { label: string; icon: string; color: string }> = {
-  PARTNER_LOCATION: {
-    label: 'Thử thách tại nhà hàng',
-    icon: '📍',
+// Challenge type configurations
+export const CHALLENGE_TYPE_CONFIG = {
+  FOOD_CHALLENGE: {
+    label: 'Thử thách ăn uống',
+    icon: 'utensils',
     color: '#52c41a'
   },
-  THEME_COUNT: {
-    label: 'Thử thách theo chủ đề',
-    icon: '🎯',
+  PHOTO_CHALLENGE: {
+    label: 'Thử thách chụp ảnh',
+    icon: 'camera',
     color: '#1890ff'
+  },
+  REVIEW_CHALLENGE: {
+    label: 'Thử thách đánh giá',
+    icon: 'star',
+    color: '#faad14'
+  },
+  SOCIAL_CHALLENGE: {
+    label: 'Thử thách xã hội',
+    icon: 'users',
+    color: '#722ed1'
   }
 }
 

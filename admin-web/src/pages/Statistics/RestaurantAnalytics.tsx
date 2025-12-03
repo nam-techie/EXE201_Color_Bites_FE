@@ -1,11 +1,11 @@
-import { Store, MapPin, Star, TrendingUp } from 'lucide-react'
 import { Card, Col, Row } from 'antd'
+import { MapPin, Star, Store, TrendingUp } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
-import LoadingState from '../../components/common/LoadingState'
-import StatCard from '../../components/common/StatCard'
 import BarChart from '../../components/charts/BarChart'
 import LineChart from '../../components/charts/LineChart'
 import PieChart from '../../components/charts/PieChart'
+import LoadingState from '../../components/common/LoadingState'
+import StatCard from '../../components/common/StatCard'
 import { statisticsApi } from '../../services/statisticsApi'
 import { displayNumber, formatNumber } from '../../utils/formatters'
 
@@ -85,7 +85,7 @@ const RestaurantAnalytics: React.FC = () => {
     },
     {
       title: 'Đánh giá trung bình',
-      value: `${stats.avgRating.toFixed(1)} ⭐`,
+      value: `${stats.avgRating.toFixed(1)}`,
       icon: <Star className="w-6 h-6" />,
       color: '#faad14',
       change: {
@@ -231,7 +231,7 @@ const RestaurantAnalytics: React.FC = () => {
         <Col xs={24} sm={6}>
           <Card className="text-center">
             <div className="text-3xl font-bold text-yellow-600 mb-2">
-              {stats ? stats.avgRating.toFixed(1) : '0.0'} ⭐
+              {stats ? stats.avgRating.toFixed(1) : '0.0'}
             </div>
             <div className="text-sm text-gray-600">Đánh giá trung bình</div>
           </Card>
