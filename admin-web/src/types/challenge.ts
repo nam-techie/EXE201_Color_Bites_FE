@@ -1,73 +1,137 @@
-// Challenge type definitions - khớp với ChallengeDefinitionResponse từ backend
+// Challenge type definitions - khớp với API Documentation backend
+
+// Enum cho loại thử thách (theo backend)
+export type ChallengeType = 'PARTNER_LOCATION' | 'THEME_COUNT'
+
+// Enum cho trạng thái tham gia
+export type ParticipationStatus = 'ACTIVE' | 'COMPLETED' | 'FAILED'
+
+// Enum cho trạng thái bài nộp
+export type EntryStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+// Interface cho ảnh trong challenge
+export interface ImageObject {
+  url: string
+  description?: string
+}
+
+// Challenge interface - khớp với ChallengeDefinitionResponse từ backend
 export interface Challenge {
   id: string
   title: string
-  description: string
-  challengeType: string // Backend trả về challengeType (ví dụ: "PARTNER_LOCATION")
-  type: 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE' // Mapped từ challengeType
-  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'CANCELLED' // Mapped từ isActive
+  description?: string
+  challengeType: ChallengeType
   restaurantId?: string | null
   restaurantName?: string | null
   typeObjId?: string | null
   typeObjName?: string | null
-  images?: string[] | null
+  images?: ImageObject[] | null
   targetCount: number
   startDate: string
   endDate: string
-  rewardDescription?: string | null // Backend trả về rewardDescription
-  reward?: string // Alias cho rewardDescription
+  rewardDescription?: string | null
   createdBy?: string
   createdAt: string
-  isActive: boolean // Backend trả về isActive
-  participantCount: number
-  completionCount?: number // Có thể không có trong response
+  isActive: boolean
+  participantCount?: number
+  // Mapped fields for UI compatibility
+  status: 'ACTIVE' | 'INACTIVE' | 'COMPLETED' | 'CANCELLED'
 }
 
+// Response ngắn gọn cho danh sách thử thách (GET /api/challenges)
+export interface ChallengeDetailResponse {
+  id: string
+  title: string
+  challengeType: ChallengeType
+  restaurantId?: string
+  typeObjId?: string
+  startDate: string
+  endDate: string
+}
+
+// Challenge Entry - khớp với ChallengeEntryResponse từ backend
 export interface ChallengeEntry {
   id: string
-  challengeId: string
-  userId: string
-  userName: string
-  userEmail: string
-  content: string
-  images?: string[]
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'
-  submittedAt: string
+  participationId: string
+  restaurantId: string
+  photoUrl?: string
+  latitude: number
+  longitude: number
+  status: EntryStatus
+  caption?: string
+  createdAt: string
+  restaurantName?: string
+  challengeTitle?: string
+  accountId?: string
+  // Additional fields for admin display
+  userName?: string
+  userEmail?: string
   reviewedAt?: string
   reviewedBy?: string
 }
 
-// API request/response types
-export interface CreateChallengeDto {
-  title: string
-  description: string
-  type: 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE'
-  restaurantId?: string
-  startDate: string
-  endDate: string
-  reward?: string
+// Challenge Participation - khớp với ChallengeParticipationResponse
+export interface ChallengeParticipation {
+  id: string
+  accountId: string
+  challengeId: string
+  status: ParticipationStatus
+  completedAt?: string
+  createdAt: string
+  challengeTitle?: string
+  targetCount?: number
+  challengeType?: string
 }
 
+// API Request Types - khớp với CreateChallengeDefinitionRequest từ backend
+export interface CreateChallengeDto {
+  title: string // 2-200 ký tự, bắt buộc
+  description?: string // tối đa 1000 ký tự
+  challengeType: ChallengeType // bắt buộc
+  restaurantId?: string // bắt buộc nếu challengeType = PARTNER_LOCATION
+  typeObjId?: string // bắt buộc nếu challengeType = THEME_COUNT
+  images?: ImageObject[]
+  targetCount: number // >= 1, bắt buộc
+  startDate: string // phải trong tương lai, bắt buộc
+  durationDay: number // số ngày, bắt buộc
+  rewardDescription?: string // tối đa 500 ký tự
+}
+
+// API Request Types - khớp với UpdateChallengeDefinitionRequest từ backend
 export interface UpdateChallengeDto {
-  title?: string
-  description?: string
-  type?: 'FOOD_CHALLENGE' | 'PHOTO_CHALLENGE' | 'REVIEW_CHALLENGE' | 'SOCIAL_CHALLENGE'
+  title?: string // 2-200 ký tự
+  description?: string // tối đa 1000 ký tự
+  challengeType?: ChallengeType
   restaurantId?: string
+  typeObjId?: string
+  images?: ImageObject[]
+  targetCount?: number // >= 1
   startDate?: string
   endDate?: string
-  reward?: string
+  rewardDescription?: string // tối đa 500 ký tự
+  isActive?: boolean
 }
 
+// Request nộp bài thử thách
+export interface SubmitChallengeEntryRequest {
+  restaurantId: string
+  latitude: number // -90 to 90
+  longitude: number // -180 to 180
+  caption?: string // max 500 chars
+}
+
+// List params for pagination and filtering
 export interface ChallengeListParams {
   page?: number
   size?: number
   search?: string
-  type?: string
+  challengeType?: ChallengeType
   status?: string
   sortBy?: 'title' | 'createdAt' | 'participantCount' | 'startDate'
   order?: 'asc' | 'desc'
 }
 
+// Statistics
 export interface ChallengeStats {
   totalChallenges: number
   activeChallenges: number
@@ -79,49 +143,75 @@ export interface ChallengeStats {
   rejectedEntries: number
 }
 
-// Challenge type configurations
-export const CHALLENGE_TYPE_CONFIG = {
-  FOOD_CHALLENGE: {
-    label: 'Thử thách ăn uống',
-    icon: '🍽️',
-    color: '#52c41a'
+// Challenge type configurations - theo backend enum ChallengeType
+// PARTNER_LOCATION: Check-in tại 1 nhà hàng cụ thể
+// THEME_COUNT: Ăn đủ số lượng quán theo chủ đề
+export const CHALLENGE_TYPE_CONFIG: Record<ChallengeType, { label: string; color: string }> = {
+  PARTNER_LOCATION: {
+    label: 'Check-in tại nhà hàng',
+    color: 'green'
   },
-  PHOTO_CHALLENGE: {
-    label: 'Thử thách chụp ảnh',
-    icon: '📸',
-    color: '#1890ff'
-  },
-  REVIEW_CHALLENGE: {
-    label: 'Thử thách đánh giá',
-    icon: '⭐',
-    color: '#faad14'
-  },
-  SOCIAL_CHALLENGE: {
-    label: 'Thử thách xã hội',
-    icon: '👥',
-    color: '#722ed1'
+  THEME_COUNT: {
+    label: 'Ăn theo chủ đề',
+    color: 'blue'
   }
 }
 
 export const CHALLENGE_STATUS_CONFIG = {
   ACTIVE: {
     label: 'Hoạt động',
-    color: '#52c41a',
+    color: 'green',
     bgColor: '#f6ffed'
   },
   INACTIVE: {
-    label: 'Không hoạt động',
-    color: '#faad14',
+    label: 'Chưa kích hoạt',
+    color: 'orange',
     bgColor: '#fffbe6'
   },
   COMPLETED: {
     label: 'Hoàn thành',
-    color: '#1890ff',
+    color: 'blue',
     bgColor: '#e6f7ff'
   },
   CANCELLED: {
     label: 'Đã hủy',
-    color: '#ff4d4f',
+    color: 'red',
+    bgColor: '#fff2f0'
+  }
+}
+
+export const ENTRY_STATUS_CONFIG: Record<EntryStatus, { label: string; color: string; bgColor: string }> = {
+  PENDING: {
+    label: 'Chờ duyệt',
+    color: 'orange',
+    bgColor: '#fffbe6'
+  },
+  APPROVED: {
+    label: 'Đã duyệt',
+    color: 'green',
+    bgColor: '#f6ffed'
+  },
+  REJECTED: {
+    label: 'Từ chối',
+    color: 'red',
+    bgColor: '#fff2f0'
+  }
+}
+
+export const PARTICIPATION_STATUS_CONFIG: Record<ParticipationStatus, { label: string; color: string; bgColor: string }> = {
+  ACTIVE: {
+    label: 'Đang thực hiện',
+    color: 'blue',
+    bgColor: '#e6f7ff'
+  },
+  COMPLETED: {
+    label: 'Hoàn thành',
+    color: 'green',
+    bgColor: '#f6ffed'
+  },
+  FAILED: {
+    label: 'Thất bại',
+    color: 'red',
     bgColor: '#fff2f0'
   }
 }

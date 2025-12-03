@@ -288,3 +288,6 @@ export interface ResetPasswordRequest {
   newPassword: string
   confirmPassword: string
 }
+
+// Challenge Types - Export all from challenge.ts
+export * from './challenge'

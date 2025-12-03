@@ -152,6 +152,22 @@ export const API_ENDPOINTS = {
     CONFIRM: '/api/payment/subscription/confirm',
     HISTORY: '/api/payment/history',
   },
+  // Challenge endpoints
+  CHALLENGES: {
+    LIST: '/api/challenges',
+    BY_ID: '/api/challenges',
+    BY_TYPE: '/api/challenges/type',
+    BY_RESTAURANT: '/api/challenges/restaurant',
+    JOIN: '/api/challenges',
+    MY_PARTICIPATIONS: '/api/challenges/my-participations',
+    MY_PARTICIPATIONS_PAGED: '/api/challenges/my-participations/paged',
+    PARTICIPATION_BY_ID: '/api/challenges/participations',
+    PARTICIPATIONS_BY_STATUS: '/api/challenges/participations/status',
+    ENTRIES: '/api/challenges/entries',
+    ENTRIES_BY_PARTICIPATION: '/api/challenges/participations',
+    ENTRIES_BY_RESTAURANT: '/api/challenges/entries/restaurant',
+    ENTRIES_BY_STATUS: '/api/challenges/entries/status',
+  },
 }
 
 // Map Configuration
