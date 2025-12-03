@@ -886,7 +886,7 @@ export const exportChallengesToExcel = async (challenges: Challenge[]): Promise<
     headerRow.height = 25
     
     challenges.forEach((challenge) => {
-      const typeLabel = CHALLENGE_TYPE_CONFIG[challenge.type]?.label || challenge.type
+      const typeLabel = CHALLENGE_TYPE_CONFIG[challenge.challengeType]?.label || challenge.challengeType
       const statusLabel = CHALLENGE_STATUS_CONFIG[challenge.status]?.label || challenge.status
       
       const row = worksheet.addRow({
@@ -900,7 +900,6 @@ export const exportChallengesToExcel = async (challenges: Challenge[]): Promise<
         startDate: formatDate(challenge.startDate, 'DD/MM/YYYY HH:mm:ss'),
         endDate: formatDate(challenge.endDate, 'DD/MM/YYYY HH:mm:ss'),
         participantCount: challenge.participantCount || 0,
-        completionCount: challenge.completionCount || 0,
         createdAt: formatDate(challenge.createdAt, 'DD/MM/YYYY HH:mm:ss')
       })
       
