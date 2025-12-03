@@ -16,7 +16,7 @@ import LoadingState from '../../components/common/LoadingState'
 import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { challengesApi } from '../../services/challengesApi'
-import type { Challenge } from '../../types/challenge'
+import type { Challenge, ChallengeType } from '../../types/challenge'
 import { CHALLENGE_STATUS_CONFIG, CHALLENGE_TYPE_CONFIG } from '../../types/challenge'
 import { exportChallengesToExcel } from '../../utils/export'
 import { formatDate, formatNumber } from '../../utils/formatters'
@@ -64,6 +64,8 @@ const ChallengesList: React.FC = () => {
     },
     initialFilters: {
       search: '',
+      challengeType: undefined,
+      status: undefined,
       sortBy: 'createdAt',
       order: 'desc'
     }
@@ -72,17 +74,6 @@ const ChallengesList: React.FC = () => {
   // Table columns
   const columns: DataTableColumn<Challenge>[] = [
     {
-      key: 'id',
-      title: 'ID',
-      dataIndex: 'id',
-      width: 80,
-      render: (id: string) => (
-        <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
-          {id.slice(0, 8)}...
-        </span>
-      )
-    },
-    {
       key: 'title',
       title: 'Tiêu đề',
       dataIndex: 'title',
@@ -90,18 +81,18 @@ const ChallengesList: React.FC = () => {
         <div>
           <div className="font-medium text-gray-900">{title}</div>
           <div className="text-sm text-gray-500 mt-1">
-            {record.description && record.description.length > 100 
-              ? `${record.description.slice(0, 100)}...` 
+            {record.description && record.description.length > 80 
+              ? `${record.description.slice(0, 80)}...` 
               : record.description}
           </div>
         </div>
       )
     },
     {
-      key: 'type',
+      key: 'challengeType',
       title: 'Loại',
       render: (_, record) => {
-        const config = CHALLENGE_TYPE_CONFIG[record.type] || { icon: '📋', label: record.challengeType || 'N/A', color: '#666' }
+        const config = CHALLENGE_TYPE_CONFIG[record.challengeType as ChallengeType] || { icon: '📋', label: record.challengeType || 'N/A', color: '#666' }
         return (
           <div className="flex items-center space-x-2">
             <span className="text-lg">{config.icon}</span>
@@ -113,10 +104,14 @@ const ChallengesList: React.FC = () => {
     {
       key: 'status',
       title: 'Trạng thái',
+      width: 140,
       render: (_, record) => {
-        const config = CHALLENGE_STATUS_CONFIG[record.status] || { label: record.isActive ? 'Hoạt động' : 'Không hoạt động', color: '#666', bgColor: '#f5f5f5' }
+        const config = CHALLENGE_STATUS_CONFIG[record.status] || { 
+          label: record.isActive ? 'Hoạt động' : 'Chưa kích hoạt', 
+          color: record.isActive ? 'green' : 'orange'
+        }
         return (
-          <Tag color={config.color} style={{ backgroundColor: config.bgColor }}>
+          <Tag color={config.color} style={{ fontWeight: 500 }}>
             {config.label}
           </Tag>
         )
@@ -174,11 +169,6 @@ const ChallengesList: React.FC = () => {
           </div>
         </div>
       )
-    },
-    {
-      key: 'createdAt',
-      title: 'Ngày tạo',
-      render: (_, record) => formatDate(record.createdAt, 'DD/MM/YYYY HH:mm')
     }
   ]
 
@@ -283,18 +273,16 @@ const ChallengesList: React.FC = () => {
   // Filter options
   const filterOptions = [
     {
-      key: 'type',
+      key: 'challengeType',
       label: 'Loại',
       options: [
         { key: 'all', label: 'Tất cả', value: undefined },
-        { key: 'FOOD_CHALLENGE', label: 'Thử thách ăn uống', value: 'FOOD_CHALLENGE' },
-        { key: 'PHOTO_CHALLENGE', label: 'Thử thách chụp ảnh', value: 'PHOTO_CHALLENGE' },
-        { key: 'REVIEW_CHALLENGE', label: 'Thử thách đánh giá', value: 'REVIEW_CHALLENGE' },
-        { key: 'SOCIAL_CHALLENGE', label: 'Thử thách xã hội', value: 'SOCIAL_CHALLENGE' }
+        { key: 'PARTNER_LOCATION', label: 'Thử thách tại nhà hàng', value: 'PARTNER_LOCATION' },
+        { key: 'THEME_COUNT', label: 'Thử thách theo chủ đề', value: 'THEME_COUNT' }
       ],
-      value: filters.type,
+      value: filters.challengeType,
       onChange: (value: string) => {
-        setFilters({ ...filters, type: value as any })
+        setFilters({ ...filters, challengeType: value as any })
       }
     },
     {
@@ -345,7 +333,7 @@ const ChallengesList: React.FC = () => {
   }
 
   const handleReset = () => {
-    setFilters({ search: '', type: undefined, status: undefined, sortBy: 'createdAt', order: 'desc' })
+    setFilters({ search: '', challengeType: undefined, status: undefined, sortBy: 'createdAt', order: 'desc' })
   }
 
   const handleCreateChallenge = () => {
