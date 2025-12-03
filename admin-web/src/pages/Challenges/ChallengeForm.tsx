@@ -123,7 +123,6 @@ const ChallengeForm: React.FC<ChallengeFormProps> = ({
    const challengeTypeOptions = Object.entries(CHALLENGE_TYPE_CONFIG).map(([key, config]) => ({
       label: (
          <div className="flex items-center space-x-2">
-            <span className="text-lg">{config.icon}</span>
             <span>{config.label}</span>
          </div>
       ),

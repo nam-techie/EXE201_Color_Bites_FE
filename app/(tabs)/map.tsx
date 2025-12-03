@@ -524,14 +524,8 @@ export default function MapScreen() {
       <MapSideMenu
         visible={menuVisible}
         onClose={() => setMenuVisible(false)}
-        onNavigateToSavedPlaces={() => {
-          Alert.alert('Saved Places', 'Tính năng địa điểm đã lưu sắp ra mắt!')
-        }}
-        onNavigateToMyPlaces={() => {
-          Alert.alert('My Places', 'Tính năng quán đã tạo sắp ra mắt!')
-        }}
-        onNavigateToHistory={() => {
-          Alert.alert('History', 'Tính năng lịch sử sắp ra mắt!')
+        onNavigateToRestaurantList={() => {
+          router.push('/restaurant-list')
         }}
       />
 
