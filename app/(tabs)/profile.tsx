@@ -498,7 +498,7 @@ export default function ProfileScreen() {
                               <Text style={styles.premiumCardTitleText}>Premium</Text>
                            </View>
                            
-                           <Text style={styles.premiumCardPrice}>5.000đ/tháng</Text>
+                           <Text style={styles.premiumCardPrice}>36.000đ/tháng</Text>
                            
                            <View style={styles.premiumFeatures}>
                               <View style={styles.premiumFeature}>

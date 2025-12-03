@@ -6,8 +6,8 @@ import {
     StarOutlined,
     UndoOutlined
 } from '@ant-design/icons'
-import { Download } from 'lucide-react'
 import { Card, Drawer, message } from 'antd'
+import { Download } from 'lucide-react'
 import React, { useState } from 'react'
 import ConfirmModal from '../../components/common/ConfirmModal'
 import DataTable, { DataTableAction, DataTableColumn } from '../../components/common/DataTable'
@@ -101,7 +101,7 @@ const RestaurantsList: React.FC = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            ⭐ {record.rating != null ? displayValue(record.rating?.toFixed(1), '0.0') : 'N/A'}
+            {record.rating != null ? displayValue(record.rating?.toFixed(1), '0.0') : 'N/A'}
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
             {displayCurrency(record.avgPrice || 0, '0')}/người
