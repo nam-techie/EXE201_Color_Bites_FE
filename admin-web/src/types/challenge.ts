@@ -143,27 +143,17 @@ export interface ChallengeStats {
   rejectedEntries: number
 }
 
-// Challenge type configurations
-export const CHALLENGE_TYPE_CONFIG = {
-  FOOD_CHALLENGE: {
-    label: 'Thử thách ăn uống',
-    icon: 'utensils',
-    color: '#52c41a'
+// Challenge type configurations - theo backend enum ChallengeType
+// PARTNER_LOCATION: Check-in tại 1 nhà hàng cụ thể
+// THEME_COUNT: Ăn đủ số lượng quán theo chủ đề
+export const CHALLENGE_TYPE_CONFIG: Record<ChallengeType, { label: string; color: string }> = {
+  PARTNER_LOCATION: {
+    label: 'Check-in tại nhà hàng',
+    color: 'green'
   },
-  PHOTO_CHALLENGE: {
-    label: 'Thử thách chụp ảnh',
-    icon: 'camera',
-    color: '#1890ff'
-  },
-  REVIEW_CHALLENGE: {
-    label: 'Thử thách đánh giá',
-    icon: 'star',
-    color: '#faad14'
-  },
-  SOCIAL_CHALLENGE: {
-    label: 'Thử thách xã hội',
-    icon: 'users',
-    color: '#722ed1'
+  THEME_COUNT: {
+    label: 'Ăn theo chủ đề',
+    color: 'blue'
   }
 }
 

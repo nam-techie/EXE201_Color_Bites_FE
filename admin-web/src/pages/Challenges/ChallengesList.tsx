@@ -16,7 +16,7 @@ import LoadingState from '../../components/common/LoadingState'
 import { useConfirm } from '../../hooks/useConfirm'
 import { useDataTable } from '../../hooks/useDataTable'
 import { challengesApi } from '../../services/challengesApi'
-import type { Challenge, ChallengeType } from '../../types/challenge'
+import type { Challenge } from '../../types/challenge'
 import { CHALLENGE_STATUS_CONFIG, CHALLENGE_TYPE_CONFIG } from '../../types/challenge'
 import { exportChallengesToExcel } from '../../utils/export'
 import { formatDate, formatNumber } from '../../utils/formatters'
@@ -92,9 +92,11 @@ const ChallengesList: React.FC = () => {
       key: 'challengeType',
       title: 'Loại',
       render: (_, record) => {
-        const config = CHALLENGE_TYPE_CONFIG[record.type] || { label: record.challengeType || 'N/A', color: '#666' }
+        const config = CHALLENGE_TYPE_CONFIG[record.challengeType] || { label: record.challengeType || 'N/A', color: 'default' }
         return (
-          <span className="font-medium">{config.label}</span>
+          <div className="flex items-center space-x-2">
+            <span className="font-medium">{config.label}</span>
+          </div>
         )
       }
     },
@@ -120,14 +122,11 @@ const ChallengesList: React.FC = () => {
       render: (_, record) => (
         <div className="text-center">
           <div className="font-medium text-blue-600">
-            {formatNumber(record.participantCount || 0)}
-          </div>
-          <div className="text-xs text-gray-500">
-            {formatNumber(record.completionCount || 0)} hoàn thành
+            {formatNumber(record.participantCount || 0)} người
           </div>
           {record.targetCount && (
-            <div className="text-xs text-gray-400">
-              Mục tiêu: {formatNumber(record.targetCount)}
+            <div className="text-xs text-gray-500">
+              Mục tiêu: {formatNumber(record.targetCount)} bài
             </div>
           )}
         </div>
@@ -274,8 +273,8 @@ const ChallengesList: React.FC = () => {
       label: 'Loại',
       options: [
         { key: 'all', label: 'Tất cả', value: undefined },
-        { key: 'PARTNER_LOCATION', label: 'Thử thách tại nhà hàng', value: 'PARTNER_LOCATION' },
-        { key: 'THEME_COUNT', label: 'Thử thách theo chủ đề', value: 'THEME_COUNT' }
+        { key: 'PARTNER_LOCATION', label: 'Check-in tại nhà hàng', value: 'PARTNER_LOCATION' },
+        { key: 'THEME_COUNT', label: 'Ăn theo chủ đề', value: 'THEME_COUNT' }
       ],
       value: filters.challengeType,
       onChange: (value: string) => {

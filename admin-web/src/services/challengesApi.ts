@@ -320,24 +320,55 @@ class ChallengesApiService {
 
    /**
     * POST /api/challenges - Tạo thử thách mới
+    * Request body theo CreateChallengeDefinitionRequest:
+    * - title: string (2-200 ký tự, bắt buộc)
+    * - description: string (tối đa 1000 ký tự)
+    * - challengeType: PARTNER_LOCATION | THEME_COUNT (bắt buộc)
+    * - restaurantId: string (bắt buộc nếu type = PARTNER_LOCATION)
+    * - typeObjId: string (bắt buộc nếu type = THEME_COUNT)
+    * - images: ImageObject[]
+    * - targetCount: number >= 1 (bắt buộc)
+    * - startDate: ISO datetime string (phải trong tương lai, bắt buộc)
+    * - durationDay: number (số ngày, bắt buộc)
+    * - rewardDescription: string (tối đa 500 ký tự)
     */
    async createChallenge(data: CreateChallengeDto): Promise<ApiResponse<Challenge>> {
       try {
-         console.log('📤 Creating new challenge:', data)
+         console.log('📤 Creating new challenge with data:', JSON.stringify(data, null, 2))
+
+         // Validate required fields
+         if (!data.title || !data.challengeType || !data.targetCount || !data.startDate || !data.durationDay) {
+            throw new Error('Thiếu thông tin bắt buộc: title, challengeType, targetCount, startDate, durationDay')
+         }
+
+         // Validate conditional fields
+         if (data.challengeType === 'PARTNER_LOCATION' && !data.restaurantId) {
+            throw new Error('restaurantId là bắt buộc khi challengeType = PARTNER_LOCATION')
+         }
+         if (data.challengeType === 'THEME_COUNT' && !data.typeObjId) {
+            throw new Error('typeObjId là bắt buộc khi challengeType = THEME_COUNT')
+         }
 
          const response = await adminApi.axiosInstance.post<ApiResponse<Challenge>>(
             this.baseURL,
             data
          )
 
+         console.log('📥 Create challenge response:', response.data)
+
          if (response.data.status === 201 || response.data.status === 200) {
-            console.log('✅ Challenge created successfully')
+            console.log('✅ Challenge created successfully:', response.data.data)
             return response.data
          }
 
          throw new Error(response.data.message || 'Không thể tạo challenge')
-      } catch (error) {
+      } catch (error: any) {
          console.error('❌ Error creating challenge:', error)
+         console.error('❌ Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+         })
          throw error
       }
    }
